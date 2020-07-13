@@ -102,12 +102,9 @@ au A FileType terraform setl
 au A BufWritePost *.tf Terrafmt
 au A FileType go setl ts=4 sw=4 noexpandtab foldmethod=syntax
      \ makeprg=(go\ build\ ./...\ &&\ go\ vet\ ./...)
-"au A BufWritePre *.go lua vim.lsp.buf.formatting()
-"au A BufWritePost *.go Goimports
 
 comm! -nargs=* T split | resize 10 | term <args>
 comm! Terrafmt  :exe 'silent !terraform fmt %' | :e
-"comm! Goimports :exe 'silent !goimports -w %'  | :e
 comm! RemoveTrailingSpace :norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
 comm! SaveAndClose :exe 'RemoveTrailingSpace' | :exe 'w' | :bdel
 
