@@ -27,5 +27,4 @@ function go_org_imports(timeout_ms)
 end
 
 vim.api.nvim_command("au BufWritePre *.go lua go_org_imports(500)")
-vim.api.nvim_command("au BufWritePre *.go lua vim.lsp.buf.formatting()")
-
+vim.api.nvim_command("au BufWritePre *.go lua vim.lsp.buf.formatting_sync()")
