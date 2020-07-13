@@ -12,6 +12,7 @@ require'nvim_lsp'.vimls.setup{}
 require'nvim_lsp'.vuels.setup{}
 
 local vim = vim
+local cmd = vim.api.nvim_command
 
 -- Synchronously organise (Go) imports.
 -- Courtesy of https://github.com/neovim/nvim-lsp/issues/115
@@ -32,5 +33,5 @@ function GoOrgImports(timeout_ms)
   vim.lsp.util.apply_workspace_edit(edit)
 end
 
-vim.api.nvim_command("au BufWritePre *.go lua GoOrgImports(500)")
-vim.api.nvim_command("au BufWritePre *.go lua vim.lsp.buf.formatting_sync()")
+cmd("au BufWritePre *.go lua GoOrgImports(500)")
+cmd("au BufWritePre *.go lua vim.lsp.buf.formatting_sync()")
