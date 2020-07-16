@@ -1,1 +1,0 @@
-Neovim nightly config, using the very latest LSP features.
