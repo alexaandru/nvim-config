@@ -11,6 +11,7 @@ Plug 'norcalli/nvim-colorizer.lua'
 Plug 'nvim-lua/completion-nvim'
 "Plug 'nvim-lua/diagnostic-nvim'
 "Plug 'nvim-treesitter/nvim-treesitter'
+"Plug 'leafOfTree/vim-vue-plugin'
 call plug#end()
 
 exe 'luafile' stdpath('config') . '/init.lua'
@@ -87,7 +88,7 @@ au A BufEnter * call LastWindow()
 au A BufEnter * if &buftype == 'terminal' | :startinsert | endif
 au A BufEnter * lua require'completion'.on_attach()
 "au A BufEnter * lua require'diagnostic'.on_attach()
-au A BufWritePre *.go lua GoOrgImports(500); vim.lsp.buf.formatting_sync()
+au A BufWritePre *.go lua GoOrgImports()
 au A BufWritePre * RemoveTrailingSpace
 au A BufWritePre * RemoveTrailingBlankLines
 au A TextYankPost * silent! lua require'vim.highlight'.on_yank()
@@ -114,21 +115,7 @@ comm! RemoveTrailingBlankLines :%s#\($\n\s*\)\+\%$##e
 comm! SaveAndClose :exe 'w' | :bdel
 
 func! LastWindow()
-  if &buftype ==# 'quickfix'
-    if winbufnr(2) == -1
-      quit!
-    endif
-  endif
-endf
-
-func! GrepQuickFix(pat)
-  let l:all = getqflist()
-  for l:d in l:all
-    if bufname(l:d['bufnr']) !~ a:pat && l:d['text'] !~ a:pat
-        call remove(l:all, index(l:all,l:d))
-    endif
-  endfor
-  call setqflist(l:all)
+  if &buftype ==# 'quickfix' && winbufnr(2) ==# -1 | quit! | endif
 endf
 
 " Buffer utils
@@ -161,10 +148,6 @@ nnoremap <silent> <F12>l    :vs ~/.config/nvim/init.lua<CR>
 nnoremap <silent> <Leader>w <cmd>SaveAndClose<CR>
 " Snippets
 nnoremap <silent>           \html :-1read ~/.local/share/nvim/snippets/skeleton.html<CR>3jwf>a
-" Uppercase word and advance to next word
-nnoremap ,w                 vE~w
-" Remove all trailling spaces
-nnoremap ,kk                <cmd>RemoveTrailingSpace<CR>
 " Easier windows resize
 nnoremap -                  <C-W>-
 nnoremap +                  <C-W>+
