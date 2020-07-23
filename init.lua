@@ -1,4 +1,3 @@
--- LSP
 require'nvim_lsp'.bashls.setup{}
 require'nvim_lsp'.cssls.setup{}
 require'nvim_lsp'.dockerls.setup{}
@@ -12,7 +11,6 @@ require'nvim_lsp'.sumneko_lua.setup{
     -- for more settings
     settings = {Lua = {diagnostics = {globals = {"vim"}}}}
 }
-
 require'nvim_lsp'.terraformls.setup{}
 require'nvim_lsp'.tsserver.setup{}
 require'nvim_lsp'.vimls.setup{}

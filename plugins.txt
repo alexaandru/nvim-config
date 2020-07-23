@@ -1,0 +1,16 @@
+Plugins that I found interesting, and may want to try (again) later
+
+Plug 'iamcco/markdown-preview.nvim', {'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug']}
+Plug 'liuchengxu/vista.vim'
+Plug 'nvim-lua/lsp-status.nvim'
+Plug 'nvim-lua/completion-nvim'
+Plug 'nvim-lua/diagnostic-nvim'
+Plug 'nvim-treesitter/nvim-treesitter'
+Plug 'leafOfTree/vim-vue-plugin'
+
+Other plugins I used and enjoyed but found (somewhat) overkill for my needs
+
+Plug 'neomake/neomake'
+Plug 'sbdchd/neoformat'
+Plug 'Shougo/deoplete.nvim'
+Plug 'lifepillar/vim-mucomplete'
