@@ -1,18 +1,16 @@
 func! CurImg()
   set paste
 
-  if exists('b:img')
-    let b:img = b:img + 1
-  else
-    let b:img = 1
+  if exists('b:img') | let b:img = b:img + 1
+  else | let b:img = 1
   endif
 
-  exe 'normal o<img src="/images' . strpart(@%, 7, len(@%) - 7 - 4) . '_' . b:img . '.jpg">'
+  exe 'norm o<img src="/images' . strpart(@%, 7, len(@%) - 7 - 4) . '_' . b:img . '.jpg">'
 endf
 
 func! CurDate()
   set paste
-  exe 'normal odata:  ' . strftime('%F %T %z')
+  exe 'norm odata:  ' . strftime('%F %T %z')
 endf
 
 nnoremap <silent> <leader>i :call CurImg()<CR>
