@@ -90,7 +90,7 @@ au A BufEnter * LastWindow
 au A BufEnter * if &buftype == 'terminal' | startinsert | endif
 au A BufEnter * lua require'completion'.on_attach()
 au A BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
-au A BufWritePre *.go lua GoOrgImports()
+au A BufWritePre *.go lua GoOrgImports(); vim.lsp.buf.formatting_sync()
 au A BufWritePre * RemoveTrailingSpace
 au A BufWritePre * RemoveTrailingBlankLines
 au A TextYankPost * silent! lua require'vim.highlight'.on_yank()

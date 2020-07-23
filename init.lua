@@ -35,7 +35,4 @@ function GoOrgImports()
 
   local edit = result[1].edit
   vim.lsp.util.apply_workspace_edit(edit)
-
-  -- also call go fmt, just like `goimports` does
-  vim.lsp.buf.formatting_sync()
 end
