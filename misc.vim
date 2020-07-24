@@ -1,3 +1,6 @@
+" Nothing interesting here, these are very custom/specific
+" functions/mappings that I use for some personal projects.
+
 func! CurImg()
   set paste
 
