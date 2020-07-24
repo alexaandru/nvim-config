@@ -28,11 +28,9 @@ set nowrap
 set omnifunc=v:lua.vim.lsp.omnifunc
 set path=**
 set shell=bash
-set shiftwidth=4
 set signcolumn=yes:2
 set smartcase smartindent
 set splitbelow splitright
-set tabstop=4
 set tags=
 set termguicolors
 set title titlestring=\{\ %n\ \}\ %<%f%=%{Modified('+','')}
@@ -89,6 +87,7 @@ comm! LastWindow if &buftype ==# 'quickfix' && winbufnr(2) ==# -1 | q | endif
 comm! Scratchify setl nobl bt=nofile bh=delete noswapfile
 comm! Scratch <mods> new +Scratchify
 comm! AutoWinHeight silent exe max([min([line("$"), 12]), 1]) . "wincmd _"
+comm! AutoIndent silent norm gg=G`.
 
 augroup A
   au!
@@ -99,6 +98,7 @@ au A BufEnter * if &buftype == 'terminal' | startinsert | endif
 au A BufEnter * lua require'completion'.on_attach()
 au A BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
 au A BufWritePre *.go lua GoOrgImports(); vim.lsp.buf.formatting_sync()
+au A BufWritePre *.vim AutoIndent
 au A BufWritePre * RemoveTrailingSpace
 au A BufWritePre * RemoveTrailingBlankLines
 au A TextYankPost * silent! lua require'vim.highlight'.on_yank()
@@ -108,15 +108,15 @@ au A TermClose * q
 au A FileType qf AutoWinHeight
 au A FileType * norm zR
 au A FileType gitcommit,asciidoc,markdown setl spell
-au A FileType vim setl ts=2 sw=2
-     \ makeprg=vint\ --enable-neovim\ %
+au A FileType vim setl ts=2 sw=2 sts=2
+      \ makeprg=vint\ --enable-neovim\ %
 au A BufWritePost init.vim source % " automatically reload when changing
 au A FileType javascript setl makeprg=npm\ run\ lint
 au A FileType terraform setl
-     \ makeprg=\(terraform\ validate\ -no-color\ &&\ for\ i\ in\ $\(find\ -iname\ '*.tf'\\\|xargs\ dirname\\\|sort\ -u\\\|paste\ -s\);\ do\ tflint\ $i;\ done\)
+      \ makeprg=\(terraform\ validate\ -no-color\ &&\ for\ i\ in\ $\(find\ -iname\ '*.tf'\\\|xargs\ dirname\\\|sort\ -u\\\|paste\ -s\);\ do\ tflint\ $i;\ done\)
 au A BufWritePost *.tf Terrafmt
 au A FileType go setl ts=4 sw=4 noexpandtab foldmethod=syntax
-     \ makeprg=(go\ build\ ./...\ &&\ go\ vet\ ./...)
+      \ makeprg=(go\ build\ ./...\ &&\ go\ vet\ ./...)
 
 " Buffer utils
 nnoremap gb                 :ls<CR>:b<Space>
