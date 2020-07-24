@@ -98,7 +98,7 @@ au A BufEnter * if &buftype == 'terminal' | startinsert | endif
 au A BufEnter * lua require'completion'.on_attach()
 au A BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
 au A BufWritePre *.go lua GoOrgImports(); vim.lsp.buf.formatting_sync()
-au A BufWritePre *.vim AutoIndent
+au A BufWritePre *.vim,*.lua AutoIndent
 au A BufWritePre * RemoveTrailingSpace
 au A BufWritePre * RemoveTrailingBlankLines
 au A TextYankPost * silent! lua require'vim.highlight'.on_yank()
@@ -108,6 +108,7 @@ au A TermClose * q
 au A FileType qf AutoWinHeight
 au A FileType * norm zR
 au A FileType gitcommit,asciidoc,markdown setl spell
+au A FileType lua setl ts=2 sw=2 sts=2
 au A FileType vim setl ts=2 sw=2 sts=2
       \ makeprg=vint\ --enable-neovim\ %
 au A BufWritePost init.vim source % " automatically reload when changing
