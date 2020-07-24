@@ -39,10 +39,6 @@ set title titlestring=\{\ %n\ \}\ %<%f%=%{Modified('+','')}
 set wildcharm=<C-Z>
 set wildignore+=.git,node_modules,*.cache,*.dat,*.idx,*.csv,*.tsv
 
-func! Modified(modified, not_modified)
-  if &modified | return a:modified | else | return a:not_modified | endif
-endf
-
 " needs termguicolors to be set 1st
 lua require'colorizer'.setup()
 
@@ -71,16 +67,28 @@ hi LspDiagnosticsInformation guifg=Pink
 hi LspDiagnosticsHint        guifg=Green
 hi Folded                    guibg=NONE
 
+func! Modified(modified, not_modified)
+  if &modified | return a:modified | else | return a:not_modified | endif
+endf
+
+func! GolangCI(...)
+  let l:lst = systemlist('golangci-lint run --print-issued-lines=0 ./...')
+  if a:0 ==# 0 | cgete(l:lst) | return | endif
+  cgete(filter(l:lst, 'v:val =~ "^'.. a:1 ..'"'))
+endf
+
 comm! -nargs=* T split | resize 10 | term <args>
-comm! Make silent make | echo "    make ✓" | sleep 1200ms | echo
+comm! Make silent make | redraw | echo "    make ✓"
+comm! -nargs=? GolangCI call GolangCI(<args>) | echo "    lint ✓"
 comm! Gdiff exe 'silent !git show HEAD^:% > /tmp/gdiff' | diffs /tmp/gdiff
 comm! Terrafmt exe 'silent !terraform fmt %' | e
 comm! RemoveTrailingSpace norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
 comm! RemoveTrailingBlankLines %s#\($\n\s*\)\+\%$##e
 comm! SaveAndClose w | bdel
-comm! LastWindow if &buftype ==# 'quickfix' && winbufnr(2) ==# -1 | quit! | endif
+comm! LastWindow if &buftype ==# 'quickfix' && winbufnr(2) ==# -1 | q | endif
 comm! Scratchify setl nobl bt=nofile bh=delete noswapfile
 comm! Scratch <mods> new +Scratchify
+comm! AutoWinHeight silent exe max([min([line("$"), 12]), 1]) . "wincmd _"
 
 augroup A
   au!
@@ -97,6 +105,7 @@ au A TextYankPost * silent! lua require'vim.highlight'.on_yank()
 au A QuickFixCmdPost [^l]* nested cwindow
 au A QuickFixCmdPost    l* nested lwindow
 au A TermClose * q
+au A FileType qf AutoWinHeight
 au A FileType * norm zR
 au A FileType gitcommit,asciidoc,markdown setl spell
 au A FileType vim setl ts=2 sw=2
@@ -126,10 +135,9 @@ nnoremap <silent> gW        <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
 nnoremap <silent> <C-n>     :let $VIM_DIR=expand('%:p:h')<CR>:T<CR>i<CR>cd "$VIM_DIR"<CR>clear<CR>
 nnoremap <silent> <F2>      :lua vim.lsp.buf.rename()<CR>
 nnoremap <silent> <F3>      :only<CR>
-nnoremap <silent> <F5>      :silent make<CR><bar>:echo "    make ✓"<CR><bar>:sleep 1200ms<CR><bar>:echo<CR>
-"nnoremap <silent> <F5>      :Make<CR><CR>
-nnoremap <silent> <F6>      :cgetexpr system('golangci-vim '.expand('%'))<CR><bar>:echo "    lint ✓"<CR><bar>:sleep 1200ms<CR><bar>:echo<CR>
-nnoremap <silent> <F7>      :cgetexpr system('golangci-lint run --print-issued-lines=0 ./...')<CR><bar>:echo "    lint ✓"<CR><bar>:sleep 1200ms<CR><bar>:echo<CR>
+nnoremap <silent> <F5>      :Make<CR>
+nnoremap <silent> <F6>      :GolangCI<CR>
+nnoremap <silent> <F6>%     :GolangCI expand('%')<CR>
 nnoremap <silent> <F8>      :silent Gdiff<CR>
 nnoremap <silent> <Space>   @=((foldclosed(line('.')) < 0) ? 'zC' : 'zO')<CR>
 nnoremap <silent> <C-Right> :cnext<CR>
