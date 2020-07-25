@@ -11,7 +11,7 @@ call plug#end()
 exe 'luafile' stdpath('config') . '/init.lua'
 
 set clipboard+=unnamedplus
-set completeopt=menu,noselect,noinsert
+set completeopt=menuone,noselect,noinsert
 set diffopt+=algorithm:patience,indent-heuristic,vertical
 set expandtab
 set foldmethod=indent foldlevelstart=1000
@@ -28,6 +28,7 @@ set nowrap
 set omnifunc=v:lua.vim.lsp.omnifunc
 set path=**
 set shell=bash
+set shortmess+=c
 set signcolumn=yes:2
 set smartcase smartindent
 set splitbelow splitright
@@ -87,6 +88,7 @@ com! Scratchify setl nobl bt=nofile bh=delete noswapfile
 com! Scratch <mods> new +Scratchify
 com! AutoWinHeight silent exe max([min([line("$"), 12]), 1]) . "wincmd _"
 com! AutoIndent silent norm gg=G`.
+com! LspCapabilities lua print(vim.inspect(vim.lsp.buf_get_clients()[1].server_capabilities))
 
 aug A
   au!
@@ -134,7 +136,7 @@ nno <silent> <F3>      <Cmd>only<CR>
 nno <silent> <F5>      <Cmd>Make<CR>
 nno <silent> <F6>      <Cmd>GolangCI<CR>
 nno <silent> <F6>%     <Cmd>GolangCI expand('%')<CR>
-nno <silent> <F8>      <Cmd>silent Gdiff<CR>
+nno <silent> <F8>      <Cmd>Gdiff<CR>
 nno <silent> <C-Right> <Cmd>cnext<CR>
 nno <silent> <C-Left>  <Cmd>cprev<CR>
 nno <silent> <F12>     <Cmd>vs ~/.config/nvim/init.vim<CR>
