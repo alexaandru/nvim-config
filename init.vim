@@ -14,7 +14,7 @@ set clipboard+=unnamedplus
 set completeopt=menu,noselect,noinsert
 set diffopt+=algorithm:patience,indent-heuristic,vertical
 set expandtab
-set foldmethod=indent
+set foldmethod=indent foldlevelstart=1000
 set icon iconstring=nvim
 set ignorecase
 set inccommand=nosplit
@@ -71,42 +71,40 @@ endf
 
 func! GolangCI(...)
   let l:lst = systemlist('golangci-lint run --print-issued-lines=0 ./...')
-  if a:0 ==# 0 | cgete(l:lst) | return | endif
-  cgete(filter(l:lst, 'v:val =~ "^'.. a:1 ..'"'))
+  cgete a:0 ==# 0 ? l:lst : filter(l:lst, 'v:val =~ "^'.. a:1 ..'"')
 endf
 
-comm! -nargs=* T split | resize 10 | term <args>
-comm! Make silent make | redraw | echo "    make ✓"
-comm! -nargs=? GolangCI call GolangCI(<args>) | echo "    lint ✓"
-comm! Gdiff exe 'silent !git show HEAD^:% > /tmp/gdiff' | diffs /tmp/gdiff
-comm! Terrafmt exe 'silent !terraform fmt %' | e
-comm! RemoveTrailingSpace norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
-comm! RemoveTrailingBlankLines %s#\($\n\s*\)\+\%$##e
-comm! SaveAndClose w | bdel
-comm! LastWindow if &buftype ==# 'quickfix' && winbufnr(2) ==# -1 | q | endif
-comm! Scratchify setl nobl bt=nofile bh=delete noswapfile
-comm! Scratch <mods> new +Scratchify
-comm! AutoWinHeight silent exe max([min([line("$"), 12]), 1]) . "wincmd _"
-comm! AutoIndent silent norm gg=G`.
+com! -nargs=* T split | resize 10 | term <args>
+com! Make silent make | redraw | echo "    MAKE"
+com! -nargs=? GolangCI call GolangCI(<args>) | echo "    LINT"
+com! Gdiff exe 'silent !git show HEAD^:% > /tmp/gdiff' | diffs /tmp/gdiff
+com! Terrafmt exe 'silent !terraform fmt %' | e
+com! RemoveTrailingSpace norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
+com! RemoveTrailingBlankLines %s#\($\n\s*\)\+\%$##e
+com! SaveAndClose w | bdel
+com! LastWindow if &buftype ==# 'quickfix' && winbufnr(2) ==# -1 | q | endif
+com! Scratchify setl nobl bt=nofile bh=delete noswapfile
+com! Scratch <mods> new +Scratchify
+com! AutoWinHeight silent exe max([min([line("$"), 12]), 1]) . "wincmd _"
+com! AutoIndent silent norm gg=G`.
 
-augroup A
+aug A
   au!
-augroup END
+aug end
 
 au A BufEnter * LastWindow
 au A BufEnter * if &buftype == 'terminal' | startinsert | endif
 au A BufEnter * lua require'completion'.on_attach()
 au A BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
-au A BufWritePre *.go lua GoOrgImports(); vim.lsp.buf.formatting_sync()
-au A BufWritePre *.vim,*.lua AutoIndent
 au A BufWritePre * RemoveTrailingSpace
 au A BufWritePre * RemoveTrailingBlankLines
 au A TextYankPost * silent! lua require'vim.highlight'.on_yank()
+au A TermClose * q
+au A BufWritePre *.go lua GoOrgImports(); vim.lsp.buf.formatting_sync()
+au A BufWritePre *.vim,*.lua AutoIndent
 au A QuickFixCmdPost [^l]* nested cwindow
 au A QuickFixCmdPost    l* nested lwindow
-au A TermClose * q
 au A FileType qf AutoWinHeight
-au A FileType * norm zR
 au A FileType gitcommit,asciidoc,markdown setl spell
 au A FileType lua setl ts=2 sw=2 sts=2
 au A FileType vim setl ts=2 sw=2 sts=2
@@ -119,48 +117,41 @@ au A BufWritePost *.tf Terrafmt
 au A FileType go setl ts=4 sw=4 noexpandtab foldmethod=syntax
       \ makeprg=(go\ build\ ./...\ &&\ go\ vet\ ./...)
 
-" Buffer utils
-nnoremap gb                 :ls<CR>:b<Space>
-nnoremap db                 :%bd<bar>e#<CR>
-" Builtin LSP
-nnoremap <silent> gd        <cmd>lua vim.lsp.buf.declaration()<CR>
-nnoremap <silent> <c-]>     <cmd>lua vim.lsp.buf.definition()<CR>
-nnoremap <silent> <F1>      <cmd>lua vim.lsp.buf.hover()<CR>
-nnoremap <silent> gD        <cmd>lua vim.lsp.buf.implementation()<CR>
-nnoremap <silent> <c-k>     <cmd>lua vim.lsp.buf.signature_help()<CR>
-nnoremap <silent> 1gD       <cmd>lua vim.lsp.buf.type_definition()<CR>
-nnoremap <silent> gr        <cmd>lua vim.lsp.buf.references()<CR>
-nnoremap <silent> g0        <cmd>lua vim.lsp.buf.document_symbol()<CR>
-nnoremap <silent> gW        <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
-" Various
-nnoremap <silent> <C-n>     :let $VIM_DIR=expand('%:p:h')<CR>:T<CR>i<CR>cd "$VIM_DIR"<CR>clear<CR>
-nnoremap <silent> <F2>      :lua vim.lsp.buf.rename()<CR>
-nnoremap <silent> <F3>      :only<CR>
-nnoremap <silent> <F5>      :Make<CR>
-nnoremap <silent> <F6>      :GolangCI<CR>
-nnoremap <silent> <F6>%     :GolangCI expand('%')<CR>
-nnoremap <silent> <F8>      :silent Gdiff<CR>
-nnoremap <silent> <Space>   @=((foldclosed(line('.')) < 0) ? 'zC' : 'zO')<CR>
-nnoremap <silent> <C-Right> :cnext<CR>
-nnoremap <silent> <C-Left>  :cprev<CR>
-nnoremap <silent> <F12>     :vs ~/.config/nvim/init.vim<CR>
-nnoremap <silent> <F12>l    :vs ~/.config/nvim/init.lua<CR>
-nnoremap <silent> <Leader>w <cmd>SaveAndClose<CR>
-" Snippets
-nnoremap <silent>           \html :-1read ~/.local/share/nvim/snippets/skeleton.html<CR>3jwf>a
-" Easier windows resize
-nnoremap -                  <C-W>-
-nnoremap +                  <C-W>+
-nnoremap <                  <C-W>>
-nnoremap >                  <C-W><
-" Saner wildmenu navigation
-cnoremap <expr> <Up>        wildmenumode() ? "\<Left>"     : "\<Up>"
-cnoremap <expr> <Down>      wildmenumode() ? "\<Right>"    : "\<Down>"
-cnoremap <expr> <Left>      wildmenumode() ? "\<Up>"       : "\<Left>"
-cnoremap <expr> <Right>     wildmenumode() ? "\<BS>\<C-Z>" : "\<Right>"
-" Auto-pairs
-inoremap '                  ''<Left>
-inoremap (                  ()<Left>
-inoremap {                  {}<Left>
+nno gb                 <Cmd>ls<CR>:b<Space>
+nno db                 <Cmd>%bd<bar>e#<CR>
+nno <silent> gd        <Cmd>lua vim.lsp.buf.declaration()<CR>
+nno <silent> <c-]>     <Cmd>lua vim.lsp.buf.definition()<CR>
+nno <silent> <F1>      <Cmd>lua vim.lsp.buf.hover()<CR>
+nno <silent> gD        <Cmd>lua vim.lsp.buf.implementation()<CR>
+nno <silent> <c-k>     <Cmd>lua vim.lsp.buf.signature_help()<CR>
+nno <silent> 1gD       <Cmd>lua vim.lsp.buf.type_definition()<CR>
+nno <silent> gr        <Cmd>lua vim.lsp.buf.references()<CR>
+nno <silent> g0        <Cmd>lua vim.lsp.buf.document_symbol()<CR>
+nno <silent> gW        <Cmd>lua vim.lsp.buf.workspace_symbol()<CR>
+nno <silent> <F2>      <Cmd>lua vim.lsp.buf.rename()<CR>
+nno <silent> <C-n>     <Cmd>let $VIM_DIR=expand('%:p:h')<CR>:T<CR>i<CR>cd "$VIM_DIR"<CR>clear<CR>
+nno <silent> <F3>      <Cmd>only<CR>
+nno <silent> <F5>      <Cmd>Make<CR>
+nno <silent> <F6>      <Cmd>GolangCI<CR>
+nno <silent> <F6>%     <Cmd>GolangCI expand('%')<CR>
+nno <silent> <F8>      <Cmd>silent Gdiff<CR>
+nno <silent> <C-Right> <Cmd>cnext<CR>
+nno <silent> <C-Left>  <Cmd>cprev<CR>
+nno <silent> <F12>     <Cmd>vs ~/.config/nvim/init.vim<CR>
+nno <silent> <F12>l    <Cmd>vs ~/.config/nvim/init.lua<CR>
+nno <silent> <Leader>w <Cmd>SaveAndClose<CR>
+nno <silent> <Space>   @=((foldclosed(line('.')) < 0) ? 'zC' : 'zO')<CR>
+nno <silent>           \html :-1read ~/.local/share/nvim/snippets/skeleton.html<CR>3jwf>a
+nno -                  <C-W>-
+nno +                  <C-W>+
+nno <                  <C-W>>
+nno >                  <C-W><
+cno <expr>   <Up>      wildmenumode() ? "\<Left>"     : "\<Up>"
+cno <expr>   <Down>    wildmenumode() ? "\<Right>"    : "\<Down>"
+cno <expr>   <Left>    wildmenumode() ? "\<Up>"       : "\<Left>"
+cno <expr>   <Right>   wildmenumode() ? "\<BS>\<C-Z>" : "\<Right>"
+ino '                  ''<Left>
+ino (                  ()<Left>
+ino {                  {}<Left>
 
 exe 'source' stdpath('config') . '/misc.vim'
