@@ -6,12 +6,13 @@ Plug 'lifepillar/vim-gruvbox8'
 Plug 'hashivim/vim-terraform'
 Plug 'norcalli/nvim-colorizer.lua'
 Plug 'nvim-lua/completion-nvim'
+Plug 'AndrewRadev/tagalong.vim'
 call plug#end()
 
 exe 'luafile' stdpath('config') . '/init.lua'
 
 set clipboard+=unnamedplus
-set completeopt=menuone,noselect,noinsert
+set complete+=kspell completeopt=menuone,noselect,noinsert
 set diffopt+=algorithm:patience,indent-heuristic,vertical
 set expandtab
 set foldmethod=indent foldlevelstart=1000
@@ -57,6 +58,7 @@ let g:netrw_hide = 1
 let g:netrw_winsize = 15
 let g:gruvbox_filetype_hi_groups = 1
 let g:gruvbox_transp_bg = 1
+let g:tagalong_additional_filetypes = ['vue']
 
 colorscheme gruvbox8
 
@@ -70,14 +72,23 @@ func! Modified(modified, not_modified)
   if &modified | return a:modified | else | return a:not_modified | endif
 endf
 
+" 1st param represents scope (pass . for all (default) and % for current buffer);
+" 2nd param represents one or more linters to be run, comma (no space) separated.
 func! GolangCI(...)
-  let l:lst = systemlist('golangci-lint run --print-issued-lines=0 ./...')
-  cgete a:0 ==# 0 ? l:lst : filter(l:lst, 'v:val =~ "^'.. a:1 ..'"')
+  let l:scope = get(a:, 1, '.')
+  if l:scope ==# '%' | let l:scope = expand('%') | endif
+
+  let l:only = get(a:, 2, '')
+  if l:only !=# '' | let l:only = '--exclude-use-default=0 --no-config --disable-all --enable ' .. l:only | endif
+
+  let l:lst = systemlist('golangci-lint run --print-issued-lines=0 '.. l:only ..' ./...')
+
+  cgete a:0 ==# 0 ? l:lst : filter(l:lst, 'v:val =~ "^'.. l:scope ..'"')
 endf
 
 com! -nargs=* T split | resize 10 | term <args>
-com! Make silent make | redraw | echo "    MAKE"
-com! -nargs=? GolangCI call GolangCI(<args>) | echo "    LINT"
+com! Make silent make | redraw | echo '    MAKE'
+com! -nargs=* -complete=file_in_path GolangCI call GolangCI(<f-args>) | echo '    LINT'
 com! Gdiff exe 'silent !git show HEAD^:% > /tmp/gdiff' | diffs /tmp/gdiff
 com! Terrafmt exe 'silent !terraform fmt %' | e
 com! RemoveTrailingSpace norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
@@ -86,9 +97,10 @@ com! SaveAndClose w | bdel
 com! LastWindow if &buftype ==# 'quickfix' && winbufnr(2) ==# -1 | q | endif
 com! Scratchify setl nobl bt=nofile bh=delete noswapfile
 com! Scratch <mods> new +Scratchify
-com! AutoWinHeight silent exe max([min([line("$"), 12]), 1]) . "wincmd _"
+com! AutoWinHeight silent exe max([min([line('$'), 12]), 1]) . 'wincmd _'
 com! AutoIndent silent norm gg=G`.
 com! LspCapabilities lua print(vim.inspect(vim.lsp.buf_get_clients()[1].server_capabilities))
+com! -nargs=1 GitGrep vim /<args>/jg `git ls-files`
 
 aug A
   au!
@@ -97,7 +109,7 @@ aug end
 au A BufEnter * LastWindow
 au A BufEnter * if &buftype == 'terminal' | startinsert | endif
 au A BufEnter * lua require'completion'.on_attach()
-au A BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+au A BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "norm! g'\"" | endif
 au A BufWritePre * RemoveTrailingSpace
 au A BufWritePre * RemoveTrailingBlankLines
 au A TextYankPost * silent! lua require'vim.highlight'.on_yank()
@@ -107,7 +119,7 @@ au A BufWritePre *.vim,*.lua AutoIndent
 au A QuickFixCmdPost [^l]* nested cwindow
 au A QuickFixCmdPost    l* nested lwindow
 au A FileType qf AutoWinHeight
-au A FileType gitcommit,asciidoc,markdown setl spell
+au A FileType gitcommit,asciidoc,markdown setl spell spelllang=en_us
 au A FileType lua setl ts=2 sw=2 sts=2
 au A FileType vim setl ts=2 sw=2 sts=2
       \ makeprg=vint\ --enable-neovim\ %
@@ -135,7 +147,7 @@ nno <silent> <C-n>     <Cmd>let $VIM_DIR=expand('%:p:h')<CR>:T<CR>i<CR>cd "$VIM_
 nno <silent> <F3>      <Cmd>only<CR>
 nno <silent> <F5>      <Cmd>Make<CR>
 nno <silent> <F6>      <Cmd>GolangCI<CR>
-nno <silent> <F6>%     <Cmd>GolangCI expand('%')<CR>
+nno <silent> <F6>%     <Cmd>GolangCI %<CR>
 nno <silent> <F8>      <Cmd>Gdiff<CR>
 nno <silent> <C-Right> <Cmd>cnext<CR>
 nno <silent> <C-Left>  <Cmd>cprev<CR>
@@ -152,6 +164,7 @@ cno <expr>   <Up>      wildmenumode() ? "\<Left>"     : "\<Up>"
 cno <expr>   <Down>    wildmenumode() ? "\<Right>"    : "\<Down>"
 cno <expr>   <Left>    wildmenumode() ? "\<Up>"       : "\<Left>"
 cno <expr>   <Right>   wildmenumode() ? "\<BS>\<C-Z>" : "\<Right>"
+ino <silent> <F2>      <C-x>s
 ino '                  ''<Left>
 ino (                  ()<Left>
 ino {                  {}<Left>
