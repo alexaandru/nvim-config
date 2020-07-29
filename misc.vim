@@ -1,19 +1,16 @@
 " Nothing interesting here, these are very custom/specific
 " functions/mappings that I use for some personal projects.
 
-func! CurImg()
-  set paste
+func! Img(...)
+  if !exists('b:img') | let b:img = 0 | endif
 
-  if exists('b:img') | let b:img = b:img + 1
-  else | let b:img = 1
-  endif
+  let l:count = get(a:, 1, 1)
+  let l:stop = b:img + l:count
 
-  exe 'norm o<img src="/images' . strpart(@%, 7, len(@%) - 7 - 4) . '_' . b:img . '.jpg">'
-endf
-
-func! CurDate()
-  set paste
-  exe 'norm odata:  ' . strftime('%F %T %z')
+  while b:img < l:stop
+    let b:img += 1
+    exe 'norm o<img src="/images' . strpart(@%, 7, len(@%) - 7 - 4) . '_' . b:img . '.jpg">'
+  endw
 endf
 
 func! CSVH(colnr)
@@ -30,12 +27,14 @@ func! CSVH(colnr)
 endf
 
 
-com! RO setl spell spelllang=ro
-com! -nargs=1 Csv :call CSVH(<args>)
+com! -count=1 Img call Img(<count>)
+com! Date         exe 'norm odata:  ' . strftime('%F %T %z')
+com! RO           setl spell spelllang=ro
+com! -nargs=1 Csv call CSVH(<args>)
 
 au! A BufEnter */articole/**/*.txt setl ft=markdown spell spelllang=ro
 
-nno <silent> <leader>i :call CurImg()<CR>
-nno <silent> <leader>d :call CurDate()<CR>
-nno <silent> <C-\>     <cmd>RemoveTrailingSpace<CR><bar>:w<CR><bar>:let $VIM_DIR=expand('%:p:h')<CR>:T<CR>i<CR>cd "$VIM_DIR" && reimg && jsame && mv * .. && exit<CR><bar>:q
+nno <silent> <leader>i <Cmd>Img<CR>
+nno <silent> <leader>d <Cmd>Date<CR>
+nno <silent> <C-\>     <Cmd>RemoveTrailingSpace<CR><bar><Cmd>w<CR><bar><Cmd>let $VIM_DIR=expand('%:p:h')<CR><Cmd>Term<CR>i<CR>cd "$VIM_DIR" && reimg && jsame && mv * .. && exit<CR><bar><Cmd>q
 nno <silent> <F12>m    <Cmd>vs ~/.config/nvim/misc.vim<CR>

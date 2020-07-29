@@ -16,6 +16,7 @@ set complete+=kspell completeopt=menuone,noselect,noinsert
 set diffopt+=algorithm:patience,indent-heuristic,vertical
 set expandtab
 set foldmethod=indent foldlevelstart=1000
+set grepprg=internal
 set icon iconstring=nvim
 set ignorecase
 set inccommand=nosplit
@@ -72,8 +73,6 @@ func! Modified(modified, not_modified)
   if &modified | return a:modified | else | return a:not_modified | endif
 endf
 
-" 1st param represents scope (pass . for all (default) and % for current buffer);
-" 2nd param represents one or more linters to be run, comma (no space) separated.
 func! GolangCI(...)
   let l:scope = get(a:, 1, '.')
   if l:scope ==# '%' | let l:scope = expand('%') | endif
@@ -82,11 +81,10 @@ func! GolangCI(...)
   if l:only !=# '' | let l:only = '--exclude-use-default=0 --no-config --disable-all --enable ' .. l:only | endif
 
   let l:lst = systemlist('golangci-lint run --print-issued-lines=0 '.. l:only ..' ./...')
-
-  cgete a:0 ==# 0 ? l:lst : filter(l:lst, 'v:val =~ "^'.. l:scope ..'"')
+  cgete filter(l:lst, 'v:val =~ "^'.. l:scope ..'"')
 endf
 
-com! -nargs=* T split | resize 10 | term <args>
+com! -nargs=* Term split | resize 12 | term <args>
 com! Make silent make | redraw | echo '    MAKE'
 com! -nargs=* -complete=file_in_path GolangCI call GolangCI(<f-args>) | echo '    LINT'
 com! Gdiff exe 'silent !git show HEAD^:% > /tmp/gdiff' | diffs /tmp/gdiff
@@ -100,36 +98,40 @@ com! Scratch <mods> new +Scratchify
 com! AutoWinHeight silent exe max([min([line('$'), 12]), 1]) . 'wincmd _'
 com! AutoIndent silent norm gg=G`.
 com! LspCapabilities lua print(vim.inspect(vim.lsp.buf_get_clients()[1].server_capabilities))
-com! -nargs=1 GitGrep vim /<args>/jg `git ls-files`
+com! -nargs=1 Grep grep /<args>/jg `git ls-files`
 
 aug A
   au!
 aug end
 
 au A BufEnter * LastWindow
-au A BufEnter * if &buftype == 'terminal' | startinsert | endif
+au A BufEnter * if &buftype == 'terminal' | star | endif
 au A BufEnter * lua require'completion'.on_attach()
 au A BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "norm! g'\"" | endif
 au A BufWritePre * RemoveTrailingSpace
 au A BufWritePre * RemoveTrailingBlankLines
 au A TextYankPost * silent! lua require'vim.highlight'.on_yank()
 au A TermClose * q
+au A BufRead,BufNewFile go.mod set ft=gomod
+au A BufWritePost,FileWritePost go.mod silent! make | e
 au A BufWritePre *.go lua GoOrgImports(); vim.lsp.buf.formatting_sync()
 au A BufWritePre *.vim,*.lua AutoIndent
-au A QuickFixCmdPost [^l]* nested cwindow
-au A QuickFixCmdPost    l* nested lwindow
+au A QuickFixCmdPost [^l]* nested cw
+au A QuickFixCmdPost    l* nested lw
 au A FileType qf AutoWinHeight
 au A FileType gitcommit,asciidoc,markdown setl spell spelllang=en_us
 au A FileType lua setl ts=2 sw=2 sts=2
 au A FileType vim setl ts=2 sw=2 sts=2
       \ makeprg=vint\ --enable-neovim\ %
-au A BufWritePost init.vim source % " automatically reload when changing
+au A BufWritePost init.vim,init.lua,misc.vim so $MYVIMRC
 au A FileType javascript setl makeprg=npm\ run\ lint
 au A FileType terraform setl
       \ makeprg=\(terraform\ validate\ -no-color\ &&\ for\ i\ in\ $\(find\ -iname\ '*.tf'\\\|xargs\ dirname\\\|sort\ -u\\\|paste\ -s\);\ do\ tflint\ $i;\ done\)
 au A BufWritePost *.tf Terrafmt
 au A FileType go setl ts=4 sw=4 noexpandtab foldmethod=syntax
       \ makeprg=(go\ build\ ./...\ &&\ go\ vet\ ./...)
+au A FileType gomod setl
+      \ makeprg=go\ mod\ tidy
 
 nno gb                 <Cmd>ls<CR>:b<Space>
 nno db                 <Cmd>%bd<bar>e#<CR>
@@ -143,7 +145,7 @@ nno <silent> gr        <Cmd>lua vim.lsp.buf.references()<CR>
 nno <silent> g0        <Cmd>lua vim.lsp.buf.document_symbol()<CR>
 nno <silent> gW        <Cmd>lua vim.lsp.buf.workspace_symbol()<CR>
 nno <silent> <F2>      <Cmd>lua vim.lsp.buf.rename()<CR>
-nno <silent> <C-n>     <Cmd>let $VIM_DIR=expand('%:p:h')<CR>:T<CR>i<CR>cd "$VIM_DIR"<CR>clear<CR>
+nno <silent> <C-n>     <Cmd>let $VIM_DIR=expand('%:p:h')<CR><Cmd>Term<CR>i<CR>cd "$VIM_DIR"<CR>clear<CR>
 nno <silent> <F3>      <Cmd>only<CR>
 nno <silent> <F5>      <Cmd>Make<CR>
 nno <silent> <F6>      <Cmd>GolangCI<CR>
