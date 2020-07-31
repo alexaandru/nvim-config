@@ -17,6 +17,11 @@ require'nvim_lsp'.vimls.setup{}
 require'nvim_lsp'.vuels.setup{}
 require'nvim_lsp'.yamlls.setup{}
 
+function LspCapabilities()
+  local _, v = next(vim.lsp.buf_get_clients())
+  print(vim.inspect(v.server_capabilities))
+end
+
 -- Synchronously organise (Go) imports,
 -- courtesy of https://github.com/neovim/nvim-lsp/issues/115
 function GoOrgImports(timeout_ms)

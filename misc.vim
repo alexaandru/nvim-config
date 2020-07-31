@@ -1,3 +1,5 @@
+scriptencoding utf-8
+
 " Nothing interesting here, these are very custom/specific
 " functions/mappings that I use for some personal projects.
 
@@ -13,12 +15,34 @@ func! Img(...)
   endw
 endf
 
-func! CSVH(colnr)
+func! AutoImg()
+  if search('<img') > 0 | echom 'Images are already present' | return | endif
+
+  let l:jpgs = systemlist('ls ' . expand('%:h') . '/*.jpg')
+  if len(l:jpgs) ==# 0 || match(l:jpgs[0], 'No such file') > -1
+    echom 'There are no images'
+    return
+  endif
+
+  echom l:jpgs
+
+  " TODO:
+  " 1✓ see if there are images in file, if yes, abort
+  " 2. call reimg, respecging 1,2,.. .jpg sorting order
+  " 3. call jsame (call imagemagik directly)
+  " 4. trim spaces around/inside header if needed
+  " 5. insert top image
+  " 6. insert rest of images at the bottom
+  " 7. save
+  " 8. move all files to parent folder
+  " 9. remove current folder & close
+endf
+
+func! CsvCol(colnr)
   if a:colnr > 1
     let n = a:colnr - 1
     exe 'match Keyword /^\([^,|]*[,|]\)\{'.n.'}\zs[^,|]*/'
-    "exe 'match Keyword /^\([^,]*,\)\{'.n.'}\zs[^,]*/'
-    exe 'normal! 0'.n.'f,'
+    exe 'norm! 0'.n.'f,'
   elseif a:colnr == 1
     match Keyword /^[^,]*/ | norm! 0
   else
@@ -26,13 +50,18 @@ func! CSVH(colnr)
   endif
 endf
 
+com! -count=1 Img    call Img(<count>)
+com! Date            exe 'norm odata:  ' . strftime('%F %T %z')
+com! RO              setl spell spelllang=ro
+com! -nargs=1 CsvCol call CsvCol(<args>)
+com! ArticoleNoi     silent! n `git ls-files -mo content/articole`
+com! AutoImg         silent! call AutoImg()
+com! WordWrap        setl formatoptions+=w tw=200 | norm gggqG
 
-com! -count=1 Img call Img(<count>)
-com! Date         exe 'norm odata:  ' . strftime('%F %T %z')
-com! RO           setl spell spelllang=ro
-com! -nargs=1 Csv call CSVH(<args>)
-
-au! A BufEnter */articole/**/*.txt setl ft=markdown spell spelllang=ro
+aug Misc | au!
+  au BufEnter */articole/**/*.txt setl ft=markdown spell spelllang=ro
+  au BufWritePre */articole/**/*.txt WordWrap
+aug END
 
 nno <silent> <leader>i <Cmd>Img<CR>
 nno <silent> <leader>d <Cmd>Date<CR>
