@@ -6,7 +6,7 @@ Plug 'lifepillar/vim-gruvbox8'
 Plug 'hashivim/vim-terraform'
 Plug 'norcalli/nvim-colorizer.lua'
 Plug 'nvim-lua/completion-nvim'
-Plug 'AndrewRadev/tagalong.vim'
+"Plug 'AndrewRadev/tagalong.vim'
 call plug#end()
 
 "packadd cfilter
@@ -62,13 +62,14 @@ let g:netrw_winsize = 15
 let g:gruvbox_filetype_hi_groups = 1
 let g:gruvbox_transp_bg = 1
 let g:tagalong_additional_filetypes = ['vue']
-let g:makeprg = {
+let s:makeprg = {
       \ 'go': '(go build ./... && go vet ./...)',
       \ 'gomod': 'go mod tidy',
       \ 'gosum': 'go mod tidy',
       \ 'vim': 'vint --enable-neovim %',
       \ 'javascript': 'npm run lint',
-      \ 'terraform': '(terraform validate -no-color && for i in $(find -iname ''*.tf''\|xargs dirname\|sort -u\|paste -s); do tflint $i; done)'
+      \ 'terraform': '(terraform validate -no-color && for i in $(find -iname ''*.tf''\|xargs dirname\|sort -u\|paste -s); do tflint $i; done)',
+      \ 'json': 'jsonlint %',
       \ }
 
 colorscheme gruvbox8
@@ -94,8 +95,13 @@ func! GolangCI(...)
   cgete filter(l:lst, 'v:val =~ "^' . l:scope . '"')
 endf
 
+func! ListSnippets(A, L, P)
+  return systemlist('ls ' . stdpath('data') . '/snippets/')
+endf
+
 com! -nargs=* Term split | resize 12 | term <args>
 com! Make silent make | redraw | echo '    MAKE'
+com! -nargs=1 Grep silent grep <args>
 com! -nargs=* -complete=file_in_path GolangCI call GolangCI(<f-args>) | echo '    LINT'
 com! Gdiff exe 'silent !git show HEAD^:% > /tmp/gdiff' | diffs /tmp/gdiff
 com! Terrafmt exe 'silent !terraform fmt %' | e
@@ -109,16 +115,17 @@ com! Scratch <mods> new +Scratchify
 com! AutoWinHeight silent exe max([min([line('$'), 12]), 1]) . 'wincmd _'
 com! AutoIndent silent norm gg=G`.
 com! LspCapabilities lua LspCapabilities()
-com! -nargs=1 Grep silent grep <args>
 com! -count=0 CC silent setl cc=<count>
+com! -nargs=1 -complete=customlist,ListSnippets Snippet silent exe '-1read ' . stdpath('data') . '/snippets/' . <q-args>
+com! -nargs=1 -complete=customlist,ListSnippets OpenSnippet silent exe 'new ' . stdpath('data') . '/snippets/' . <q-args>
 
 aug Setup | au!
   au BufEnter * LastWindow
+  au BufEnter * let &makeprg = get(s:makeprg, &filetype, 'make')
   au BufEnter * if &buftype == 'terminal' | star | endif
   au BufEnter * lua require'completion'.on_attach()
   au BufReadPost * JumpToLastLocation
-  au BufWritePre * RemoveTrailingSpace
-  au BufWritePre * RemoveTrailingBlankLines
+  au BufWritePre * exe 'RemoveTrailingSpace' | RemoveTrailingBlankLines
   au TextYankPost * silent! lua require'vim.highlight'.on_yank()
   au TermClose * q
   au FileType go.mod set ft=gomod
@@ -134,7 +141,6 @@ aug Setup | au!
   au BufWritePost init.vim,init.lua,misc.vim so $MYVIMRC
   au BufWritePost *.tf Terrafmt
   au FileType go setl ts=4 sw=4 noexpandtab foldmethod=syntax
-  au FileType * let &makeprg = get(g:makeprg, &filetype, 'make')
 aug END
 
 nno          gb        <Cmd>ls<CR>:b<Space>
@@ -162,7 +168,7 @@ nno <silent> <F12>     <Cmd>vs ~/.config/nvim/init.vim<CR>
 nno <silent> <F12>l    <Cmd>vs ~/.config/nvim/init.lua<CR>
 nno <silent> <Leader>w <Cmd>SaveAndClose<CR>
 nno <silent> <Space>   @=((foldclosed(line('.')) < 0) ? 'zC' : 'zO')<CR>
-nno <silent> \html     <Cmd>-1read ~/.local/share/nvim/snippets/skeleton.html<CR>o
+nno <silent> \html     <Cmd>Snippet skeleton.html<CR>o
 nno          -         <C-W>-
 nno          +         <C-W>+
 nno          <         <C-W>>

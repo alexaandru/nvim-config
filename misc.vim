@@ -51,6 +51,7 @@ func! CsvCol(colnr)
 endf
 
 com! -count=1 Img    call Img(<count>)
+com! -count=1 AllImg exe 'Img' | exe 'norm Go' | call Img(<count>-1)
 com! Date            exe 'norm odata:  ' . strftime('%F %T %z')
 com! RO              setl spell spelllang=ro
 com! -nargs=1 CsvCol call CsvCol(<args>)
@@ -60,10 +61,10 @@ com! WordWrap        setl formatoptions+=w tw=200 | norm gggqG
 
 aug Misc | au!
   au BufEnter */articole/**/*.txt setl ft=markdown spell spelllang=ro
-  au BufWritePre */articole/**/*.txt WordWrap
+  au BufWritePre */articole/**/*.txt,*/Downloads/**/*.txt WordWrap
 aug END
 
 nno <silent> <leader>i <Cmd>Img<CR>
 nno <silent> <leader>d <Cmd>Date<CR>
-nno <silent> <C-\>     <Cmd>RemoveTrailingSpace<CR><bar><Cmd>w<CR><bar><Cmd>let $VIM_DIR=expand('%:p:h')<CR><Cmd>Term<CR>i<CR>cd "$VIM_DIR" && reimg && jsame && mv * .. && exit<CR><bar><Cmd>q
+nno <silent> <C-\>     <Cmd>WordWrap<CR><bar><Cmd>w<CR><bar><Cmd>let $VIM_DIR=expand('%:p:h')<CR><Cmd>Term<CR>i<CR>cd "$VIM_DIR" && reimg && jsame && mv * .. && exit<CR><bar><Cmd>q
 nno <silent> <F12>m    <Cmd>vs ~/.config/nvim/misc.vim<CR>
