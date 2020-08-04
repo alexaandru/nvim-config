@@ -17,6 +17,13 @@ require'nvim_lsp'.vimls.setup{}
 require'nvim_lsp'.vuels.setup{}
 require'nvim_lsp'.yamlls.setup{}
 
+require'nvim-treesitter.configs'.setup {
+  highlight = {enable = true},
+  incremental_selection = {enable = true},
+  textobjects = {enable = true},
+  ensure_installed = {'go', 'json', 'python', 'lua'}
+}
+
 function LspCapabilities()
   local _, v = next(vim.lsp.buf_get_clients())
   print(vim.inspect(v.server_capabilities))

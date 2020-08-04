@@ -38,29 +38,21 @@ func! AutoImg()
   " 9. remove current folder & close
 endf
 
-func! CsvCol(colnr)
-  if a:colnr > 1
-    let n = a:colnr - 1
-    exe 'match Keyword /^\([^,|]*[,|]\)\{'.n.'}\zs[^,|]*/'
-    exe 'norm! 0'.n.'f,'
-  elseif a:colnr == 1
-    match Keyword /^[^,]*/ | norm! 0
-  else
-    match
-  endif
+func! SynStack()
+  if !exists("*synstack") | return | endif
+  echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
 endf
 
 com! -count=1 Img    call Img(<count>)
 com! -count=1 AllImg exe 'Img' | exe 'norm Go' | call Img(<count>-1)
 com! Date            exe 'norm odata:  ' . strftime('%F %T %z')
 com! RO              setl spell spelllang=ro
-com! -nargs=1 CsvCol call CsvCol(<args>)
 com! ArticoleNoi     silent! n `git ls-files -mo content/articole`
 com! AutoImg         silent! call AutoImg()
 com! WordWrap        setl formatoptions+=w tw=200 | norm gggqG
 
 aug Misc | au!
-  au BufEnter */articole/**/*.txt setl ft=markdown spell spelllang=ro
+  au BufEnter */articole/**/*.txt,*/Downloads/**/*.txt setl ft=markdown spell spelllang=ro
   au BufWritePre */articole/**/*.txt,*/Downloads/**/*.txt WordWrap
 aug END
 
@@ -68,3 +60,4 @@ nno <silent> <leader>i <Cmd>Img<CR>
 nno <silent> <leader>d <Cmd>Date<CR>
 nno <silent> <C-\>     <Cmd>WordWrap<CR><bar><Cmd>w<CR><bar><Cmd>let $VIM_DIR=expand('%:p:h')<CR><Cmd>Term<CR>i<CR>cd "$VIM_DIR" && reimg && jsame && mv * .. && exit<CR><bar><Cmd>q
 nno <silent> <F12>m    <Cmd>vs ~/.config/nvim/misc.vim<CR>
+nno <silent> <leader>h <Cmd>call SynStack()<CR>
