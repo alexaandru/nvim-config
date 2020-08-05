@@ -1,5 +1,10 @@
 scriptencoding utf-8
 
+" Bare bones snippets functionality.
+"
+" You can define new Snippets with `:OpenSnippet foo.txt` and then use them
+" with `:Snippet foo<tab>` (or use a key mapping, etc. etc.).
+
 func! ListSnippets(A, L, P)
   return systemlist('ls ' . stdpath('data') . '/snippets/')
 endf

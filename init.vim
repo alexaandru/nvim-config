@@ -33,7 +33,7 @@ set smartcase smartindent
 set splitbelow splitright
 set tags=
 set termguicolors
-set title titlestring=\{\ %n\ \}\ %<%f%=%{Modified('+','')}\ \|\ %{nvim_treesitter#statusline(100)}
+set title titlestring=\{\ %n\ \}\ %<%f%=%M
 set wildcharm=<C-Z>
 set wildignore+=*/.git/*,*/node_modules/*,*.cache,*.dat,*.idx,*.csv,*.tsv
 
@@ -56,7 +56,6 @@ let g:netrw_hide = 1
 let g:netrw_winsize = 15
 let g:gruvbox_filetype_hi_groups = 1
 let g:gruvbox_transp_bg = 1
-let g:tagalong_additional_filetypes = ['vue']
 let s:makeprg = {
       \ 'go': '(go build ./... && go vet ./...)',
       \ 'gomod': 'go mod tidy',
@@ -76,17 +75,9 @@ hi LspDiagnosticsHint        guifg=Green
 hi Folded                    guibg=NONE
 hi htmlBold                  guibg=NONE
 
-func! Modified(modified, not_modified)
-  if &modified | return a:modified | else | return a:not_modified | endif
-endf
-
 func! GolangCI(...)
-  let l:scope = get(a:, 1, '.')
-  if l:scope ==# '%' | let l:scope = expand('%') | endif
-
-  let l:only = get(a:, 2, '')
-  if l:only !=# '' | let l:only = '--exclude-use-default=0 --no-config --disable-all --enable ' . l:only | endif
-
+  let l:scope = get(a:, 1, '.') | if l:scope ==# '%' | let l:scope = expand('%') | endif
+  let l:only = get(a:, 2, '') | if l:only !=# '' | let l:only = '--exclude-use-default=0 --no-config --disable-all --enable ' . l:only | endif
   let l:lst = systemlist('golangci-lint run --print-issued-lines=0 ' .  l:only . ' ./...')
   cgete filter(l:lst, 'v:val =~ "^' . l:scope . '"')
 endf
@@ -101,13 +92,12 @@ com! JumpToLastLocation if line("'\"") > 0 && line("'\"") <= line("$") | exe "no
 com! RemoveTrailingSpace norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
 com! RemoveTrailingBlankLines %s#\($\n\s*\)\+\%$##e
 com! SaveAndClose w | bdel
-com! LastWindow if &buftype ==# 'quickfix' && winbufnr(2) ==# -1 | q | endif
+com! LastWindow if (&buftype ==# 'quickfix' || &filetype ==# 'netrw') && winbufnr(2) ==# -1 | q | endif
 com! Scratchify setl nobl bt=nofile bh=delete noswf
 com! Scratch <mods> new +Scratchify
 com! AutoWinHeight silent exe max([min([line('$'), 12]), 1]) . 'wincmd _'
 com! AutoIndent silent norm gg=G`.
 com! LspCapabilities lua LspCapabilities()
-com! -count=0 CC silent setl cc=<count>
 
 aug Setup | au!
   au BufEnter * LastWindow
@@ -130,11 +120,11 @@ aug Setup | au!
   au FileType lua,vim setl ts=2 sw=2 sts=2
   au BufWritePost init.vim,init.lua,misc.vim so $MYVIMRC
   au BufWritePost *.tf Terrafmt
-  au FileType go setl ts=4 sw=4 noet fdm=expr foldexpr=nvim_treesitter#foldexpr()
+  au FileType go setl ts=4 sw=4 noet fdm=expr fde=nvim_treesitter#foldexpr()
 aug END
 
-nno          gb        <Cmd>ls<CR>:b<Space>
-nno          db        <Cmd>%bd<bar>e#<CR>
+nno <silent> gb        <Cmd>ls<CR>:b<Space>
+nno <silent> db        <Cmd>%bd<bar>e#<CR>
 nno <silent> gd        <Cmd>lua vim.lsp.buf.declaration()<CR>
 nno <silent> <c-]>     <Cmd>lua vim.lsp.buf.definition()<CR>
 nno <silent> <F1>      <Cmd>lua vim.lsp.buf.hover()<CR>
@@ -153,15 +143,10 @@ nno <silent> <F6>%     <Cmd>GolangCI %<CR>
 nno <silent> <F8>      <Cmd>Gdiff<CR>
 nno <silent> <C-Right> <Cmd>cnext<CR>
 nno <silent> <C-Left>  <Cmd>cprev<CR>
-nno <silent> <F11>     <Cmd>exe 'CC'..col('.')<CR>
 nno <silent> <F12>     <Cmd>vs ~/.config/nvim/init.vim<CR>
 nno <silent> <F12>l    <Cmd>vs ~/.config/nvim/init.lua<CR>
 nno <silent> <Leader>w <Cmd>SaveAndClose<CR>
 nno <silent> <Space>   @=((foldclosed(line('.')) < 0) ? 'zC' : 'zO')<CR>
-nno          -         <C-W>-
-nno          +         <C-W>+
-nno          <         <C-W>>
-nno          >         <C-W><
 cno <expr>   <Up>      wildmenumode() ? "\<Left>"     : "\<Up>"
 cno <expr>   <Down>    wildmenumode() ? "\<Right>"    : "\<Down>"
 cno <expr>   <Left>    wildmenumode() ? "\<Up>"       : "\<Left>"
@@ -169,6 +154,7 @@ cno <expr>   <Right>   wildmenumode() ? "\<BS>\<C-Z>" : "\<Right>"
 ino <silent> <F2>      <C-x>s
 ino          '         ''<Left>
 ino          (         ()<Left>
+ino          [         []<Left>
 ino          {         {}<Left>
 
 for i in systemlist('ls ' . stdpath('config') . '/*.vim|grep -v init.vim') | exe 'so ' . i | endfor

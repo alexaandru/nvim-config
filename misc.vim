@@ -1,7 +1,7 @@
 scriptencoding utf-8
 
-" Nothing interesting here, these are very custom/specific
-" functions/mappings that I use for some personal projects.
+" Misc, experimental, WIP stuff goes in here.
+" You probably don't want to copy this one :-)
 
 func! Img(...)
   if !exists('b:img') | let b:img = 0 | endif
@@ -50,6 +50,7 @@ com! RO              setl spell spelllang=ro
 com! ArticoleNoi     silent! n `git ls-files -mo content/articole`
 com! AutoImg         silent! call AutoImg()
 com! WordWrap        setl formatoptions+=w tw=200 | norm gggqG
+com! -count=0 CC silent setl cc=<count>
 
 aug Misc | au!
   au BufEnter */articole/**/*.txt,*/Downloads/**/*.txt setl ft=markdown spell spelllang=ro
@@ -59,5 +60,6 @@ aug END
 nno <silent> <leader>i <Cmd>Img<CR>
 nno <silent> <leader>d <Cmd>Date<CR>
 nno <silent> <C-\>     <Cmd>WordWrap<CR><bar><Cmd>w<CR><bar><Cmd>let $VIM_DIR=expand('%:p:h')<CR><Cmd>Term<CR>i<CR>cd "$VIM_DIR" && reimg && jsame && mv * .. && exit<CR><bar><Cmd>q
+nno <silent> <F11>     <Cmd>exe 'CC'..col('.')<CR>
 nno <silent> <F12>m    <Cmd>vs ~/.config/nvim/misc.vim<CR>
 nno <silent> <leader>h <Cmd>call SynStack()<CR>

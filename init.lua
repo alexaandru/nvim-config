@@ -17,11 +17,9 @@ require'nvim_lsp'.vimls.setup{}
 require'nvim_lsp'.vuels.setup{}
 require'nvim_lsp'.yamlls.setup{}
 
-require'nvim-treesitter.configs'.setup {
+require'nvim-treesitter.configs'.setup{
   highlight = {enable = true},
-  incremental_selection = {enable = true},
-  textobjects = {enable = true},
-  ensure_installed = {'go', 'json', 'python', 'lua'}
+  ensure_installed = {'go', 'json', 'lua', 'html', 'css', 'markdown', 'vue', 'python'}
 }
 
 function LspCapabilities()
@@ -29,8 +27,8 @@ function LspCapabilities()
   print(vim.inspect(v.server_capabilities))
 end
 
--- Synchronously organise (Go) imports,
--- courtesy of https://github.com/neovim/nvim-lsp/issues/115
+-- Synchronously organise (Go) imports, courtesy of
+-- https://github.com/neovim/nvim-lsp/issues/115#issuecomment-656372575
 function GoOrgImports(timeout_ms)
   timeout_ms = timeout_ms or 1000
 
