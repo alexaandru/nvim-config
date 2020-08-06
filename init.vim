@@ -83,21 +83,23 @@ func! GolangCI(...)
 endf
 
 com! -nargs=* Term split | resize 12 | term <args>
-com! Make silent make | redraw | echo '    MAKE'
+com! Make silent make | redraw | echo '    ' . &makeprg
 com! -nargs=1 Grep silent grep <args>
-com! -nargs=* -complete=file_in_path GolangCI call GolangCI(<f-args>) | echo '    LINT'
+com! -nargs=* -complete=file_in_path GolangCI call GolangCI(<f-args>) | echo '    golangci-lint'
 com! Gdiff exe 'silent !git show HEAD^:% > /tmp/gdiff' | diffs /tmp/gdiff
 com! Terrafmt exe 'silent !terraform fmt %' | e
 com! JumpToLastLocation if line("'\"") > 0 && line("'\"") <= line("$") | exe "norm! g'\"" | endif
 com! RemoveTrailingSpace norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
 com! RemoveTrailingBlankLines %s#\($\n\s*\)\+\%$##e
 com! SaveAndClose w | bdel
-com! LastWindow if (&buftype ==# 'quickfix' || &filetype ==# 'netrw') && winbufnr(2) ==# -1 | q | endif
+com! LastWindow if (&buftype ==# 'quickfix' || &buftype ==# 'terminal' || &filetype ==# 'netrw')
+      \ && winbufnr(2) ==# -1 | q | endif
 com! Scratchify setl nobl bt=nofile bh=delete noswf
 com! Scratch <mods> new +Scratchify
 com! AutoWinHeight silent exe max([min([line('$'), 12]), 1]) . 'wincmd _'
 com! AutoIndent silent norm gg=G`.
 com! LspCapabilities lua LspCapabilities()
+com! -range JQ '<,'>!jq .
 
 aug Setup | au!
   au BufEnter * LastWindow
@@ -113,6 +115,7 @@ aug Setup | au!
   au BufWritePost,FileWritePost go.mod,go.sum silent! make | e
   au BufWritePre *.go lua GoOrgImports(); vim.lsp.buf.formatting_sync()
   au BufWritePre *.vim,*.lua AutoIndent
+  au BufWritePre *.json 1,$JQ
   au QuickFixCmdPost [^l]* nested cw
   au QuickFixCmdPost    l* nested lw
   au FileType qf AutoWinHeight
