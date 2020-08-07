@@ -1,6 +1,6 @@
 scriptencoding utf-8
 
-call plug#begin(stdpath('data') . '/plugged')
+call plug#begin(stdpath('data').'/plugged')
 Plug 'neovim/nvim-lsp'
 Plug 'nvim-treesitter/nvim-treesitter'
 Plug 'lifepillar/vim-gruvbox8'
@@ -9,7 +9,7 @@ Plug 'norcalli/nvim-colorizer.lua'
 Plug 'nvim-lua/completion-nvim'
 call plug#end()
 
-exe 'luafile' stdpath('config') . '/init.lua'
+exe 'luafile' stdpath('config').'/init.lua'
 
 set clipboard+=unnamedplus
 set complete+=kspell completeopt=menuone,noselect,noinsert
@@ -36,7 +36,7 @@ set tags=
 set termguicolors
 set title titlestring=\{\ %n\ \}\ %<%f%=%M
 set wildcharm=<C-Z>
-set wildignore+=*/.git/*,*/node_modules/*,*.cache,*.dat,*.idx,*.csv,*.tsv
+set wildignore+=*/.git/*,*/node_modules/*
 set wildignorecase
 
 " needs termguicolors to be set 1st
@@ -79,21 +79,21 @@ hi htmlBold                  guibg=NONE
 
 func! GolangCI(...)
   let l:scope = get(a:, 1, '.') | if l:scope ==# '%' | let l:scope = expand('%') | endif
-  let l:only = get(a:, 2, '') | if l:only !=# '' | let l:only = '--exclude-use-default=0 --no-config --disable-all --enable ' . l:only | endif
-  let l:lst = systemlist('golangci-lint run --print-issued-lines=0 ' .  l:only . ' ./...')
-  cgete filter(l:lst, 'v:val =~ "^' . l:scope . '"')
+  let l:only = get(a:, 2, '') | if l:only !=# '' | let l:only = '--exclude-use-default=0 --no-config --disable-all --enable '.l:only | endif
+  let l:lst = systemlist('golangci-lint run --print-issued-lines=0 '.l:only.' ./...')
+  cgete filter(l:lst, 'v:val =~ "^'.l:scope.'"')
 endf
 
 func! ProjRelativePath()
   return expand('%:p')[len(b:proj_root):]
 endf
 
-com!          Make silent make | redraw | echo '    ' . &makeprg
-com! -bar     SetProjRoot let b:proj_root = fnamemodify(finddir('.git/..', expand('%:p:h').';'), ':p')
+com! -bar     Make silent make
 com! -nargs=1 Grep silent grep <args>
 com! -nargs=* Term split | resize 12 | term <args>
-com! -nargs=* -complete=file_in_path GolangCI call GolangCI(<f-args>) | echo '    golangci-lint'
-com!          Gdiff exe 'silent !cd ' . b:proj_root . ' && git show HEAD^:' . ProjRelativePath() . ' > /tmp/gdiff' | diffs /tmp/gdiff
+com! -nargs=* -bar -complete=file_in_path GolangCI call GolangCI(<f-args>)
+com! -bar     SetProjRoot let b:proj_root = fnamemodify(finddir('.git/..', expand('%:p:h').';'), ':p')
+com!          Gdiff exe 'silent !cd '.b:proj_root.' && git show HEAD^:'.ProjRelativePath().' > /tmp/gdiff' | diffs /tmp/gdiff
 com!          Terrafmt exe 'silent !terraform fmt %' | e
 com!          JumpToLastLocation if line("'\"") > 0 && line("'\"") <= line("$") | exe "norm! g'\"" | endif
 com! -bar     RemoveTrailingSpace norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
@@ -103,12 +103,13 @@ com!          LastWindow if (&buftype ==# 'quickfix' || &buftype ==# 'terminal' 
       \ && winbufnr(2) ==# -1 | q | endif
 com! -bar     Scratchify setl nobl bt=nofile bh=delete noswf
 com! -bar     Scratch <mods> new +Scratchify
-com! -bar     AutoWinHeight silent exe max([min([line('$'), 12]), 1]) . 'wincmd _'
+com! -bar     AutoWinHeight silent exe max([min([line('$'), 12]), 1]).'wincmd _'
 com! -bar     AutoIndent silent norm gg=G`.
 com! -bar     LspCapabilities lua LspCapabilities()
 com! -range   JQ '<,'>!jq .
 
 aug Setup | au!
+  au VimEnter * exe 'cd '.b:proj_root
   au BufEnter * SetProjRoot | LastWindow
   au BufEnter * let &makeprg = get(s:makeprg, &filetype, 'make')
   au BufEnter * lua require'completion'.on_attach()
@@ -169,4 +170,4 @@ ino          (         ()<Left>
 ino          [         []<Left>
 ino          {         {}<Left>
 
-for i in systemlist('ls ' . stdpath('config') . '/*.vim|grep -v init.vim') | exe 'so ' . i | endfor
+for i in systemlist('ls '.stdpath('config').'/*.vim|grep -v init.vim') | exe 'so '.i | endfor

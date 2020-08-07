@@ -43,14 +43,14 @@ func! SynStack()
   echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
 endf
 
-com! -count=1 Img call Img(<count>)
-com! -count=1 AllImg exe 'Img' | exe 'norm Go' | call Img(<count>-1)
-com!          Date exe 'norm odata:  ' . strftime('%F %T %z')
-com!          RO setl spell spelllang=ro
-com!          ArticoleNoi silent! n `git ls-files -mo content/articole`
-com!          AutoImg silent! call AutoImg()
-com!          WordWrap exe 'setl formatoptions+=w tw=200' | exe 'g/ ./ norm gqq' | nohl
-com! -count=0 CC silent setl cc=<count>
+com! -bar -count=1 Img call Img(<count>)
+com! -count=1      AllImg exe 'Img' | exe 'norm Go' | call Img(<count>-1)
+com! -bar          Date exe 'norm odata:  ' . strftime('%F %T %z')
+com! -bar          RO setl spell spelllang=ro
+com! -bar          ArticoleNoi silent! n `git ls-files -mo content/articole`
+com! -bar          AutoImg silent! call AutoImg()
+com!               WordWrap exe 'setl formatoptions+=w tw=200' | exe 'g/ ./ norm gqq' | nohl
+com! -bar -count=0 CC silent setl cc=<count>
 
 aug Misc | au!
   au BufEnter */articole/**/*.txt,*/Downloads/**/*.txt setl ft=markdown spell spelllang=ro
