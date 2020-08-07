@@ -34,7 +34,7 @@ set smartcase smartindent
 set splitbelow splitright
 set tags=
 set termguicolors
-set title titlestring=\{\ %n\ \}\ %<%f%=%M
+set title titlestring=%{b:git_status}\ %<%f%=%M
 set wildcharm=<C-Z>
 set wildignore+=*/.git/*,*/node_modules/*
 set wildignorecase
@@ -81,6 +81,7 @@ func! GolangCI(...)
   let l:scope = get(a:, 1, '.') | if l:scope ==# '%' | let l:scope = expand('%') | endif
   let l:only = get(a:, 2, '') | if l:only !=# '' | let l:only = '--exclude-use-default=0 --no-config --disable-all --enable '.l:only | endif
   let l:lst = systemlist('golangci-lint run --print-issued-lines=0 '.l:only.' ./...')
+
   cgete filter(l:lst, 'v:val =~ "^'.l:scope.'"')
 endf
 
@@ -88,11 +89,20 @@ func! ProjRelativePath()
   return expand('%:p')[len(b:proj_root):]
 endf
 
+func! GitStatus()
+  let l:branch = trim(system('git rev-parse --abbrev-ref HEAD 2> /dev/null'), "\n")
+  if l:branch ==# '' | return 'non-git |' | endif
+  let l:dirty = system('git diff --quiet || echo -n \*')
+
+  return l:branch.l:dirty.' |'
+endf
+
 com! -bar     Make silent make
 com! -nargs=1 Grep silent grep <args>
 com! -nargs=* Term split | resize 12 | term <args>
 com! -nargs=* -bar -complete=file_in_path GolangCI call GolangCI(<f-args>)
 com! -bar     SetProjRoot let b:proj_root = fnamemodify(finddir('.git/..', expand('%:p:h').';'), ':p')
+com! -bar     GitStatus let b:git_status = GitStatus()
 com!          Gdiff exe 'silent !cd '.b:proj_root.' && git show HEAD^:'.ProjRelativePath().' > /tmp/gdiff' | diffs /tmp/gdiff
 com!          Terrafmt exe 'silent !terraform fmt %' | e
 com!          JumpToLastLocation if line("'\"") > 0 && line("'\"") <= line("$") | exe "norm! g'\"" | endif
@@ -109,8 +119,9 @@ com! -bar     LspCapabilities lua LspCapabilities()
 com! -range   JQ '<,'>!jq .
 
 aug Setup | au!
-  au VimEnter * exe 'cd '.b:proj_root
-  au BufEnter * SetProjRoot | LastWindow
+  au VimEnter * exe 'cd '.b:proj_root | GitStatus
+  au DirChanged * if filereadable('.nvimrc') | so .nvimrc | endif
+  au BufEnter * SetProjRoot | GitStatus | LastWindow
   au BufEnter * let &makeprg = get(s:makeprg, &filetype, 'make')
   au BufEnter * lua require'completion'.on_attach()
   au BufEnter go.mod set ft=gomod
@@ -120,6 +131,7 @@ aug Setup | au!
   au TextYankPost * silent! lua require'vim.highlight'.on_yank()
   au TermOpen * star
   au TermClose * q
+  au BufWritePost * GitStatus
   au BufWritePost,FileWritePost go.mod,go.sum silent! make | e
   au BufWritePre *.go lua GoOrgImports(); vim.lsp.buf.formatting_sync()
   au BufWritePre *.vim,*.lua AutoIndent
