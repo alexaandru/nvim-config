@@ -15,6 +15,7 @@ set clipboard+=unnamedplus
 set complete+=kspell completeopt=menuone,noselect,noinsert
 set diffopt+=algorithm:patience,indent-heuristic,vertical
 set expandtab
+set exrc
 set foldmethod=indent foldlevelstart=1000
 set grepprg=git\ grep\ -n
 set icon iconstring=nvim
@@ -36,6 +37,7 @@ set termguicolors
 set title titlestring=\{\ %n\ \}\ %<%f%=%M
 set wildcharm=<C-Z>
 set wildignore+=*/.git/*,*/node_modules/*,*.cache,*.dat,*.idx,*.csv,*.tsv
+set wildignorecase
 
 " needs termguicolors to be set 1st
 lua require'colorizer'.setup()
@@ -82,33 +84,38 @@ func! GolangCI(...)
   cgete filter(l:lst, 'v:val =~ "^' . l:scope . '"')
 endf
 
-com! -nargs=* Term split | resize 12 | term <args>
-com! Make silent make | redraw | echo '    ' . &makeprg
+func! ProjRelativePath()
+  return expand('%:p')[len(b:proj_root):]
+endf
+
+com!          Make silent make | redraw | echo '    ' . &makeprg
+com! -bar     SetProjRoot let b:proj_root = fnamemodify(finddir('.git/..', expand('%:p:h').';'), ':p')
 com! -nargs=1 Grep silent grep <args>
+com! -nargs=* Term split | resize 12 | term <args>
 com! -nargs=* -complete=file_in_path GolangCI call GolangCI(<f-args>) | echo '    golangci-lint'
-com! Gdiff exe 'silent !git show HEAD^:% > /tmp/gdiff' | diffs /tmp/gdiff
-com! Terrafmt exe 'silent !terraform fmt %' | e
-com! JumpToLastLocation if line("'\"") > 0 && line("'\"") <= line("$") | exe "norm! g'\"" | endif
-com! RemoveTrailingSpace norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
-com! RemoveTrailingBlankLines %s#\($\n\s*\)\+\%$##e
-com! SaveAndClose w | bdel
-com! LastWindow if (&buftype ==# 'quickfix' || &buftype ==# 'terminal' || &filetype ==# 'netrw')
+com!          Gdiff exe 'silent !cd ' . b:proj_root . ' && git show HEAD^:' . ProjRelativePath() . ' > /tmp/gdiff' | diffs /tmp/gdiff
+com!          Terrafmt exe 'silent !terraform fmt %' | e
+com!          JumpToLastLocation if line("'\"") > 0 && line("'\"") <= line("$") | exe "norm! g'\"" | endif
+com! -bar     RemoveTrailingSpace norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
+com! -bar     RemoveTrailingBlankLines %s#\($\n\s*\)\+\%$##e
+com!          SaveAndClose w | bdel
+com!          LastWindow if (&buftype ==# 'quickfix' || &buftype ==# 'terminal' || &filetype ==# 'netrw')
       \ && winbufnr(2) ==# -1 | q | endif
-com! Scratchify setl nobl bt=nofile bh=delete noswf
-com! Scratch <mods> new +Scratchify
-com! AutoWinHeight silent exe max([min([line('$'), 12]), 1]) . 'wincmd _'
-com! AutoIndent silent norm gg=G`.
-com! LspCapabilities lua LspCapabilities()
-com! -range JQ '<,'>!jq .
+com! -bar     Scratchify setl nobl bt=nofile bh=delete noswf
+com! -bar     Scratch <mods> new +Scratchify
+com! -bar     AutoWinHeight silent exe max([min([line('$'), 12]), 1]) . 'wincmd _'
+com! -bar     AutoIndent silent norm gg=G`.
+com! -bar     LspCapabilities lua LspCapabilities()
+com! -range   JQ '<,'>!jq .
 
 aug Setup | au!
-  au BufEnter * LastWindow
+  au BufEnter * SetProjRoot | LastWindow
   au BufEnter * let &makeprg = get(s:makeprg, &filetype, 'make')
   au BufEnter * lua require'completion'.on_attach()
   au BufEnter go.mod set ft=gomod
   au BufEnter go.sum set ft=gosum
   au BufReadPost * JumpToLastLocation
-  au BufWritePre * exe 'RemoveTrailingSpace' | RemoveTrailingBlankLines
+  au BufWritePre * RemoveTrailingSpace | RemoveTrailingBlankLines
   au TextYankPost * silent! lua require'vim.highlight'.on_yank()
   au TermOpen * star
   au TermClose * q
@@ -150,10 +157,12 @@ nno <silent> <F12>     <Cmd>vs ~/.config/nvim/init.vim<CR>
 nno <silent> <F12>l    <Cmd>vs ~/.config/nvim/init.lua<CR>
 nno <silent> <Leader>w <Cmd>SaveAndClose<CR>
 nno <silent> <Space>   @=((foldclosed(line('.')) < 0) ? 'zC' : 'zO')<CR>
+nno          <C-p>     :find *
 cno <expr>   <Up>      wildmenumode() ? "\<Left>"     : "\<Up>"
 cno <expr>   <Down>    wildmenumode() ? "\<Right>"    : "\<Down>"
 cno <expr>   <Left>    wildmenumode() ? "\<Up>"       : "\<Left>"
 cno <expr>   <Right>   wildmenumode() ? "\<BS>\<C-Z>" : "\<Right>"
+xno          <Leader>q !jq .<CR>
 ino <silent> <F2>      <C-x>s
 ino          '         ''<Left>
 ino          (         ()<Left>

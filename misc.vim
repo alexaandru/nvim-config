@@ -43,13 +43,13 @@ func! SynStack()
   echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
 endf
 
-com! -count=1 Img    call Img(<count>)
+com! -count=1 Img call Img(<count>)
 com! -count=1 AllImg exe 'Img' | exe 'norm Go' | call Img(<count>-1)
-com! Date            exe 'norm odata:  ' . strftime('%F %T %z')
-com! RO              setl spell spelllang=ro
-com! ArticoleNoi     silent! n `git ls-files -mo content/articole`
-com! AutoImg         silent! call AutoImg()
-com! WordWrap        setl formatoptions+=w tw=200 | norm gggqG
+com!          Date exe 'norm odata:  ' . strftime('%F %T %z')
+com!          RO setl spell spelllang=ro
+com!          ArticoleNoi silent! n `git ls-files -mo content/articole`
+com!          AutoImg silent! call AutoImg()
+com!          WordWrap exe 'setl formatoptions+=w tw=200' | exe 'g/ ./ norm gqq' | nohl
 com! -count=0 CC silent setl cc=<count>
 
 aug Misc | au!
