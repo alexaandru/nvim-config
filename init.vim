@@ -6,7 +6,7 @@ Plug 'nvim-treesitter/nvim-treesitter'
 Plug 'hashivim/vim-terraform'
 Plug 'norcalli/nvim-colorizer.lua'
 Plug 'nvim-lua/completion-nvim'
-Plug 'joshdick/onedark.vim'
+Plug 'srcery-colors/srcery-vim'
 call plug#end()
 
 exe 'luafile' stdpath('config').'/init.lua'
@@ -95,8 +95,8 @@ com! -bar     GitStatus let b:git_status = GitStatus()
 com!          Gdiff exe 'silent !cd '.b:proj_root.' && git show HEAD^:'.ProjRelativePath().' > /tmp/gdiff' | diffs /tmp/gdiff
 com!          Terrafmt exe 'silent !terraform fmt %' | e
 com!          JumpToLastLocation if line("'\"") > 0 && line("'\"") <= line("$") | exe "norm! g'\"" | endif
-com! -bar     RemoveTrailingSpace norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
-com! -bar     RemoveTrailingBlankLines %s#\($\n\s*\)\+\%$##e
+com! -bar     TrimTrailingSpace norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
+com! -bar     TrimTrailingBlankLines %s#\($\n\s*\)\+\%$##e
 com!          SaveAndClose w | bdel
 com!          LastWindow if (&buftype ==# 'quickfix' || &buftype ==# 'terminal' || &filetype ==# 'netrw')
       \ && winbufnr(2) ==# -1 | q | endif
@@ -116,7 +116,7 @@ aug Setup | au!
   au BufEnter go.mod set ft=gomod
   au BufEnter go.sum set ft=gosum
   au BufReadPost * JumpToLastLocation
-  au BufWritePre * RemoveTrailingSpace | RemoveTrailingBlankLines
+  au BufWritePre * TrimTrailingSpace | TrimTrailingBlankLines
   au TextYankPost * silent! lua require'vim.highlight'.on_yank()
   au TermOpen * star
   au TermClose * q
@@ -130,7 +130,7 @@ aug Setup | au!
   au FileType qf AutoWinHeight
   au FileType gitcommit,asciidoc,markdown setl spell spl=en_us
   au FileType lua,vim setl ts=2 sw=2 sts=2
-  au BufWritePost init.vim,init.lua,misc.vim,color.vim so $MYVIMRC
+  au BufWritePost ~/.config/nvim/*.vim so $MYVIMRC
   au BufWritePost *.tf Terrafmt
   au FileType go setl ts=4 sw=4 noet fdm=expr fde=nvim_treesitter#foldexpr()
 aug END

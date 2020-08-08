@@ -3,6 +3,7 @@
 Plug 'AndrewRadev/tagalong.vim'
 Plug 'iamcco/markdown-preview.nvim', {'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug']}
 Plug 'leafOfTree/vim-vue-plugin'
+Plug 'lifepillar/vim-gruvbox8'
 Plug 'lifepillar/vim-mucomplete'
 Plug 'liuchengxu/vista.vim'
 Plug 'mhinz/vim-signify'
@@ -13,5 +14,20 @@ Plug 'nvim-lua/lsp-status.nvim'
 Plug 'sbdchd/neoformat'
 Plug 'sheerun/vim-polyglot'
 Plug 'Shougo/deoplete.nvim'
+Plug 'tweekmonster/startuptime.vim'
+
+" JS development
+Plug 'yardnsm/vim-import-cost'
+Plug 'kyoz/npm.vim'
+Plug 'prettier/vim-prettier'
+
+" Color themes
+Plug 'joshdick/onedark.vim'
+Plug 'pgavlin/pulumi.vim'
+Plug 'arzg/vim-colors-xcode'
+Plug 'bluz71/vim-nightfly-guicolors'
+Plug 'srcery-colors/srcery-vim'
+Plug 'lifepillar/vim-gruvbox8'
+Plug 'chriskempson/base16-vim'
 
 packadd cfilter
