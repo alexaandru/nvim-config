@@ -3,10 +3,10 @@ scriptencoding utf-8
 call plug#begin(stdpath('data').'/plugged')
 Plug 'neovim/nvim-lsp'
 Plug 'nvim-treesitter/nvim-treesitter'
-Plug 'lifepillar/vim-gruvbox8'
 Plug 'hashivim/vim-terraform'
 Plug 'norcalli/nvim-colorizer.lua'
 Plug 'nvim-lua/completion-nvim'
+Plug 'joshdick/onedark.vim'
 call plug#end()
 
 exe 'luafile' stdpath('config').'/init.lua'
@@ -56,8 +56,6 @@ let g:netrw_altv = 1
 let g:netrw_list_hide = '^\.[a-zA-Z].*,^\./$'
 let g:netrw_hide = 1
 let g:netrw_winsize = 15
-let g:gruvbox_filetype_hi_groups = 1
-let g:gruvbox_transp_bg = 1
 let s:makeprg = {
       \ 'go': '(go build ./... && go vet ./...)',
       \ 'gomod': 'go mod tidy',
@@ -67,15 +65,6 @@ let s:makeprg = {
       \ 'terraform': '(terraform validate -no-color && for i in $(find -iname ''*.tf''\|xargs dirname\|sort -u\|paste -s); do tflint $i; done)',
       \ 'json': 'jsonlint %',
       \ }
-
-colorscheme gruvbox8
-
-hi LspDiagnosticsError       guifg=Red
-hi LspDiagnosticsWarning     guifg=Orange
-hi LspDiagnosticsInformation guifg=Pink
-hi LspDiagnosticsHint        guifg=Green
-hi Folded                    guibg=NONE
-hi htmlBold                  guibg=NONE
 
 func! GolangCI(...)
   let l:scope = get(a:, 1, '.') | if l:scope ==# '%' | let l:scope = expand('%') | endif
@@ -91,7 +80,7 @@ endf
 
 func! GitStatus()
   let l:branch = trim(system('git rev-parse --abbrev-ref HEAD 2> /dev/null'), "\n")
-  if l:branch ==# '' | return 'non-git |' | endif
+  if l:branch ==# '' | return '~git |' | endif
   let l:dirty = system('git diff --quiet || echo -n \*')
 
   return l:branch.l:dirty.' |'
@@ -141,7 +130,7 @@ aug Setup | au!
   au FileType qf AutoWinHeight
   au FileType gitcommit,asciidoc,markdown setl spell spl=en_us
   au FileType lua,vim setl ts=2 sw=2 sts=2
-  au BufWritePost init.vim,init.lua,misc.vim so $MYVIMRC
+  au BufWritePost init.vim,init.lua,misc.vim,color.vim so $MYVIMRC
   au BufWritePost *.tf Terrafmt
   au FileType go setl ts=4 sw=4 noet fdm=expr fde=nvim_treesitter#foldexpr()
 aug END
