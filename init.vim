@@ -97,7 +97,7 @@ com!          Terrafmt exe 'silent !terraform fmt %' | e
 com!          JumpToLastLocation if line("'\"") > 0 && line("'\"") <= line("$") | exe "norm! g'\"" | endif
 com! -bar     TrimTrailingSpace norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
 com! -bar     TrimTrailingBlankLines %s#\($\n\s*\)\+\%$##e
-com!          SaveAndClose w | bdel
+com!          SaveAndClose up | bdel
 com!          LastWindow if (&buftype ==# 'quickfix' || &buftype ==# 'terminal' || &filetype ==# 'netrw')
       \ && winbufnr(2) ==# -1 | q | endif
 com! -bar     Scratchify setl nobl bt=nofile bh=delete noswf

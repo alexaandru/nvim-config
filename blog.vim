@@ -19,7 +19,7 @@ func! ImgCount()
   if @%[:len(s:prefix)-1] !=# s:prefix | return 0 | endif
 
   let s:count = 0
-  for s:jpg in split(glob('content/images/'.@%[8:len(@%)-5].'_*.jpg'), "\n")
+  for s:jpg in glob('content/images/'.@%[8:len(@%)-5].'_*.jpg', 0, 1)
     if s:jpg !~ '_small\d\+.jpg' | let s:count += 1 | endif
   endfor | return s:count
 endf
@@ -54,5 +54,5 @@ aug END
 nno <silent> <Leader>a <Cmd>AutoImg<CR>
 nno <silent> <Leader>i <Cmd>Img<CR>
 nno <silent> <Leader>d <Cmd>Date<CR>
-nno <silent> <C-\>     <Cmd>w<CR><bar><Cmd>let $VIM_DIR=expand('%:p:h')<CR><Cmd>Term<CR>i<CR>cd "$VIM_DIR" && reimg && jsame && mv * .. && exit<CR><bar><Cmd>q
+nno <silent> <C-\>     <Cmd>w<CR><bar><Cmd>let $VIM_DIR=expand('%:p:h')<CR><Cmd>Term<CR>cd "$VIM_DIR" && reimg && jsame && mv * .. && exit<CR>
 nno <silent> <F12>b    <Cmd>vs ~/.config/nvim/blog.vim<CR>
