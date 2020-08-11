@@ -22,6 +22,9 @@ require'nvim-treesitter.configs'.setup{
   ensure_installed = {'go', 'json', 'lua', 'html', 'css', 'markdown', 'vue', 'python'}
 }
 
+vim.cmd('set termguicolors')
+require'colorizer'.setup()
+
 function LspCapabilities()
   local _, v = next(vim.lsp.buf_get_clients())
   print(vim.inspect(v.server_capabilities))

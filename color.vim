@@ -1,13 +1,8 @@
 scriptencoding utf-8
 
-let g:gruvbox_filetype_hi_groups = 1
-let g:gruvbox_transp_bg = 1
-let g:onedark_hide_endofbuffer = 1
-let g:onedark_terminal_italics = 1
-let s:tr_bg = 'Normal,SignColumn,VertSplit,PreProc,EndOfBuffer,Folded,htmlBold'
-
 colo srcery "onedark iceberg slate desert gruvbox8
 
+let s:tr_bg = 'Normal,SignColumn,VertSplit,PreProc,EndOfBuffer,Folded,htmlBold'
 for s:i in split(s:tr_bg, ',') | exe 'hi '.s:i.' guibg=NONE' | endfor
 
 hi LspDiagnosticsError       guifg=Red

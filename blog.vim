@@ -58,7 +58,7 @@ com! -bar          TrimLeadingBlankLines exe '1,/---/-1s/^\n//e | nohl'
 com!               TrimAll TrimLeadingBlankLines | TrimLeadingBlankLines | TrimTrailingSpace |
       \              TrimTrailingBlankLines | SquashBlankLines | WordWrap
 com!               PrepArt exe 'TrimAll' | exe 'AutoDate' | AutoFB | up
-com! -bar          PrepArts argdo PrepArt
+com! -bar          PrepArts n **/*.txt | argdo PrepArt
 
 aug Misc | au!
   au BufEnter */articole/**/*.txt,*/Downloads/**/*.txt setl ft=markdown spell spelllang=ro

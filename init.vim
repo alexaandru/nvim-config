@@ -1,13 +1,12 @@
 scriptencoding utf-8
 
-call plug#begin(stdpath('data').'/plugged')
-Plug 'neovim/nvim-lsp'
-Plug 'nvim-treesitter/nvim-treesitter'
-Plug 'hashivim/vim-terraform'
-Plug 'norcalli/nvim-colorizer.lua'
-Plug 'nvim-lua/completion-nvim'
-Plug 'srcery-colors/srcery-vim'
-call plug#end()
+packadd completion-nvim
+packadd nvim-colorizer.lua
+packadd nvim-lsp
+packadd nvim-treesitter
+packadd vim-terraform
+packadd srcery-vim
+packadd cfilter
 
 exe 'luafile' stdpath('config').'/init.lua'
 
@@ -15,7 +14,6 @@ set clipboard+=unnamedplus
 set complete+=kspell completeopt=menuone,noselect,noinsert
 set diffopt+=algorithm:patience,indent-heuristic,vertical
 set expandtab
-set exrc
 set foldmethod=indent foldlevelstart=1000
 set grepprg=git\ grep\ -n
 set icon iconstring=nvim
@@ -32,15 +30,11 @@ set shortmess+=c
 set signcolumn=yes:2
 set smartcase smartindent
 set splitbelow splitright
-set tags=
 set termguicolors
 set title titlestring=%{get(b:,\ 'git_status',\ '~git')}\ %<%f%=%M
 set wildcharm=<C-Z>
 set wildignore+=*/.git/*,*/node_modules/*
 set wildignorecase
-
-" needs termguicolors to be set 1st
-lua require'colorizer'.setup()
 
 let $GOFLAGS='-tags=development'
 let g:loaded_python_provider = 0
@@ -98,14 +92,14 @@ endf
 
 com! -bar     Make silent make
 com! -nargs=1 Grep silent grep <args>
-com! -nargs=? -bar -complete=customlist,ListConfigs Cfg call Cfg(<q-args>)
 com! -nargs=* Term split | resize 12 | term <args>
 com! -nargs=* -bar -complete=file_in_path GolangCI call GolangCI(<f-args>)
+com! -nargs=? -bar -complete=customlist,ListConfigs Cfg call Cfg(<q-args>)
 com! -bar     SetProjRoot let b:proj_root = fnamemodify(finddir('.git/..', expand('%:p:h').';'), ':p')
 com! -bar     GitStatus let b:git_status = GitStatus()
 com!          Gdiff exe 'silent !cd '.b:proj_root.' && git show HEAD^:'.ProjRelativePath().' > /tmp/gdiff' | diffs /tmp/gdiff
 com!          Terrafmt exe 'silent !terraform fmt %' | e
-com!          JumpToLastLocation let b:pos = line('''"') | if b:pos && b:pos < line('$') | exe b:pos | endif
+com!          JumpToLastLocation let b:pos = line('''"') | if b:pos && b:pos <= line('$') | exe b:pos | endif
 com! -bar     TrimTrailingSpace norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
 com! -bar     TrimTrailingBlankLines %s#\($\n\s*\)\+\%$##e
 com! -bar -range=% SquashBlankLines <line1>,<line2>s/\(\n\)\{3,}/\1\1/e
@@ -121,10 +115,11 @@ com! -bar     LspCapabilities lua LspCapabilities()
 com! -range   JQ <line1>,<line2>!jq .
 
 aug Setup | au!
-  au VimEnter * exe 'cd '.b:proj_root | GitStatus
-  au DirChanged * if filereadable('.nvimrc') | so .nvimrc | endif
+  au VimEnter * exe 'cd' b:proj_root | GitStatus
+  au ColorScheme * exe 'so' stdpath('config').'/color.vim'
+  au VimEnter,DirChanged * if filereadable('.nvimrc') | so .nvimrc | endif
+  au FileType * let &makeprg = get(s:makeprg, &filetype, 'make')
   au BufEnter * SetProjRoot | GitStatus | LastWindow
-  au BufEnter * let &makeprg = get(s:makeprg, &filetype, 'make')
   au BufEnter * lua require'completion'.on_attach()
   au BufEnter go.mod set ft=gomod
   au BufEnter go.sum set ft=gosum
@@ -180,8 +175,8 @@ cno <expr>   <Right>   wildmenumode() ? "\<BS>\<C-Z>" : "\<Right>"
 xno          <Leader>q !jq .<CR>
 ino <silent> <F2>      <C-x>s
 ino          '         ''<Left>
-ino          (         ()<Left>
+"ino          (         ()<Left>
 ino          [         []<Left>
 ino          {         {}<Left>
 
-for i in systemlist('ls '.stdpath('config').'/*.vim|grep -v init.vim') | exe 'so '.i | endfor
+for i in systemlist('ls '.stdpath('config').'/*.vim|grep -v init.vim') | exe 'so' i | endfor
