@@ -34,7 +34,7 @@ set smartcase smartindent
 set splitbelow splitright
 set tags=
 set termguicolors
-set title titlestring=%{b:git_status}\ %<%f%=%M
+set title titlestring=%{get(b:,\ 'git_status',\ '~git')}\ %<%f%=%M
 set wildcharm=<C-Z>
 set wildignore+=*/.git/*,*/node_modules/*
 set wildignorecase
@@ -94,18 +94,20 @@ com! -bar     SetProjRoot let b:proj_root = fnamemodify(finddir('.git/..', expan
 com! -bar     GitStatus let b:git_status = GitStatus()
 com!          Gdiff exe 'silent !cd '.b:proj_root.' && git show HEAD^:'.ProjRelativePath().' > /tmp/gdiff' | diffs /tmp/gdiff
 com!          Terrafmt exe 'silent !terraform fmt %' | e
-com!          JumpToLastLocation if line("'\"") > 0 && line("'\"") <= line("$") | exe "norm! g'\"" | endif
+com!          JumpToLastLocation let b:pos = line('''"') | if b:pos && b:pos < line('$') | exe b:pos | endif
 com! -bar     TrimTrailingSpace norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
 com! -bar     TrimTrailingBlankLines %s#\($\n\s*\)\+\%$##e
+com! -bar -range=% SquashBlankLines <line1>,<line2>s/\(\n\)\{3,}/\1\1/e
+com! -bar -range=% TrimBlankLines <line1>,<line2>s/\(\n\)\{2,}/\1/e
 com!          SaveAndClose up | bdel
 com!          LastWindow if (&buftype ==# 'quickfix' || &buftype ==# 'terminal' || &filetype ==# 'netrw')
-      \ && winbufnr(2) ==# -1 | q | endif
+      \         && winbufnr(2) ==# -1 | q | endif
 com! -bar     Scratchify setl nobl bt=nofile bh=delete noswf
 com! -bar     Scratch <mods> new +Scratchify
 com! -bar     AutoWinHeight silent exe max([min([line('$'), 12]), 1]).'wincmd _'
 com! -bar     AutoIndent silent norm gg=G`.
 com! -bar     LspCapabilities lua LspCapabilities()
-com! -range   JQ '<,'>!jq .
+com! -range   JQ <line1>,<line2>!jq .
 
 aug Setup | au!
   au VimEnter * exe 'cd '.b:proj_root | GitStatus
@@ -115,7 +117,7 @@ aug Setup | au!
   au BufEnter * lua require'completion'.on_attach()
   au BufEnter go.mod set ft=gomod
   au BufEnter go.sum set ft=gosum
-  au BufReadPost * JumpToLastLocation
+  au BufReadPost *.go,*.vim,*.lua JumpToLastLocation
   au BufWritePre * TrimTrailingSpace | TrimTrailingBlankLines
   au TextYankPost * silent! lua require'vim.highlight'.on_yank()
   au TermOpen * star
@@ -130,7 +132,7 @@ aug Setup | au!
   au FileType qf AutoWinHeight
   au FileType gitcommit,asciidoc,markdown setl spell spl=en_us
   au FileType lua,vim setl ts=2 sw=2 sts=2
-  au BufWritePost ~/.config/nvim/*.vim so $MYVIMRC
+  au BufWritePost ~/.config/nvim/*.{vim,lua} so $MYVIMRC
   au BufWritePost *.tf Terrafmt
   au FileType go setl ts=4 sw=4 noet fdm=expr fde=nvim_treesitter#foldexpr()
 aug END

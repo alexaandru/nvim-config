@@ -3,12 +3,12 @@ scriptencoding utf-8
 " Experimental stuff goes in here.
 
 func! ListConfigs(A, L, P)
-  let l:configs = map(glob(stdpath('config').'/*.{vim,lua}', 0, 1), {i,v -> fnamemodify(v, ":t")})
-  return sort(filter(l:configs, 'v:val =~ "^'.a:A.'"'))
+  let l:configs = map(glob(stdpath('config').'/*.{vim,lua}', 0, 1), {_,v -> fnamemodify(v, ":t")})
+  return sort(filter(l:configs, {_,v -> fnamemodify(v, ':r') =~ a:A}))
 endf
 
 func! Cfg(...)
-  let l:file = get(a:, 1, 'init.vim')
+  let l:file = 'init.vim' | if a:1 !=# '' | let l:file = a:1 | endif
   exe 'n '.stdpath('config').'/'.l:file
 endf
 

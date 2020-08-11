@@ -38,17 +38,31 @@ func! AutoImg()
   norm gg0
 endf
 
+func! AutoFB()
+  1
+  if !search('^foto:', 'n', '^---$') | return | endif
+  if search('^foto:\s*Facebook', 'n', '^---$') | return | endif
+  2,/^---$/s/^foto:\s*\(.*\)/foto:  Facebook \1/ | nohl
+endf
+
 com! -bar -count=1 Img call Img(<count>)
 com! -bar          AutoImg call AutoImg()
+com!               AutoDate 1 | if !search('^data:', 'n', '^---$') | Date | endif
+com! -bar          AutoFB call AutoFB()
 com! -bar          Date exe 'norm odata:  '.strftime('%F %T %z')
 com! -bar          RO setl spell spelllang=ro
 com! -bar          ArticoleNoi silent! n `git ls-files -mo content/articole`
 com!               AA ArticoleNoi | argdo AutoImg | up
 com!               WordWrap exe 'setl formatoptions+=w tw=200' | exe 'g/ ./ norm gqq' | nohl
+com! -bar          TrimLeadingBlankLines exe '1,/---/-1s/^\n//e | nohl'
+com!               TrimAll TrimLeadingBlankLines | TrimLeadingBlankLines | TrimTrailingSpace |
+      \              TrimTrailingBlankLines | SquashBlankLines | WordWrap
+com!               PrepArt exe 'TrimAll' | exe 'AutoDate' | AutoFB | up
+com! -bar          PrepArts argdo PrepArt
 
 aug Misc | au!
   au BufEnter */articole/**/*.txt,*/Downloads/**/*.txt setl ft=markdown spell spelllang=ro
-  au BufWritePre */articole/**/*.txt,*/Downloads/**/*.txt WordWrap
+  au BufWritePre */articole/**/*.txt,*/Downloads/**/*.txt TrimAll
 aug END
 
 nno <silent> <Leader>a <Cmd>AutoImg<CR>
