@@ -20,7 +20,7 @@ hi LspDiagnosticsHint        guifg=Green
 hi StatusLineNC gui=NONE guibg=NONE
 
 nno          <Leader>c <Cmd>so $VIMRUNTIME/syntax/hitest.vim<CR>
-nno <silent> <F12>c    <Cmd>vs ~/.config/nvim/color.vim<CR>
+nno <silent> <F12>c    <Cmd>Cfg color.vim<CR>
 
 " Tools & tips for colorscheme editing
 " https://github.com/lifepillar/vim-colortemplate

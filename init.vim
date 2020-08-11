@@ -86,8 +86,19 @@ func! GitStatus()
   return l:branch.l:dirty.' |'
 endf
 
+func! ListConfigs(A, L, P)
+  let l:configs = map(glob(stdpath('config').'/*.{vim,lua}', 0, 1), {_,v -> fnamemodify(v, ":t")})
+  return sort(filter(l:configs, {_,v -> fnamemodify(v, ':r') =~ a:A}))
+endf
+
+func! Cfg(...)
+  let l:file = 'init.vim' | if a:1 !=# '' | let l:file = a:1 | endif
+  exe 'n '.stdpath('config').'/'.l:file
+endf
+
 com! -bar     Make silent make
 com! -nargs=1 Grep silent grep <args>
+com! -nargs=? -bar -complete=customlist,ListConfigs Cfg call Cfg(<q-args>)
 com! -nargs=* Term split | resize 12 | term <args>
 com! -nargs=* -bar -complete=file_in_path GolangCI call GolangCI(<f-args>)
 com! -bar     SetProjRoot let b:proj_root = fnamemodify(finddir('.git/..', expand('%:p:h').';'), ':p')
@@ -157,8 +168,8 @@ nno <silent> <F6>%     <Cmd>GolangCI %<CR>
 nno <silent> <F8>      <Cmd>Gdiff<CR>
 nno <silent> <C-Right> <Cmd>cnext<CR>
 nno <silent> <C-Left>  <Cmd>cprev<CR>
-nno <silent> <F12>     <Cmd>vs ~/.config/nvim/init.vim<CR>
-nno <silent> <F12>l    <Cmd>vs ~/.config/nvim/init.lua<CR>
+nno <silent> <F12>     <Cmd>Cfg<CR>
+nno <silent> <F12>l    <Cmd>Cfg init.lua<CR>
 nno <silent> <Leader>w <Cmd>SaveAndClose<CR>
 nno <silent> <Space>   @=((foldclosed(line('.')) < 0) ? 'zC' : 'zO')<CR>
 nno          <C-p>     :find *
