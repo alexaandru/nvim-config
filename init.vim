@@ -8,7 +8,7 @@ packadd vim-terraform
 packadd srcery-vim
 packadd cfilter
 
-exe 'luafile' stdpath('config').'/init.lua'
+exe 'luafile' stdpath('config').'/setup.lua'
 
 set clipboard+=unnamedplus
 set complete+=kspell completeopt=menuone,noselect,noinsert
@@ -116,7 +116,7 @@ com! -range   JQ <line1>,<line2>!jq .
 
 aug Setup | au!
   au VimEnter * exe 'cd' b:proj_root | GitStatus
-  au ColorScheme * exe 'so' stdpath('config').'/color.vim'
+  au ColorScheme * exe 'so' stdpath('config').'/synfix.vim'
   au VimEnter,DirChanged * if filereadable('.nvimrc') | so .nvimrc | endif
   au FileType * let &makeprg = get(s:makeprg, &filetype, 'make')
   au BufEnter * SetProjRoot | GitStatus | LastWindow
@@ -164,7 +164,7 @@ nno <silent> <F8>      <Cmd>Gdiff<CR>
 nno <silent> <C-Right> <Cmd>cnext<CR>
 nno <silent> <C-Left>  <Cmd>cprev<CR>
 nno <silent> <F12>     <Cmd>Cfg<CR>
-nno <silent> <F12>l    <Cmd>Cfg init.lua<CR>
+nno <silent> <F12>l    <Cmd>Cfg setup.lua<CR>
 nno <silent> <Leader>w <Cmd>SaveAndClose<CR>
 nno <silent> <Space>   @=((foldclosed(line('.')) < 0) ? 'zC' : 'zO')<CR>
 nno          <C-p>     :find *

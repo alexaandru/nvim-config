@@ -1,5 +1,7 @@
 scriptencoding utf-8
 
+" Fixes to syntax highlight go here.
+
 colo srcery "onedark iceberg slate desert gruvbox8
 
 let s:tr_bg = 'Normal,SignColumn,VertSplit,PreProc,EndOfBuffer,Folded,htmlBold'
