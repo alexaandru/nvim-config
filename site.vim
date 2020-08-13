@@ -69,4 +69,4 @@ nno <silent> <Leader>a <Cmd>AutoImg<CR>
 nno <silent> <Leader>i <Cmd>Img<CR>
 nno <silent> <Leader>d <Cmd>Date<CR>
 nno <silent> <C-\>     <Cmd>w<CR><bar><Cmd>let $VIM_DIR=expand('%:p:h')<CR><Cmd>Term<CR>cd "$VIM_DIR" && reimg && jsame && mv * .. && exit<CR>
-nno <silent> <F12>b    <Cmd>Cfg blog.vim<CR>
+nno <silent> <F12>s    <Cmd>Cfg site.vim<CR>

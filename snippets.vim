@@ -13,4 +13,4 @@ com! -nargs=1 -complete=customlist,ListSnippets Snippet silent exe '-1read' stdp
 com! -nargs=1 -complete=customlist,ListSnippets OpenSnippet silent exe 'new' stdpath('data').'/snippets/'.<q-args>
 
 nno <silent> \html     <Cmd>Snippet skeleton.html<CR>o
-nno <silent> <F12>s    <Cmd>Cfg snippets.vim<CR>
+nno <silent> <F12>p    <Cmd>Cfg snippets.vim<CR>

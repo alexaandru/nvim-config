@@ -8,8 +8,11 @@ packadd vim-terraform
 packadd srcery-vim
 packadd cfilter
 
-exe 'luafile' stdpath('config').'/setup.lua'
+if !exists("g:lsp_loaded")
+  let g:lsp_loaded = 1 | exe 'luafile' stdpath('config').'/setup.lua'
+endif
 
+set autowriteall hidden
 set clipboard+=unnamedplus
 set complete+=kspell completeopt=menuone,noselect,noinsert
 set diffopt+=algorithm:patience,indent-heuristic,vertical
@@ -87,7 +90,7 @@ endf
 
 func! Cfg(...)
   let l:file = 'init.vim' | if a:1 !=# '' | let l:file = a:1 | endif
-  exe 'n '.stdpath('config').'/'.l:file
+  exe 'e '.stdpath('config').'/'.l:file
 endf
 
 com! -bar     Make silent make
@@ -95,9 +98,11 @@ com! -nargs=1 Grep silent grep <args>
 com! -nargs=* Term split | resize 12 | term <args>
 com! -nargs=* -bar -complete=file_in_path GolangCI call GolangCI(<f-args>)
 com! -nargs=? -bar -complete=customlist,ListConfigs Cfg call Cfg(<q-args>)
+com!          LoadLocalCfg if filereadable('.nvimrc') | so .nvimrc | endif
 com! -bar     SetProjRoot let b:proj_root = fnamemodify(finddir('.git/..', expand('%:p:h').';'), ':p')
+com! -bar     CdProjRoot SetProjRoot | exe 'cd' b:proj_root
 com! -bar     GitStatus let b:git_status = GitStatus()
-com!          Gdiff exe 'silent !cd '.b:proj_root.' && git show HEAD^:'.ProjRelativePath().' > /tmp/gdiff' | diffs /tmp/gdiff
+com!          Gdiff SetProjRoot | exe 'silent !cd '.b:proj_root.' && git show HEAD^:'.ProjRelativePath().' > /tmp/gdiff' | diffs /tmp/gdiff
 com!          Terrafmt exe 'silent !terraform fmt %' | e
 com!          JumpToLastLocation let b:pos = line('''"') | if b:pos && b:pos <= line('$') | exe b:pos | endif
 com! -bar     TrimTrailingSpace norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
@@ -115,32 +120,31 @@ com! -bar     LspCapabilities lua LspCapabilities()
 com! -range   JQ <line1>,<line2>!jq .
 
 aug Setup | au!
-  au VimEnter * exe 'cd' b:proj_root | GitStatus
+  au VimEnter,DirChanged * CdProjRoot | LoadLocalCfg
   au ColorScheme * exe 'so' stdpath('config').'/synfix.vim'
-  au VimEnter,DirChanged * if filereadable('.nvimrc') | so .nvimrc | endif
+  au TextYankPost * silent! lua require'vim.highlight'.on_yank()
+  au QuickFixCmdPost [^l]* nested cw
+  au QuickFixCmdPost    l* nested lw
+  au TermOpen * star
+  au TermClose * q
   au FileType * let &makeprg = get(s:makeprg, &filetype, 'make')
-  au BufEnter * SetProjRoot | GitStatus | LastWindow
+  au FileType qf AutoWinHeight
+  au FileType gitcommit,asciidoc,markdown setl spell spl=en_us
+  au FileType lua,vim setl ts=2 sw=2 sts=2
+  au FileType go setl ts=4 sw=4 noet fdm=expr fde=nvim_treesitter#foldexpr()
+  au BufEnter,BufWritePost * GitStatus
+  au BufEnter * LastWindow
   au BufEnter * lua require'completion'.on_attach()
   au BufEnter go.mod set ft=gomod
   au BufEnter go.sum set ft=gosum
   au BufReadPost *.go,*.vim,*.lua JumpToLastLocation
   au BufWritePre * TrimTrailingSpace | TrimTrailingBlankLines
-  au TextYankPost * silent! lua require'vim.highlight'.on_yank()
-  au TermOpen * star
-  au TermClose * q
-  au BufWritePost * GitStatus
-  au BufWritePost,FileWritePost go.mod,go.sum silent! make | e
   au BufWritePre *.go lua GoOrgImports(); vim.lsp.buf.formatting_sync()
   au BufWritePre *.vim,*.lua AutoIndent
   au BufWritePre *.json 1,$JQ
-  au QuickFixCmdPost [^l]* nested cw
-  au QuickFixCmdPost    l* nested lw
-  au FileType qf AutoWinHeight
-  au FileType gitcommit,asciidoc,markdown setl spell spl=en_us
-  au FileType lua,vim setl ts=2 sw=2 sts=2
   au BufWritePost ~/.config/nvim/*.{vim,lua} so $MYVIMRC
   au BufWritePost *.tf Terrafmt
-  au FileType go setl ts=4 sw=4 noet fdm=expr fde=nvim_treesitter#foldexpr()
+  au BufWritePost,FileWritePost go.mod,go.sum silent! make | e
 aug END
 
 nno <silent> gb        <Cmd>ls<CR>:b<Space>

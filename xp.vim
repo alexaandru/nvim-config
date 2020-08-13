@@ -5,4 +5,4 @@ scriptencoding utf-8
 com! -bar -count=0 CC silent setl cc=<count>
 
 nno <silent> <F11>     <Cmd>exe 'CC'..col('.')<CR>
-nno <silent> <F12>x    <Cmd>Cfg exp.vim<CR>
+nno <silent> <F12>x    <Cmd>Cfg xp.vim<CR>
