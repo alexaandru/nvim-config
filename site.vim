@@ -45,10 +45,17 @@ func! AutoFB()
   2,/^---$/s/^foto:\s*\(.*\)/foto:  Facebook \1/ | nohl
 endf
 
+func! CorrectTitleMarker()
+  g/----/norm dd
+  let l:len = strwidth(getline('.'))
+  exe 'norm o'.repeat('-', l:len)
+endf
+
 com! -bar -count=1 Img call Img(<count>)
 com! -bar AutoImg call AutoImg()
 com!      AutoDate 1 | if !search('^data:', 'n', '^---$') | Date | endif
 com! -bar AutoFB call AutoFB()
+com! -bar CorrectTitleMarker call CorrectTitleMarker()
 com! -bar Date exe 'norm odata:  '.strftime('%F %T %z')
 com! -bar RO setl spell spelllang=ro
 com! -bar ArticoleNoi silent! n `git ls-files -mo content/articole`
@@ -57,7 +64,7 @@ com!      WordWrap exe 'setl formatoptions+=w tw=200' | exe 'g/ ./ norm gqq' | n
 com! -bar TrimLeadingBlankLines exe '1,/---/-1s/^\n//e | nohl'
 com!      TrimAll TrimLeadingBlankLines | TrimLeadingBlankLines | TrimTrailingSpace |
       \     TrimTrailingBlankLines | SquashBlankLines | WordWrap
-com!      PrepArt exe 'TrimAll' | exe 'AutoDate' | AutoFB | up
+com!      PrepArt exe 'TrimAll' | exe 'AutoDate' | CorrectTitleMarker | AutoFB | up
 com! -bar PrepArts n **/*.txt | argdo PrepArt
 
 aug Misc | au!
@@ -68,5 +75,5 @@ aug END
 nno <silent> <Leader>a <Cmd>AutoImg<CR>
 nno <silent> <Leader>i <Cmd>Img<CR>
 nno <silent> <Leader>d <Cmd>Date<CR>
-nno <silent> <C-\>     <Cmd>w<CR><bar><Cmd>let $VIM_DIR=expand('%:p:h')<CR><Cmd>Term<CR>cd "$VIM_DIR" && reimg && jsame && mv * .. && exit<CR>
+nno <silent> <C-\>     <Cmd>PrepArt<CR><Cmd>up<CR><bar><Cmd>let $VIM_DIR=expand('%:p:h')<CR><Cmd>Term<CR>cd "$VIM_DIR" && reimg && jsame && mv * .. && exit<CR>
 nno <silent> <F12>s    <Cmd>Cfg site.vim<CR>
