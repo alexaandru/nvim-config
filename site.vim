@@ -46,8 +46,9 @@ func! AutoFB()
 endf
 
 func! CorrectTitleMarker()
-  g/----/norm dd
+  /----/-1
   let l:len = strwidth(getline('.'))
+  norm jddk
   exe 'norm o'.repeat('-', l:len)
 endf
 

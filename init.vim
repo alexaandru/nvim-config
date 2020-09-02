@@ -1,6 +1,5 @@
 scriptencoding utf-8
 
-" packadd α
 packadd completion-nvim
 packadd nvim-colorizer.lua
 packadd nvim-lsp
@@ -8,13 +7,11 @@ packadd nvim-treesitter
 packadd vim-terraform
 packadd srcery-vim
 packadd cfilter
-" ω
 
-if !exists("g:lsp_loaded")
+if !exists('g:lsp_loaded')
   let g:lsp_loaded = 1 | exe 'luafile' stdpath('config').'/setup.lua'
 endif
 
-" set α
 set autowriteall hidden
 set clipboard+=unnamedplus
 set complete+=kspell completeopt=menuone,noselect,noinsert
@@ -40,9 +37,7 @@ set title titlestring=%{get(b:,\ 'git_status',\ '~git')}\ %<%f%=%M
 set wildcharm=<C-Z>
 set wildignore+=*/.git/*,*/node_modules/*
 set wildignorecase
-" ω
 
-" let α
 let $GOFLAGS='-tags=development'
 let g:loaded_python_provider = 0
 let g:loaded_python3_provider = 0
@@ -66,9 +61,7 @@ let s:makeprg = {
       \ 'terraform': '(terraform validate -no-color && for i in $(find -iname ''*.tf''\|xargs dirname\|sort -u\|paste -s); do tflint $i; done)',
       \ 'json': 'jsonlint %',
       \ }
-" ω
 
-" func α
 func! GolangCI(...)
   let l:scope = get(a:, 1, '.') | if l:scope ==# '%' | let l:scope = expand('%') | endif
   let l:only = get(a:, 2, '') | if l:only !=# '' | let l:only = '--exclude-use-default=0 --no-config --disable-all --enable '.l:only | endif
@@ -99,12 +92,6 @@ func! Cfg(...)
   exe 'e '.stdpath('config').'/'.l:file
 endf
 
-func! PlugUpdate()
-  exe '! cd' stdpath('config').'/pack && git submodule update --remote --rebase'
-endf
-" ω
-
-" com α
 com! -bar     Make silent make
 com! -nargs=1 Grep silent grep <args>
 com! -nargs=* Term split | resize 12 | term <args>
@@ -129,11 +116,9 @@ com! -bar     Scratch <mods> new +Scratchify
 com! -bar     AutoWinHeight silent exe max([min([line('$'), 12]), 1]).'wincmd _'
 com! -bar     AutoIndent silent norm gg=G`.
 com! -bar     LspCapabilities lua LspCapabilities()
-com! -bar     PlugUpdate call PlugUpdate()
+com! -bar     PlugUpdate exe '! cd' stdpath('config').'/pack && git submodule update --remote --rebase'
 com! -range   JQ <line1>,<line2>!jq .
-" ω
 
-" aug α
 aug Setup | au!
   au VimEnter,DirChanged * CdProjRoot | LoadLocalCfg
   au ColorScheme * exe 'so' stdpath('config').'/synfix.vim'
@@ -161,9 +146,7 @@ aug Setup | au!
   au BufWritePost *.tf Terrafmt
   au BufWritePost,FileWritePost go.mod,go.sum silent! make | e
 aug END
-" ω
 
-" map α
 nno <silent> gb        <Cmd>ls<CR>:b<Space>
 nno <silent> db        <Cmd>%bd<bar>e#<CR>
 nno <silent> gd        <Cmd>lua vim.lsp.buf.declaration()<CR>
@@ -199,6 +182,5 @@ ino          '         ''<Left>
 "ino          (         ()<Left>
 ino          [         []<Left>
 ino          {         {}<Left>
-" ω
 
 for i in systemlist('ls '.stdpath('config').'/*.vim|grep -v init.vim') | exe 'so' i | endfor
