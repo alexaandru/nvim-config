@@ -2,10 +2,12 @@ scriptencoding utf-8
 
 packadd completion-nvim
 packadd nvim-colorizer.lua
-packadd nvim-lsp
+packadd nvim-lspconfig
 packadd nvim-treesitter
 packadd vim-terraform
 packadd srcery-vim
+packadd popfix
+packadd nvim-lsputils
 packadd cfilter
 
 if !exists('g:lsp_loaded')
@@ -116,7 +118,7 @@ com! -bar     Scratch <mods> new +Scratchify
 com! -bar     AutoWinHeight silent exe max([min([line('$'), 12]), 1]).'wincmd _'
 com! -bar     AutoIndent silent norm gg=G`.
 com! -bar     LspCapabilities lua LspCapabilities()
-com! -bar     PlugUpdate exe '! cd' stdpath('config').'/pack && git submodule update --remote --rebase'
+com! -bar     PlugUpdate silent exe '! cd' stdpath('config').'/pack && git submodule update --remote --rebase'
 com! -range   JQ <line1>,<line2>!jq .
 
 aug Setup | au!
@@ -131,7 +133,7 @@ aug Setup | au!
   au FileType qf AutoWinHeight
   au FileType gitcommit,asciidoc,markdown setl spell spl=en_us
   au FileType lua,vim setl ts=2 sw=2 sts=2 fdm=marker fdls=0
-  au FileType go setl ts=4 sw=4 noet fdm=expr fde=nvim_treesitter#foldexpr()
+  au FileType go setl ts=4 sw=4 noet fdm=syntax fde=nvim_treesitter#foldexpr()
   au BufEnter,BufWritePost * GitStatus
   au BufEnter * LastWindow
   au BufEnter * lua require'completion'.on_attach()

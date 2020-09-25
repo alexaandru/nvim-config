@@ -19,7 +19,7 @@ func! ImgCount()
   if @%[:len(s:prefix)-1] !=# s:prefix | return 0 | endif
 
   let s:count = 0
-  for s:jpg in glob('content/images/'.@%[8:len(@%)-5].'_*.jpg', 0, 1)
+  for s:jpg in glob('content/images/'.@%[8:len(@%)-5].'_[0-9]*.jpg', 0, 1)
     if s:jpg !~ '_small\d\+.jpg' | let s:count += 1 | endif
   endfor | return s:count
 endf
