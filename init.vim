@@ -161,6 +161,7 @@ nno <silent> gr        <Cmd>lua vim.lsp.buf.references()<CR>
 nno <silent> g0        <Cmd>lua vim.lsp.buf.document_symbol()<CR>
 nno <silent> gW        <Cmd>lua vim.lsp.buf.workspace_symbol()<CR>
 nno <silent> <F2>      <Cmd>lua vim.lsp.buf.rename()<CR>
+nno <silent> <F16>     <Cmd>lua vim.lsp.buf.code_action()<CR>
 nno <silent> <C-n>     <Cmd>let $CD=expand('%:p:h')<CR><Cmd>Term<CR>cd "$CD"<CR>clear<CR>
 nno <silent> <F3>      <Cmd>only<CR>
 nno <silent> <F5>      <Cmd>Make<CR>
