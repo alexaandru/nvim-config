@@ -4,6 +4,7 @@ packadd completion-nvim
 packadd nvim-colorizer.lua
 packadd nvim-lspconfig
 packadd nvim-treesitter
+packadd diagnostic-nvim
 packadd vim-terraform
 packadd srcery-vim
 packadd popfix
@@ -54,6 +55,10 @@ let g:netrw_altv = 1
 let g:netrw_list_hide = '^\.[a-zA-Z].*,^\./$'
 let g:netrw_hide = 1
 let g:netrw_winsize = 15
+let g:diagnostic_enable_virtual_text = 1
+let g:diagnostic_virtual_text_prefix = '⚡'
+let g:diagnostic_insert_delay = 0
+let g:diagnostic_show_sign = 1
 let s:makeprg = {
       \ 'go': '(go build ./... && go vet ./...)',
       \ 'gomod': 'go mod tidy',
@@ -95,6 +100,7 @@ func! Cfg(...)
 endf
 
 com! -bar     Make silent make
+com! -bar     SetMake let &makeprg = get(s:makeprg, &filetype, 'make')
 com! -nargs=1 Grep silent grep <args>
 com! -nargs=* Term split | resize 12 | term <args>
 com! -nargs=* -bar -complete=file_in_path GolangCI call GolangCI(<f-args>)
@@ -105,6 +111,7 @@ com! -bar     CdProjRoot SetProjRoot | exe 'cd' b:proj_root
 com! -bar     GitStatus let b:git_status = GitStatus()
 com!          Gdiff SetProjRoot | exe 'silent !cd '.b:proj_root.' && git show HEAD^:'.ProjRelativePath().' > /tmp/gdiff' | diffs /tmp/gdiff
 com!          Terrafmt exe 'silent !terraform fmt %' | e
+com!          Eslintfmt exe 'silent !npx eslint --fix %' | e
 com!          JumpToLastLocation let b:pos = line('''"') | if b:pos && b:pos <= line('$') | exe b:pos | endif
 com! -bar     TrimTrailingSpace norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
 com! -bar     TrimTrailingBlankLines %s#\($\n\s*\)\+\%$##e
@@ -129,19 +136,19 @@ aug Setup | au!
   au QuickFixCmdPost    l* nested lw
   au TermOpen * star
   au TermClose * q
-  au FileType * let &makeprg = get(s:makeprg, &filetype, 'make') | set fmr=α,ω fdm=indent fdls=99
   au FileType qf AutoWinHeight
   au FileType gitcommit,asciidoc,markdown setl spell spl=en_us
   au FileType lua,vim setl ts=2 sw=2 sts=2 fdm=marker fdls=0
   au FileType go setl ts=4 sw=4 noet fdm=syntax fde=nvim_treesitter#foldexpr()
   au BufEnter,BufWritePost * GitStatus
-  au BufEnter * LastWindow
+  au BufEnter * SetMake | LastWindow
   au BufEnter * lua require'completion'.on_attach()
   au BufEnter go.mod set ft=gomod
   au BufEnter go.sum set ft=gosum
   au BufReadPost *.go,*.vim,*.lua JumpToLastLocation
   au BufWritePre * TrimTrailingSpace | TrimTrailingBlankLines
   au BufWritePre *.go lua GoOrgImports(); vim.lsp.buf.formatting_sync()
+  au BufWritePre *.js exe 'Eslintfmt' | lua vim.lsp.buf.formatting_sync()
   au BufWritePre *.vim,*.lua AutoIndent
   au BufWritePre *.json 1,$JQ
   au BufWritePost ~/.config/nvim/*.{vim,lua} so $MYVIMRC
@@ -168,12 +175,12 @@ nno <silent> <F5>      <Cmd>Make<CR>
 nno <silent> <F6>      <Cmd>GolangCI<CR>
 nno <silent> <F6>%     <Cmd>GolangCI %<CR>
 nno <silent> <F8>      <Cmd>Gdiff<CR>
-nno <silent> <C-Right> <Cmd>cnext<CR>
-nno <silent> <C-Left>  <Cmd>cprev<CR>
+nno <silent> <M-Right> <Cmd>cnext<CR>
+nno <silent> <M-Left>  <Cmd>cprev<CR>
 nno <silent> <F12>     <Cmd>Cfg<CR>
 nno <silent> <F12>l    <Cmd>Cfg setup.lua<CR>
 nno <silent> <Leader>w <Cmd>SaveAndClose<CR>
-nno <silent> <Space>   @=((foldclosed(line('.')) < 0) ? 'zC' : 'zO')<CR>
+nno <silent> <Space>   @=((foldclosed(line('.')) < 0) ? 'zc' : 'zo')<CR>
 nno          <C-p>     :find *
 cno <expr>   <Up>      wildmenumode() ? "\<Left>"     : "\<Up>"
 cno <expr>   <Down>    wildmenumode() ? "\<Right>"    : "\<Down>"

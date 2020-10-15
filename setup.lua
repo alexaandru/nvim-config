@@ -1,7 +1,22 @@
 require'nvim_lsp'.bashls.setup{}
 require'nvim_lsp'.cssls.setup{}
 require'nvim_lsp'.dockerls.setup{}
-require'nvim_lsp'.gopls.setup{}
+require'nvim_lsp'.gopls.setup{
+  on_attach = require'diagnostic'.on_attach,
+  cmd = {"gopls", "serve"},
+  settings = {
+    gopls = {
+      analyses = {
+        unusedparams = true,
+      },
+      codelens = {
+        gc_details = true,
+        test = true,
+      },
+      staticcheck = true,
+    },
+  },
+}
 require'nvim_lsp'.html.setup{}
 require'nvim_lsp'.jsonls.setup{}
 -- require'nvim_lsp'.pyls_ms.setup{}
@@ -11,7 +26,9 @@ require'nvim_lsp'.sumneko_lua.setup{
   -- for more settings
   settings = {Lua = {diagnostics = {globals = {"vim"}}}}
 }
-require'nvim_lsp'.terraformls.setup{}
+require'nvim_lsp'.terraformls.setup{
+  cmd = {'terraform-ls', 'serve'}
+}
 require'nvim_lsp'.tsserver.setup{}
 require'nvim_lsp'.vimls.setup{}
 require'nvim_lsp'.vuels.setup{}
