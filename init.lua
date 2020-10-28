@@ -1,8 +1,12 @@
+if vim.g.lua_loaded then
+  do return end
+end; vim.g.lua_loaded = 1
+
 require'nvim_lsp'.bashls.setup{}
 require'nvim_lsp'.cssls.setup{}
 require'nvim_lsp'.dockerls.setup{}
 require'nvim_lsp'.gopls.setup{
-  on_attach = require'diagnostic'.on_attach,
+  -- on_attach = require'diagnostic'.on_attach,
   cmd = {"gopls", "serve"},
   settings = {
     gopls = {
@@ -34,16 +38,16 @@ require'nvim_lsp'.vimls.setup{}
 require'nvim_lsp'.vuels.setup{}
 require'nvim_lsp'.yamlls.setup{}
 
-local lsputilConfig = {
-  ['textDocument/codeAction']     = require'lsputil.codeAction'.code_action_handler,
-  ['textDocument/references']     = require'lsputil.locations'.references_handler,
-  ['textDocument/definition']     = require'lsputil.locations'.definition_handler,
-  ['textDocument/declaration']    = require'lsputil.locations'.declaration_handler,
-  ['textDocument/typeDefinition'] = require'lsputil.locations'.typeDefinition_handler,
-  ['textDocument/implementation'] = require'lsputil.locations'.implementation_handler,
-  ['textDocument/documentSymbol'] = require'lsputil.symbols'.document_handler,
-  ['workspace/symbol']            = require'lsputil.symbols'.workspace_handler,
-}; for k,v in pairs(lsputilConfig) do vim.lsp.callbacks[k] = v end
+-- local lsputilConfig = {
+--   ['textDocument/codeAction']     = require'lsputil.codeAction'.code_action_handler,
+--   ['textDocument/references']     = require'lsputil.locations'.references_handler,
+--   ['textDocument/definition']     = require'lsputil.locations'.definition_handler,
+--   ['textDocument/declaration']    = require'lsputil.locations'.declaration_handler,
+--   ['textDocument/typeDefinition'] = require'lsputil.locations'.typeDefinition_handler,
+--   ['textDocument/implementation'] = require'lsputil.locations'.implementation_handler,
+--   ['textDocument/documentSymbol'] = require'lsputil.symbols'.document_handler,
+--   ['workspace/symbol']            = require'lsputil.symbols'.workspace_handler,
+-- }; for k,v in pairs(lsputilConfig) do vim.lsp.callbacks[k] = v end
 
 require'nvim-treesitter.configs'.setup{
   highlight = {enable = true},

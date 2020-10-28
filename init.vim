@@ -4,16 +4,14 @@ packadd completion-nvim
 packadd nvim-colorizer.lua
 packadd nvim-lspconfig
 packadd nvim-treesitter
-packadd diagnostic-nvim
 packadd vim-terraform
 packadd srcery-vim
-packadd popfix
-packadd nvim-lsputils
 packadd cfilter
+"packadd diagnostic-nvim
+"packadd popfix
+"packadd nvim-lsputils
 
-if !exists('g:lsp_loaded')
-  let g:lsp_loaded = 1 | exe 'luafile' stdpath('config').'/setup.lua'
-endif
+lua require('init')
 
 set autowriteall hidden
 set clipboard+=unnamedplus
@@ -36,7 +34,7 @@ set signcolumn=yes:2
 set smartcase smartindent
 set splitbelow splitright
 set termguicolors
-set title titlestring=%{get(b:,\ 'git_status',\ '~git')}\ %<%f%=%M
+set title titlestring=🌳\ \%{get(b:,\ 'git_status',\ '~git')}\ 📄\ %<%f%=%M\ \ 📦\ %{nvim_treesitter#statusline(150)}
 set wildcharm=<C-Z>
 set wildignore+=*/.git/*,*/node_modules/*
 set wildignorecase
@@ -83,10 +81,10 @@ endf
 
 func! GitStatus()
   let l:branch = trim(system('git rev-parse --abbrev-ref HEAD 2> /dev/null'), "\n")
-  if l:branch ==# '' | return '~git |' | endif
+  if l:branch ==# '' | return '~git' | endif
   let l:dirty = system('git diff --quiet || echo -n \*')
 
-  return l:branch.l:dirty.' |'
+  return l:branch.l:dirty
 endf
 
 func! ListConfigs(A, L, P)
@@ -178,7 +176,7 @@ nno <silent> <F8>      <Cmd>Gdiff<CR>
 nno <silent> <M-Right> <Cmd>cnext<CR>
 nno <silent> <M-Left>  <Cmd>cprev<CR>
 nno <silent> <F12>     <Cmd>Cfg<CR>
-nno <silent> <F12>l    <Cmd>Cfg setup.lua<CR>
+nno <silent> <F12>l    <Cmd>Cfg init.lua<CR>
 nno <silent> <Leader>w <Cmd>SaveAndClose<CR>
 nno <silent> <Space>   @=((foldclosed(line('.')) < 0) ? 'zc' : 'zo')<CR>
 nno          <C-p>     :find *
