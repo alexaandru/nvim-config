@@ -1,17 +1,14 @@
 scriptencoding utf-8
 
+packadd vim-polyglot
 packadd completion-nvim
 packadd nvim-colorizer.lua
 packadd nvim-lspconfig
 packadd nvim-treesitter
-packadd vim-terraform
-packadd srcery-vim
+packadd nvim-deus
 packadd cfilter
-"packadd diagnostic-nvim
-"packadd popfix
-"packadd nvim-lsputils
 
-lua require('init')
+lua require('config')
 
 set autowriteall hidden
 set clipboard+=unnamedplus
@@ -34,7 +31,7 @@ set signcolumn=yes:2
 set smartcase smartindent
 set splitbelow splitright
 set termguicolors
-set title titlestring=🌳\ \%{get(b:,\ 'git_status',\ '~git')}\ 📄\ %<%f%=%M\ \ 📦\ %{nvim_treesitter#statusline(150)}
+set title titlestring=🐙\ \%{get(b:,'git_status','~git')}\ 📚\ %<%f%=%M\ \ 📦\ %{nvim_treesitter#statusline(150)}
 set wildcharm=<C-Z>
 set wildignore+=*/.git/*,*/node_modules/*
 set wildignorecase
@@ -45,18 +42,6 @@ let g:loaded_python3_provider = 0
 let g:loaded_node_provider = 0
 let g:loaded_ruby_provider = 0
 let g:loaded_perl_provider = 0
-let g:netrw_banner = 0
-let g:netrw_liststyle = 1
-let g:netrw_browse_split = 4
-let g:netrw_preview = 1
-let g:netrw_altv = 1
-let g:netrw_list_hide = '^\.[a-zA-Z].*,^\./$'
-let g:netrw_hide = 1
-let g:netrw_winsize = 15
-let g:diagnostic_enable_virtual_text = 1
-let g:diagnostic_virtual_text_prefix = '⚡'
-let g:diagnostic_insert_delay = 0
-let g:diagnostic_show_sign = 1
 let s:makeprg = {
       \ 'go': '(go build ./... && go vet ./...)',
       \ 'gomod': 'go mod tidy',
@@ -83,8 +68,9 @@ func! GitStatus()
   let l:branch = trim(system('git rev-parse --abbrev-ref HEAD 2> /dev/null'), "\n")
   if l:branch ==# '' | return '~git' | endif
   let l:dirty = system('git diff --quiet || echo -n \*')
+  let b:git_status = l:branch.l:dirty
 
-  return l:branch.l:dirty
+  return b:git_status
 endf
 
 func! ListConfigs(A, L, P)
@@ -106,12 +92,11 @@ com! -nargs=? -bar -complete=customlist,ListConfigs Cfg call Cfg(<q-args>)
 com!          LoadLocalCfg if filereadable('.nvimrc') | so .nvimrc | endif
 com! -bar     SetProjRoot let b:proj_root = fnamemodify(finddir('.git/..', expand('%:p:h').';'), ':p')
 com! -bar     CdProjRoot SetProjRoot | exe 'cd' b:proj_root
-com! -bar     GitStatus let b:git_status = GitStatus()
 com!          Gdiff SetProjRoot | exe 'silent !cd '.b:proj_root.' && git show HEAD^:'.ProjRelativePath().' > /tmp/gdiff' | diffs /tmp/gdiff
 com!          Terrafmt exe 'silent !terraform fmt %' | e
 com!          Eslintfmt exe 'silent !npx eslint --fix %' | e
 com!          JumpToLastLocation let b:pos = line('''"') | if b:pos && b:pos <= line('$') | exe b:pos | endif
-com! -bar     TrimTrailingSpace norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
+com! -bar     TrimTrailingSpace silent norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
 com! -bar     TrimTrailingBlankLines %s#\($\n\s*\)\+\%$##e
 com! -bar -range=% SquashBlankLines <line1>,<line2>s/\(\n\)\{3,}/\1\1/e
 com! -bar -range=% TrimBlankLines <line1>,<line2>s/\(\n\)\{2,}/\1/e
@@ -127,8 +112,8 @@ com! -bar     PlugUpdate silent exe '! cd' stdpath('config').'/pack && git submo
 com! -range   JQ <line1>,<line2>!jq .
 
 aug Setup | au!
-  au VimEnter,DirChanged * CdProjRoot | LoadLocalCfg
-  au ColorScheme * exe 'so' stdpath('config').'/synfix.vim'
+  au VimEnter,DirChanged * CdProjRoot | exe 'LoadLocalCfg' | call GitStatus()
+  au ColorScheme * exe 'so' stdpath('config').'/color.vim'
   au TextYankPost * silent! lua require'vim.highlight'.on_yank()
   au QuickFixCmdPost [^l]* nested cw
   au QuickFixCmdPost    l* nested lw
@@ -137,12 +122,12 @@ aug Setup | au!
   au FileType qf AutoWinHeight
   au FileType gitcommit,asciidoc,markdown setl spell spl=en_us
   au FileType lua,vim setl ts=2 sw=2 sts=2 fdm=marker fdls=0
-  au FileType go setl ts=4 sw=4 noet fdm=syntax fde=nvim_treesitter#foldexpr()
-  au BufEnter,BufWritePost * GitStatus
+  au FileType go setl ts=4 sw=4 noet fdm=expr fde=nvim_treesitter#foldexpr()
   au BufEnter * SetMake | LastWindow
   au BufEnter * lua require'completion'.on_attach()
   au BufEnter go.mod set ft=gomod
   au BufEnter go.sum set ft=gosum
+  au BufEnter *.tmpl set ft=gohtmltmpl
   au BufReadPost *.go,*.vim,*.lua JumpToLastLocation
   au BufWritePre * TrimTrailingSpace | TrimTrailingBlankLines
   au BufWritePre *.go lua GoOrgImports(); vim.lsp.buf.formatting_sync()
@@ -167,6 +152,8 @@ nno <silent> g0        <Cmd>lua vim.lsp.buf.document_symbol()<CR>
 nno <silent> gW        <Cmd>lua vim.lsp.buf.workspace_symbol()<CR>
 nno <silent> <F2>      <Cmd>lua vim.lsp.buf.rename()<CR>
 nno <silent> <F16>     <Cmd>lua vim.lsp.buf.code_action()<CR>
+nno <silent> g[        <Cmd>lua vim.lsp.diagnostic.goto_next()<CR>
+nno <silent> g]        <Cmd>lua vim.lsp.diagnostic.goto_prev()<CR>
 nno <silent> <C-n>     <Cmd>let $CD=expand('%:p:h')<CR><Cmd>Term<CR>cd "$CD"<CR>clear<CR>
 nno <silent> <F3>      <Cmd>only<CR>
 nno <silent> <F5>      <Cmd>Make<CR>
@@ -176,9 +163,9 @@ nno <silent> <F8>      <Cmd>Gdiff<CR>
 nno <silent> <M-Right> <Cmd>cnext<CR>
 nno <silent> <M-Left>  <Cmd>cprev<CR>
 nno <silent> <F12>     <Cmd>Cfg<CR>
-nno <silent> <F12>l    <Cmd>Cfg init.lua<CR>
+nno <silent> <F12>l    <Cmd>Cfg config.lua<CR>
 nno <silent> <Leader>w <Cmd>SaveAndClose<CR>
-nno <silent> <Space>   @=((foldclosed(line('.')) < 0) ? 'zc' : 'zo')<CR>
+nno <silent> <Space>   @=((foldclosed(line('.')) < 0) ? 'zC' : 'zO')<CR>
 nno          <C-p>     :find *
 cno <expr>   <Up>      wildmenumode() ? "\<Left>"     : "\<Up>"
 cno <expr>   <Down>    wildmenumode() ? "\<Right>"    : "\<Down>"
@@ -191,4 +178,4 @@ ino          '         ''<Left>
 ino          [         []<Left>
 ino          {         {}<Left>
 
-for i in systemlist('ls '.stdpath('config').'/*.vim|grep -v init.vim') | exe 'so' i | endfor
+for i in systemlist('ls '.stdpath('config').'/*.vim|grep -v init') | exe 'so' i | endfor

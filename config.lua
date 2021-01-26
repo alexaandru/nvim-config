@@ -2,11 +2,10 @@ if vim.g.lua_loaded then
   do return end
 end; vim.g.lua_loaded = 1
 
-require'nvim_lsp'.bashls.setup{}
-require'nvim_lsp'.cssls.setup{}
-require'nvim_lsp'.dockerls.setup{}
-require'nvim_lsp'.gopls.setup{
-  -- on_attach = require'diagnostic'.on_attach,
+require'lspconfig'.bashls.setup{}
+require'lspconfig'.cssls.setup{}
+require'lspconfig'.dockerls.setup{}
+require'lspconfig'.gopls.setup{
   cmd = {"gopls", "serve"},
   settings = {
     gopls = {
@@ -21,32 +20,30 @@ require'nvim_lsp'.gopls.setup{
     },
   },
 }
-require'nvim_lsp'.html.setup{}
-require'nvim_lsp'.jsonls.setup{}
--- require'nvim_lsp'.pyls_ms.setup{}
-require'nvim_lsp'.pyls.setup{}
-require'nvim_lsp'.sumneko_lua.setup{
+require'lspconfig'.html.setup{}
+require'lspconfig'.jsonls.setup{}
+-- require'lspconfig'.pyls_ms.setup{}
+require'lspconfig'.pyls.setup{}
+require'lspconfig'.sumneko_lua.setup{
   -- see https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json
   -- for more settings
   settings = {Lua = {diagnostics = {globals = {"vim"}}}}
 }
-require'nvim_lsp'.terraformls.setup{
-  cmd = {'terraform-ls', 'serve'}
-}
-require'nvim_lsp'.tsserver.setup{}
-require'nvim_lsp'.vimls.setup{}
-require'nvim_lsp'.vuels.setup{}
-require'nvim_lsp'.yamlls.setup{}
+require'lspconfig'.terraformls.setup{}
+require'lspconfig'.tsserver.setup{}
+require'lspconfig'.vimls.setup{}
+require'lspconfig'.vuels.setup{}
+require'lspconfig'.yamlls.setup{}
 
 -- local lsputilConfig = {
---   ['textDocument/codeAction']     = require'lsputil.codeAction'.code_action_handler,
---   ['textDocument/references']     = require'lsputil.locations'.references_handler,
---   ['textDocument/definition']     = require'lsputil.locations'.definition_handler,
---   ['textDocument/declaration']    = require'lsputil.locations'.declaration_handler,
---   ['textDocument/typeDefinition'] = require'lsputil.locations'.typeDefinition_handler,
---   ['textDocument/implementation'] = require'lsputil.locations'.implementation_handler,
---   ['textDocument/documentSymbol'] = require'lsputil.symbols'.document_handler,
---   ['workspace/symbol']            = require'lsputil.symbols'.workspace_handler,
+  -- ['textDocument/codeAction']     = require'lsputil.codeAction'.code_action_handler,
+  -- ['textDocument/references']     = require'lsputil.locations'.references_handler,
+  -- ['textDocument/definition']     = require'lsputil.locations'.definition_handler,
+  -- ['textDocument/declaration']    = require'lsputil.locations'.declaration_handler,
+  -- ['textDocument/typeDefinition'] = require'lsputil.locations'.typeDefinition_handler,
+  -- ['textDocument/implementation'] = require'lsputil.locations'.implementation_handler,
+  -- ['textDocument/documentSymbol'] = require'lsputil.symbols'.document_handler,
+  -- ['workspace/symbol']            = require'lsputil.symbols'.workspace_handler,
 -- }; for k,v in pairs(lsputilConfig) do vim.lsp.callbacks[k] = v end
 
 require'nvim-treesitter.configs'.setup{
@@ -63,7 +60,7 @@ function LspCapabilities()
 end
 
 -- Synchronously organise (Go) imports, courtesy of
--- https://github.com/neovim/nvim-lsp/issues/115#issuecomment-656372575
+-- https://github.com/neovim/nvim-lspconfig/issues/115#issuecomment-656372575
 function GoOrgImports(timeout_ms)
   timeout_ms = timeout_ms or 1000
 

@@ -2,22 +2,28 @@ scriptencoding utf-8
 
 " Fixes to syntax highlight go here.
 
-colo srcery "onedark iceberg slate desert gruvbox8
+colo deus
 
 let s:tr_bg = 'Normal,SignColumn,VertSplit,PreProc,EndOfBuffer,Folded,htmlBold'
 for s:i in split(s:tr_bg, ',') | exe 'hi '.s:i.' guibg=NONE' | endfor
 
-hi LspDiagnosticsError       guifg=Red
-hi LspDiagnosticsWarning     guifg=Orange
-hi LspDiagnosticsInformation guifg=Pink
-hi LspDiagnosticsHint        guifg=Green
+hi LspDiagnosticsVirtualTextError       guifg=Red
+hi LspDiagnosticsVirtualTextWarning     guifg=Orange
+hi LspDiagnosticsVirtualTextInformation guifg=Pink
+hi LspDiagnosticsVirtualTextHint        guifg=Green
+
+hi LspDiagnosticsSignError       guifg=Red
+hi LspDiagnosticsSignWarning     guifg=Orange
+hi LspDiagnosticsSignInformation guifg=Pink
+hi LspDiagnosticsSignHint        guifg=Green
 
 "hi Type      gui=NONE
 "hi Statement gui=NONE
 hi StatusLineNC gui=NONE guibg=#222222
+hi EndOfBuffer               guifg=#992277
 
 nno          <Leader>c <Cmd>so $VIMRUNTIME/syntax/hitest.vim<CR>
-nno <silent> <F12>c    <Cmd>Cfg synfix.vim<CR>
+nno <silent> <F12>c    <Cmd>Cfg color.vim<CR>
 
 " Tools & tips for colorscheme editing
 " https://github.com/lifepillar/vim-colortemplate
