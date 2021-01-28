@@ -1,54 +1,82 @@
-if vim.g.lua_loaded then
-  do return end
-end; vim.g.lua_loaded = 1
-
-require'lspconfig'.bashls.setup{}
-require'lspconfig'.cssls.setup{}
-require'lspconfig'.dockerls.setup{}
-require'lspconfig'.gopls.setup{
-  cmd = {"gopls", "serve"},
-  settings = {
-    gopls = {
-      analyses = {
-        unusedparams = true,
+local sumneko_root = '/home/alex/.lua_lsp'
+local sumneko_binary = sumneko_root .. '/bin/Linux/lua-language-server'
+local lsp = require 'lspconfig'
+local lsp_cfg = {
+  bashls = {},
+  cssls = {},
+  dockerls = {},
+  gopls = { -- https://github.com/golang/tools/blob/master/gopls/doc/settings.md
+    cmd = {'gopls', 'serve'},
+    settings = {
+      gopls = {
+        analyses = {fieldalignment = true, shadow = true, unusedparams = true},
+        codelenses = {
+          gc_details = true,
+          test = true,
+          generate = true,
+          tidy = true,
+        },
+        staticcheck = true,
+        gofumpt = true,
+        hoverKind = 'SynopsisDocumentation',
       },
-      codelens = {
-        gc_details = true,
-        test = true,
-      },
-      staticcheck = true,
     },
   },
+  html = {},
+  jsonls = {},
+  pyls = {},
+  sumneko_lua = { -- https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json
+    cmd = {sumneko_binary, '-E', sumneko_root .. '/main.lua'},
+    settings = {
+      Lua = {
+        runtime = {version = 'LuaJIT', path = vim.split(package.path, ';')},
+        diagnostics = {globals = {'vim'}},
+        workspace = {
+          library = {
+            [vim.fn.expand('$VIMRUNTIME/lua')] = true,
+            [vim.fn.expand('$VIMRUNTIME/lua/vim/lsp')] = true,
+          },
+        },
+      },
+    },
+  },
+  terraformls = {},
+  tsserver = {},
+  vimls = {},
+  vuels = {},
+  yamlls = {},
 }
-require'lspconfig'.html.setup{}
-require'lspconfig'.jsonls.setup{}
--- require'lspconfig'.pyls_ms.setup{}
-require'lspconfig'.pyls.setup{}
-require'lspconfig'.sumneko_lua.setup{
-  -- see https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json
-  -- for more settings
-  settings = {Lua = {diagnostics = {globals = {"vim"}}}}
-}
-require'lspconfig'.terraformls.setup{}
-require'lspconfig'.tsserver.setup{}
-require'lspconfig'.vimls.setup{}
-require'lspconfig'.vuels.setup{}
-require'lspconfig'.yamlls.setup{}
 
--- local lsputilConfig = {
-  -- ['textDocument/codeAction']     = require'lsputil.codeAction'.code_action_handler,
-  -- ['textDocument/references']     = require'lsputil.locations'.references_handler,
-  -- ['textDocument/definition']     = require'lsputil.locations'.definition_handler,
-  -- ['textDocument/declaration']    = require'lsputil.locations'.declaration_handler,
-  -- ['textDocument/typeDefinition'] = require'lsputil.locations'.typeDefinition_handler,
-  -- ['textDocument/implementation'] = require'lsputil.locations'.implementation_handler,
-  -- ['textDocument/documentSymbol'] = require'lsputil.symbols'.document_handler,
-  -- ['workspace/symbol']            = require'lsputil.symbols'.workspace_handler,
--- }; for k,v in pairs(lsputilConfig) do vim.lsp.callbacks[k] = v end
+for k, v in pairs(lsp_cfg) do lsp[k].setup(v) end
 
-require'nvim-treesitter.configs'.setup{
+vim.lsp.handlers["textDocument/publishDiagnostics"] =
+    vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {
+      underline = true,
+      virtual_text = true,
+      signs = true,
+      update_in_insert = true,
+    })
+
+require'nvim-treesitter.configs'.setup {
   highlight = {enable = true},
-  ensure_installed = {'go', 'json', 'lua', 'html', 'css', 'markdown', 'vue', 'python'}
+  indent = {enable = true},
+  incremental_selection = {
+    enable = true,
+    keymaps = {
+      init_selection = "<Return>",
+      node_incremental = "<Return>",
+      scope_incremental = "<Tab>",
+      node_decremental = "<S-Tab>",
+    },
+  },
+  ensure_installed = 'all',
+}
+
+require'compe'.setup {
+  enabled = true,
+  min_length = 2,
+  preselect = 'enable', -- 'disable' | 'always'
+  source = {path = true, buffer = true, nvim_lsp = true},
 }
 
 vim.cmd('set termguicolors')
@@ -64,13 +92,12 @@ end
 function GoOrgImports(timeout_ms)
   timeout_ms = timeout_ms or 1000
 
-  local context = {source={organizeImports=true}}
-  vim.validate {context={context, 't', true}}
-
+  local context = {source = {organizeImports = true}}
   local params = vim.lsp.util.make_range_params()
   params.context = context
 
-  local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, timeout_ms)
+  local result = vim.lsp.buf_request_sync(0, 'textDocument/codeAction', params,
+                                          timeout_ms)
   if not result or not result[1] then return end
 
   result = result[1].result

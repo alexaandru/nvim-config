@@ -1,11 +1,12 @@
 scriptencoding utf-8
 
-packadd vim-polyglot
-packadd completion-nvim
-packadd nvim-colorizer.lua
 packadd nvim-lspconfig
+packadd nvim-lspupdate
 packadd nvim-treesitter
+packadd nvim-compe
 packadd nvim-deus
+packadd nvim-colorizer.lua
+"packadd markdown-preview.nvim
 packadd cfilter
 
 lua require('config')
@@ -43,13 +44,14 @@ let g:loaded_node_provider = 0
 let g:loaded_ruby_provider = 0
 let g:loaded_perl_provider = 0
 let s:makeprg = {
-      \ 'go': '(go build ./... && go vet ./...)',
-      \ 'gomod': 'go mod tidy',
-      \ 'gosum': 'go mod tidy',
-      \ 'vim': 'vint --enable-neovim %',
+      \ 'go':         '(go build ./... && go vet ./...)',
+      \ 'gomod':      'go mod tidy',
+      \ 'gosum':      'go mod tidy',
+      \ 'vim':        'vint --enable-neovim %',
       \ 'javascript': 'npm run lint',
-      \ 'terraform': '(terraform validate -no-color && for i in $(find -iname ''*.tf''\|xargs dirname\|sort -u\|paste -s); do tflint $i; done)',
-      \ 'json': 'jsonlint %',
+      \ 'terraform':  '(terraform validate -no-color && for i in $(find -iname ''*.tf''\|xargs dirname\|sort -u\|paste -s); do tflint $i; done)',
+      \ 'json':       'jsonlint %',
+      \ 'lua':        'luacheck --formatter plain --globals vim -- %',
       \ }
 
 func! GolangCI(...)
@@ -94,6 +96,7 @@ com! -bar     SetProjRoot let b:proj_root = fnamemodify(finddir('.git/..', expan
 com! -bar     CdProjRoot SetProjRoot | exe 'cd' b:proj_root
 com!          Gdiff SetProjRoot | exe 'silent !cd '.b:proj_root.' && git show HEAD^:'.ProjRelativePath().' > /tmp/gdiff' | diffs /tmp/gdiff
 com!          Terrafmt exe 'silent !terraform fmt %' | e
+com!          LuaFmt exe 'silent !lua-format -i %' | e
 com!          Eslintfmt exe 'silent !npx eslint --fix %' | e
 com!          JumpToLastLocation let b:pos = line('''"') | if b:pos && b:pos <= line('$') | exe b:pos | endif
 com! -bar     TrimTrailingSpace silent norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
@@ -108,7 +111,7 @@ com! -bar     Scratch <mods> new +Scratchify
 com! -bar     AutoWinHeight silent exe max([min([line('$'), 12]), 1]).'wincmd _'
 com! -bar     AutoIndent silent norm gg=G`.
 com! -bar     LspCapabilities lua LspCapabilities()
-com! -bar     PlugUpdate silent exe '! cd' stdpath('config').'/pack && git submodule update --remote --rebase'
+com!          PlugUpdate silent exe '! cd' stdpath('config').'/pack && git submodule update --remote --rebase' | so $MYVIMRC
 com! -range   JQ <line1>,<line2>!jq .
 
 aug Setup | au!
@@ -121,10 +124,9 @@ aug Setup | au!
   au TermClose * q
   au FileType qf AutoWinHeight
   au FileType gitcommit,asciidoc,markdown setl spell spl=en_us
-  au FileType lua,vim setl ts=2 sw=2 sts=2 fdm=marker fdls=0
+  au FileType lua,vim setl ts=2 sw=2 sts=2 fdls=0 fdm=expr fde=nvim_treesitter#foldexpr()
   au FileType go setl ts=4 sw=4 noet fdm=expr fde=nvim_treesitter#foldexpr()
-  au BufEnter * SetMake | LastWindow
-  au BufEnter * lua require'completion'.on_attach()
+  au BufEnter * SetMake | exe 'ColorizerAttachToBuffer' | LastWindow
   au BufEnter go.mod set ft=gomod
   au BufEnter go.sum set ft=gosum
   au BufEnter *.tmpl set ft=gohtmltmpl
@@ -132,10 +134,11 @@ aug Setup | au!
   au BufWritePre * TrimTrailingSpace | TrimTrailingBlankLines
   au BufWritePre *.go lua GoOrgImports(); vim.lsp.buf.formatting_sync()
   au BufWritePre *.js exe 'Eslintfmt' | lua vim.lsp.buf.formatting_sync()
-  au BufWritePre *.vim,*.lua AutoIndent
+  au BufWritePre *.vim AutoIndent
   au BufWritePre *.json 1,$JQ
-  au BufWritePost ~/.config/nvim/*.{vim,lua} so $MYVIMRC
   au BufWritePost *.tf Terrafmt
+  au BufWritePost *.lua LuaFmt
+  au BufWritePost ~/.config/nvim/*.{vim,lua} so $MYVIMRC
   au BufWritePost,FileWritePost go.mod,go.sum silent! make | e
 aug END
 
@@ -154,6 +157,7 @@ nno <silent> <F2>      <Cmd>lua vim.lsp.buf.rename()<CR>
 nno <silent> <F16>     <Cmd>lua vim.lsp.buf.code_action()<CR>
 nno <silent> g[        <Cmd>lua vim.lsp.diagnostic.goto_next()<CR>
 nno <silent> g]        <Cmd>lua vim.lsp.diagnostic.goto_prev()<CR>
+nno <silent> <F7>      <Cmd>lua vim.lsp.diagnostic.set_loclist()<CR>
 nno <silent> <C-n>     <Cmd>let $CD=expand('%:p:h')<CR><Cmd>Term<CR>cd "$CD"<CR>clear<CR>
 nno <silent> <F3>      <Cmd>only<CR>
 nno <silent> <F5>      <Cmd>Make<CR>
@@ -172,10 +176,12 @@ cno <expr>   <Down>    wildmenumode() ? "\<Right>"    : "\<Down>"
 cno <expr>   <Left>    wildmenumode() ? "\<Up>"       : "\<Left>"
 cno <expr>   <Right>   wildmenumode() ? "\<BS>\<C-Z>" : "\<Right>"
 xno          <Leader>q !jq .<CR>
-ino <silent> <F2>      <C-x>s
 ino          '         ''<Left>
-"ino          (         ()<Left>
+"ino          "         ""<Left>
+ino          (         ()<Left>
 ino          [         []<Left>
 ino          {         {}<Left>
+
+colo deus " TODO: why is this needed?!? It's already set in color.vim
 
 for i in systemlist('ls '.stdpath('config').'/*.vim|grep -v init') | exe 'so' i | endfor
