@@ -3,8 +3,8 @@ scriptencoding utf-8
 packadd nvim-lspconfig
 packadd nvim-lspupdate
 packadd nvim-treesitter
-packadd nvim-deus
 packadd nvim-colorizer.lua
+packadd nvim-deus
 "packadd markdown-preview.nvim
 "packadd cfilter
 
