@@ -3,11 +3,10 @@ scriptencoding utf-8
 packadd nvim-lspconfig
 packadd nvim-lspupdate
 packadd nvim-treesitter
-packadd nvim-compe
 packadd nvim-deus
 packadd nvim-colorizer.lua
 "packadd markdown-preview.nvim
-packadd cfilter
+"packadd cfilter
 
 lua require('config')
 
@@ -52,6 +51,7 @@ let s:makeprg = {
       \ 'terraform':  '(terraform validate -no-color && for i in $(find -iname ''*.tf''\|xargs dirname\|sort -u\|paste -s); do tflint $i; done)',
       \ 'json':       'jsonlint %',
       \ 'lua':        'luacheck --formatter plain --globals vim -- %',
+      \ 'vlang':      'v % 2>&1 \| grep -v "^ "',
       \ }
 
 func! GolangCI(...)
@@ -97,6 +97,7 @@ com! -bar     CdProjRoot SetProjRoot | exe 'cd' b:proj_root
 com!          Gdiff SetProjRoot | exe 'silent !cd '.b:proj_root.' && git show HEAD^:'.ProjRelativePath().' > /tmp/gdiff' | diffs /tmp/gdiff
 com!          Terrafmt exe 'silent !terraform fmt %' | e
 com!          LuaFmt exe 'silent !lua-format -i %' | e
+com!          VFmt exe 'silent !v fmt -w %' | e
 com!          Eslintfmt exe 'silent !npx eslint --fix %' | e
 com!          JumpToLastLocation let b:pos = line('''"') | if b:pos && b:pos <= line('$') | exe b:pos | endif
 com! -bar     TrimTrailingSpace silent norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
@@ -127,6 +128,7 @@ aug Setup | au!
   au FileType lua,vim setl ts=2 sw=2 sts=2 fdls=0 fdm=expr fde=nvim_treesitter#foldexpr()
   au FileType go setl ts=4 sw=4 noet fdm=expr fde=nvim_treesitter#foldexpr()
   au BufEnter * SetMake | exe 'ColorizerAttachToBuffer' | LastWindow
+  au BufEnter *.v set ft=vlang
   au BufEnter go.mod set ft=gomod
   au BufEnter go.sum set ft=gosum
   au BufEnter *.tmpl set ft=gohtmltmpl
@@ -134,10 +136,12 @@ aug Setup | au!
   au BufWritePre * TrimTrailingSpace | TrimTrailingBlankLines
   au BufWritePre *.go lua GoOrgImports(); vim.lsp.buf.formatting_sync()
   au BufWritePre *.js exe 'Eslintfmt' | lua vim.lsp.buf.formatting_sync()
+  au BufWritePre *.R lua vim.lsp.buf.formatting()
   au BufWritePre *.vim AutoIndent
   au BufWritePre *.json 1,$JQ
   au BufWritePost *.tf Terrafmt
   au BufWritePost *.lua LuaFmt
+  au BufWritePost *.v VFmt
   au BufWritePost ~/.config/nvim/*.{vim,lua} so $MYVIMRC
   au BufWritePost,FileWritePost go.mod,go.sum silent! make | e
 aug END
@@ -177,6 +181,7 @@ cno <expr>   <Left>    wildmenumode() ? "\<Up>"       : "\<Left>"
 cno <expr>   <Right>   wildmenumode() ? "\<BS>\<C-Z>" : "\<Right>"
 xno          <Leader>q !jq .<CR>
 ino          '         ''<Left>
+ino <expr>   <Tab>     luaeval("SmartTabComplete()")
 "ino          "         ""<Left>
 ino          (         ()<Left>
 ino          [         []<Left>

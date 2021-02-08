@@ -25,6 +25,7 @@ local lsp_cfg = {
   html = {},
   jsonls = {},
   pyls = {},
+  r_language_server = nil,
   sumneko_lua = { -- https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json
     cmd = {sumneko_binary, '-E', sumneko_root .. '/main.lua'},
     settings = {
@@ -43,6 +44,7 @@ local lsp_cfg = {
   terraformls = {},
   tsserver = {},
   vimls = {},
+  vls = nil, -- {cmd = {"/usr/local/bin/vls"}},
   vuels = {},
   yamlls = {},
 }
@@ -72,13 +74,6 @@ require'nvim-treesitter.configs'.setup {
   ensure_installed = 'all',
 }
 
-require'compe'.setup {
-  enabled = true,
-  min_length = 2,
-  preselect = 'enable', -- 'disable' | 'always'
-  source = {path = true, buffer = true, nvim_lsp = true},
-}
-
 vim.cmd('set termguicolors')
 require'colorizer'.setup()
 
@@ -105,4 +100,26 @@ function GoOrgImports(timeout_ms)
 
   local edit = result[1].edit
   vim.lsp.util.apply_workspace_edit(edit)
+end
+
+-- inspired by https://vim.fandom.com/wiki/Smart_mapping_for_tab_completion
+function SmartTabComplete()
+  local s = vim.fn.getline('.'):sub(1, vim.fn.col('.') - 1):gsub("%s+", "")
+
+  if s == "" then return "	" end
+  if s:sub(s:len(), s:len()) == "/" then return "" end
+  return ""
+end
+
+local ts_utils = require 'nvim-treesitter.ts_utils'
+-- experiment: get current function name when on function name or inside ()
+-- use that to query LSP about function signature
+-- then what??? how/when to display it? where?
+function CurrNode(winnr, bufnr)
+  winnr = winnr or 0
+  bufnr = bufnr or 0
+  local node = ts_utils.get_node_at_cursor(winnr)
+  local text = ts_utils.get_node_text(node, bufnr)
+
+  print("Current node: " .. vim.inspect(text))
 end
