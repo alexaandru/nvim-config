@@ -98,9 +98,6 @@ com!          LoadLocalCfg if filereadable('.nvimrc') | so .nvimrc | endif
 com! -bar     SetProjRoot let b:proj_root = fnamemodify(finddir('.git/..', expand('%:p:h').';'), ':p')
 com! -bar     CdProjRoot SetProjRoot | exe 'cd' b:proj_root
 com!          Gdiff SetProjRoot | exe 'silent !cd '.b:proj_root.' && git show HEAD^:'.ProjRelativePath().' > /tmp/gdiff' | diffs /tmp/gdiff
-com!          Terrafmt exe 'silent !terraform fmt %' | e
-com!          LuaFmt exe 'silent !lua-format -i %' | e
-com!          VFmt exe 'silent !v fmt -w %' | e
 com!          Eslintfmt exe 'silent !npx eslint --fix %' | e
 com!          JumpToLastLocation let b:pos = line('''"') | if b:pos && b:pos <= line('$') | exe b:pos | endif
 com! -bar     TrimTrailingSpace silent norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
@@ -134,35 +131,18 @@ aug Setup | au!
   au BufEnter *.v set ft=vlang
   au BufEnter go.mod set ft=gomod
   au BufEnter go.sum set ft=gosum
-  au BufEnter *.tmpl set ft=gohtmltmpl
+  "au BufEnter *.tmpl set ft=gohtmltmpl
   au BufReadPost *.go,*.vim,*.lua JumpToLastLocation
   au BufWritePre * TrimTrailingSpace | TrimTrailingBlankLines
   au BufWritePre *.js Eslintfmt
   au BufWritePre *.vim AutoIndent
   au BufWritePre *.json 1,$JQ
-  au BufWritePost *.tf Terrafmt
-  au BufWritePost *.lua LuaFmt
-  au BufWritePost *.v VFmt
   au BufWritePost ~/.config/nvim/*.{vim,lua} so $MYVIMRC
   au BufWritePost,FileWritePost go.mod,go.sum silent! make | e
 aug END
 
 nno <silent> gb        <Cmd>ls<CR>:b<Space>
 nno <silent> db        <Cmd>%bd<bar>e#<CR>
-nno <silent> gd        <Cmd>lua vim.lsp.buf.declaration()<CR>
-nno <silent> <c-]>     <Cmd>lua vim.lsp.buf.definition()<CR>
-nno <silent> <F1>      <Cmd>lua vim.lsp.buf.hover()<CR>
-nno <silent> gD        <Cmd>lua vim.lsp.buf.implementation()<CR>
-nno <silent> <c-k>     <Cmd>lua vim.lsp.buf.signature_help()<CR>
-nno <silent> 1gD       <Cmd>lua vim.lsp.buf.type_definition()<CR>
-nno <silent> gr        <Cmd>lua vim.lsp.buf.references()<CR>
-nno <silent> g0        <Cmd>lua vim.lsp.buf.document_symbol()<CR>
-nno <silent> gW        <Cmd>lua vim.lsp.buf.workspace_symbol()<CR>
-nno <silent> <F2>      <Cmd>lua vim.lsp.buf.rename()<CR>
-nno <silent> <F16>     <Cmd>lua vim.lsp.buf.code_action()<CR>
-nno <silent> g[        <Cmd>lua vim.lsp.diagnostic.goto_next()<CR>
-nno <silent> g]        <Cmd>lua vim.lsp.diagnostic.goto_prev()<CR>
-nno <silent> <F7>      <Cmd>lua vim.lsp.diagnostic.set_loclist()<CR>
 nno <silent> <C-n>     <Cmd>let $CD=expand('%:p:h')<CR><Cmd>Term<CR>cd "$CD"<CR>clear<CR>
 nno <silent> <F3>      <Cmd>only<CR>
 nno <silent> <F5>      <Cmd>Make<CR>

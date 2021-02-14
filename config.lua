@@ -1,3 +1,49 @@
+local function n(key, cmd)
+  cmd = ("<Cmd>lua vim.lsp.%s()<CR>"):format(cmd)
+  vim.api.nvim_buf_set_keymap(0, "n", key, cmd, {noremap = true, silent = true})
+end
+
+local function lsp_mappings() -- LuaFormatter off
+  n("gd",    "buf.declaration")
+  n("<c-]>", "buf.definition")
+  n("<F1>",  "buf.hover")
+  n("gD",    "buf.implementation")
+  n("<c-k>", "buf.signature_help")
+  n("1gD",   "buf.type_definition")
+  n("gr",    "buf.references")
+  n("g0",    "buf.document_symbol")
+  n("gW",    "buf.workspace_symbol")
+  n("<F2>",  "buf.rename")
+  n("<F16>", "buf.code_action")
+  n("g[",    "diagnostic.goto_next")
+  n("g]",    "diagnostic.goto_prev")
+  n("<F7>",  "diagnostic.set_loclist")
+end -- LuaFormatter on
+
+local function on_attach_async_fmt(client, bufnr)
+  lsp_mappings()
+  vim.cmd "au Setup BufWritePre <buffer> lua vim.lsp.buf.formatting()"
+end
+
+local function on_attach(client, bufnr)
+  lsp_mappings()
+
+  local au = {
+    ["OrgImports()"] = client.resolved_capabilities.code_action or nil,
+    ["vim.lsp.buf.formatting_sync()"] = client.resolved_capabilities
+        .document_formatting or nil,
+  }
+
+  if vim.tbl_isempty(au) then return end
+
+  vim.cmd(("au Setup BufWritePre <buffer> lua %s"):format(
+              table.concat(vim.tbl_keys(au), "; ")))
+end
+
+local efm_cfg = {
+  lua = {{formatCommand = "lua-format -i", formatStdin = true}},
+  tf = {{formatCommand = "terraform fmt -", formatStdin = true}},
+}
 local sumneko_root = "/home/alex/.lua_lsp"
 local sumneko_binary = sumneko_root .. "/bin/Linux/lua-language-server"
 local lsp = require "lspconfig"
@@ -5,7 +51,15 @@ local lsp_cfg = {
   bashls = {},
   cssls = {},
   dockerls = {},
-  efm = nil, -- check https://github.com/tomaskallup/dotfiles/blob/master/nvim/lua/lsp-config.lua
+  -- https://github.com/tomaskallup/dotfiles/blob/master/nvim/lua/lsp-config.lua,
+  -- https://github.com/lukas-reineke/dotfiles/tree/master/vim/lua
+  -- https://github.com/tsuyoshicho/vim-efm-langserver-settings
+  efm = {
+    on_attach = on_attach_async_fmt,
+    init_options = {documentFormatting = true},
+    filetypes = vim.tbl_keys(efm_cfg),
+    settings = {rootMarkers = {".git"}, languages = efm_cfg},
+  },
   gopls = { -- https://github.com/golang/tools/blob/master/gopls/doc/settings.md
     cmd = {"gopls", "serve"},
     settings = {
@@ -26,11 +80,7 @@ local lsp_cfg = {
   html = {},
   jsonls = {},
   pyls = {},
-  r_language_server = {
-    on_attach = function(client, bufnr)
-      vim.cmd "au Setup BufWritePre <buffer> lua vim.lsp.buf.formatting()"
-    end,
-  },
+  r_language_server = {on_attach = on_attach_async_fmt},
   sumneko_lua = { -- https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json
     cmd = {sumneko_binary, "-E", sumneko_root .. "/main.lua"},
     settings = {
@@ -53,23 +103,6 @@ local lsp_cfg = {
   vuels = {},
   yamlls = {},
 }
-
-local function on_attach(client, bufnr)
-  local au = {}
-
-  if client.resolved_capabilities.code_action then
-    table.insert(au, "OrgImports()")
-  end
-
-  if client.resolved_capabilities.document_formatting then
-    table.insert(au, "vim.lsp.buf.formatting_sync()")
-  end
-
-  -- print(vim.inspect(client.resolved_capabilities))
-
-  vim.cmd(
-      ("au Setup BufWritePre <buffer> lua %s"):format(table.concat(au, "; ")))
-end
 
 for k, v in pairs(lsp_cfg) do
   lsp[k].setup(vim.tbl_extend("keep", v, {on_attach = on_attach}))
