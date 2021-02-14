@@ -54,7 +54,6 @@ let s:makeprg = {
       \ 'terraform':  '(terraform validate -no-color && for i in $(find -iname ''*.tf''\|xargs dirname\|sort -u\|paste -s); do tflint $i; done)',
       \ 'json':       'jsonlint %',
       \ 'lua':        'luacheck --formatter plain --globals vim -- %',
-      \ 'vlang':      'v % 2>&1 \| grep -v "^ "',
       \ }
 
 func! GolangCI(...)
@@ -98,7 +97,6 @@ com!          LoadLocalCfg if filereadable('.nvimrc') | so .nvimrc | endif
 com! -bar     SetProjRoot let b:proj_root = fnamemodify(finddir('.git/..', expand('%:p:h').';'), ':p')
 com! -bar     CdProjRoot SetProjRoot | exe 'cd' b:proj_root
 com!          Gdiff SetProjRoot | exe 'silent !cd '.b:proj_root.' && git show HEAD^:'.ProjRelativePath().' > /tmp/gdiff' | diffs /tmp/gdiff
-com!          Eslintfmt exe 'silent !npx eslint --fix %' | e
 com!          JumpToLastLocation let b:pos = line('''"') | if b:pos && b:pos <= line('$') | exe b:pos | endif
 com! -bar     TrimTrailingSpace silent norm m':%s/[<Space><Tab><C-v><C-m>]\+$//e<NL>''
 com! -bar     TrimTrailingBlankLines %s#\($\n\s*\)\+\%$##e
@@ -128,15 +126,12 @@ aug Setup | au!
   au FileType lua,vim setl ts=2 sw=2 sts=2 fdls=0 fdm=expr fde=nvim_treesitter#foldexpr()
   au FileType go setl ts=4 sw=4 noet fdm=expr fde=nvim_treesitter#foldexpr()
   au BufEnter * SetMake | exe 'ColorizerAttachToBuffer' | LastWindow
-  au BufEnter *.v set ft=vlang
   au BufEnter go.mod set ft=gomod
   au BufEnter go.sum set ft=gosum
   "au BufEnter *.tmpl set ft=gohtmltmpl
   au BufReadPost *.go,*.vim,*.lua JumpToLastLocation
   au BufWritePre * TrimTrailingSpace | TrimTrailingBlankLines
-  au BufWritePre *.js Eslintfmt
   au BufWritePre *.vim AutoIndent
-  au BufWritePre *.json 1,$JQ
   au BufWritePost ~/.config/nvim/*.{vim,lua} so $MYVIMRC
   au BufWritePost,FileWritePost go.mod,go.sum silent! make | e
 aug END

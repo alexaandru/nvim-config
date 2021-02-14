@@ -1,32 +1,32 @@
-local function n(key, cmd)
+local function nno(key, cmd)
   cmd = ("<Cmd>lua vim.lsp.%s()<CR>"):format(cmd)
   vim.api.nvim_buf_set_keymap(0, "n", key, cmd, {noremap = true, silent = true})
 end
 
-local function lsp_mappings() -- LuaFormatter off
-  n("gd",    "buf.declaration")
-  n("<c-]>", "buf.definition")
-  n("<F1>",  "buf.hover")
-  n("gD",    "buf.implementation")
-  n("<c-k>", "buf.signature_help")
-  n("1gD",   "buf.type_definition")
-  n("gr",    "buf.references")
-  n("g0",    "buf.document_symbol")
-  n("gW",    "buf.workspace_symbol")
-  n("<F2>",  "buf.rename")
-  n("<F16>", "buf.code_action")
-  n("g[",    "diagnostic.goto_next")
-  n("g]",    "diagnostic.goto_prev")
-  n("<F7>",  "diagnostic.set_loclist")
-end -- LuaFormatter on
+local lsp_keys = { -- LuaFormatter off
+  ["buf.declaration"]        = "gd",
+  ["buf.definition"]         = "<c-]>",
+  ["buf.hover"]              = "<F1>",
+  ["buf.implementation"]     = "gD",
+  ["buf.signature_help"]     = "<c-k>",
+  ["buf.type_definition"]    = "1gD",
+  ["buf.references"]         = "gr",
+  ["buf.document_symbol"]    = "g0",
+  ["buf.workspace_symbol"]   = "gW",
+  ["buf.rename"]             = "<F2>",
+  ["buf.code_action"]        = "<F16>",
+  ["diagnostic.goto_next"]   = "g[",
+  ["diagnostic.goto_prev"]   = "g]",
+  ["diagnostic.set_loclist"] = "<F7>",
+} -- LuaFormatter on
 
 local function on_attach_async_fmt(client, bufnr)
-  lsp_mappings()
+  for cmd, key in pairs(lsp_keys) do nno(key, cmd) end
   vim.cmd "au Setup BufWritePre <buffer> lua vim.lsp.buf.formatting()"
 end
 
 local function on_attach(client, bufnr)
-  lsp_mappings()
+  for cmd, key in pairs(lsp_keys) do nno(key, cmd) end
 
   local au = {
     ["OrgImports()"] = client.resolved_capabilities.code_action or nil,
@@ -40,9 +40,31 @@ local function on_attach(client, bufnr)
               table.concat(vim.tbl_keys(au), "; ")))
 end
 
+local prettier = {
+  formatCommand = "npx prettier --arrow-parens avoid --stdin-filepath ${INPUT}",
+  formatStdin = true,
+}
+local eslint = { -- WIP
+  lintCommand = "npx eslint -f compact --stdin-filename ${INPUT}",
+  lintStdin = true,
+  lintIgnoreExitCode = true,
+  lintFormats = {
+    "%f: line %l, col %c, %trror - %m",
+    "%f: line %l, col %c, %tarning - %m",
+  },
+}
 local efm_cfg = {
   lua = {{formatCommand = "lua-format -i", formatStdin = true}},
   tf = {{formatCommand = "terraform fmt -", formatStdin = true}},
+  json = {{formatCommand = "jq .", formatStdin = true}},
+  javascript = {prettier},
+  typescript = {prettier},
+  yaml = {prettier},
+  vue = {prettier},
+  html = {prettier},
+  scss = {prettier},
+  css = {prettier},
+  markdown = {prettier},
 }
 local sumneko_root = "/home/alex/.lua_lsp"
 local sumneko_binary = sumneko_root .. "/bin/Linux/lua-language-server"
@@ -56,7 +78,7 @@ local lsp_cfg = {
   -- https://github.com/tsuyoshicho/vim-efm-langserver-settings
   efm = {
     on_attach = on_attach_async_fmt,
-    init_options = {documentFormatting = true},
+    init_options = {documentFormatting = true, codeAction = true},
     filetypes = vim.tbl_keys(efm_cfg),
     settings = {rootMarkers = {".git"}, languages = efm_cfg},
   },
@@ -97,9 +119,15 @@ local lsp_cfg = {
     },
   },
   terraformls = {},
-  tsserver = {},
+  tsserver = {
+    on_attach = function(client, bufnr)
+      -- prefer prettier
+      client.resolved_capabilities.document_formatting = false
+      on_attach(client, bufnr)
+    end,
+    settings = {documentFormatting = false},
+  },
   vimls = {},
-  vls = nil, -- {cmd = {"/usr/local/bin/vls"}},
   vuels = {},
   yamlls = {},
 }
@@ -150,8 +178,8 @@ vim.cmd("set termguicolors")
 require"colorizer".setup()
 
 function LspCapabilities()
-  local _, v = next(vim.lsp.buf_get_clients())
-  print(vim.inspect(v.server_capabilities))
+  local _, c = next(vim.lsp.buf_get_clients())
+  print(vim.inspect(c.resolved_capabilities))
 end
 
 -- Synchronously organise imports, courtesy of
@@ -159,23 +187,18 @@ end
 -- https://github.com/lucax88x/configs/blob/master/dotfiles/.config/nvim/lua/lt/lsp/functions.lua
 function OrgImports(ms)
   ms = ms or 1000
-
   local context = {source = {organizeImports = true}}
   local params = vim.lsp.util.make_range_params()
   params.context = context
 
   local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params,
                                           ms)
-  if not result or vim.tbl_isempty(result) then return end
-
-  for _, res in pairs(result) do
-    if res.result then
-      for _, r in pairs(res.result) do
-        if r.edit then
-          vim.lsp.util.apply_workspace_edit(r.edit)
-        else
-          vim.lsp.buf.execute_command(r.command)
-        end
+  for _, res in pairs(result or {}) do
+    for _, r in pairs(res.result or {}) do
+      if r.edit then
+        vim.lsp.util.apply_workspace_edit(r.edit)
+      else
+        vim.lsp.buf.execute_command(r.command)
       end
     end
   end
@@ -188,15 +211,4 @@ function SmartTabComplete()
   if s == "" then return "	" end
   if s:sub(s:len(), s:len()) == "/" then return "" end
   return ""
-end
-
-local tsu = require "nvim-treesitter.ts_utils"
--- experiment: get current function name when on function name or inside ()
--- use that to query LSP about function signature
--- then what??? how/when to display it? where?
--- see https://github.com/neovim/neovim/issues/12390#issuecomment-716107137
-function CurrNode(winnr, bufnr)
-  local node = tsu.get_node_at_cursor(winnr or 0)
-  local text = tsu.get_node_text(node, bufnr or 0)
-  print("Current node: " .. vim.inspect(text))
 end
