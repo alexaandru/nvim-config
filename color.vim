@@ -22,6 +22,11 @@ hi LspDiagnosticsSignHint        guifg=Green
 hi StatusLineNC gui=NONE guibg=#222222
 hi EndOfBuffer               guifg=#992277
 
+sig define LspDiagnosticsSignError       text=⚡ texthl=LspDiagnosticsSignError
+sig define LspDiagnosticsSignWarning     text=w  texthl=LspDiagnosticsSignWarning
+sig define LspDiagnosticsSignInformation text=i  texthl=LspDiagnosticsSignInformation
+sig define LspDiagnosticsSignHint        text=💡 texthl=LspDiagnosticsSignHint
+
 nno          <Leader>c <Cmd>so $VIMRUNTIME/syntax/hitest.vim<CR>
 nno <silent> <F12>c    <Cmd>Cfg color.vim<CR>
 

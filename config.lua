@@ -5,6 +5,7 @@ local lsp_cfg = {
   bashls = {},
   cssls = {},
   dockerls = {},
+  efm = nil, -- check https://github.com/tomaskallup/dotfiles/blob/master/nvim/lua/lsp-config.lua
   gopls = { -- https://github.com/golang/tools/blob/master/gopls/doc/settings.md
     cmd = {"gopls", "serve"},
     settings = {
@@ -25,7 +26,11 @@ local lsp_cfg = {
   html = {},
   jsonls = {},
   pyls = {},
-  r_language_server = nil,
+  r_language_server = {
+    on_attach = function(client, bufnr)
+      vim.cmd "au Setup BufWritePre <buffer> lua vim.lsp.buf.formatting()"
+    end,
+  },
   sumneko_lua = { -- https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json
     cmd = {sumneko_binary, "-E", sumneko_root .. "/main.lua"},
     settings = {
@@ -49,13 +54,32 @@ local lsp_cfg = {
   yamlls = {},
 }
 
-for k, v in pairs(lsp_cfg) do lsp[k].setup(v) end
+local function on_attach(client, bufnr)
+  local au = {}
+
+  if client.resolved_capabilities.code_action then
+    table.insert(au, "OrgImports()")
+  end
+
+  if client.resolved_capabilities.document_formatting then
+    table.insert(au, "vim.lsp.buf.formatting_sync()")
+  end
+
+  -- print(vim.inspect(client.resolved_capabilities))
+
+  vim.cmd(
+      ("au Setup BufWritePre <buffer> lua %s"):format(table.concat(au, "; ")))
+end
+
+for k, v in pairs(lsp_cfg) do
+  lsp[k].setup(vim.tbl_extend("keep", v, {on_attach = on_attach}))
+end
 
 vim.lsp.handlers["textDocument/publishDiagnostics"] =
     vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {
       underline = true,
-      virtual_text = true,
-      signs = true,
+      virtual_text = {spacing = 5, prefix = "->"},
+      signs = false,
       update_in_insert = true,
     })
 
@@ -71,6 +95,21 @@ require"nvim-treesitter.configs".setup {
       node_decremental = "<S-Tab>",
     },
   },
+  textobjects = {
+    select = {
+      enable = true,
+      keymaps = { -- You can use the capture groups defined in textobjects.scm
+        af = "@function.outer",
+        ["if"] = "@function.inner",
+        ac = "@class.outer",
+        ic = "@class.inner",
+      },
+    },
+    lsp_interop = {
+      enable = true,
+      peek_definition_code = {df = "@function.outer", dF = "@class.outer"},
+    },
+  },
   ensure_installed = "all",
 }
 
@@ -82,27 +121,31 @@ function LspCapabilities()
   print(vim.inspect(v.server_capabilities))
 end
 
--- Synchronously organise (Go) imports, courtesy of
--- https://github.com/neovim/nvim-lspconfig/issues/115#issuecomment-656372575
--- NOTE: this is NOT Go specific,
--- and also not complete, it could return either edits or commands,
--- see https://github.com/lucax88x/configs/blob/master/dotfiles/.config/nvim/lua/lt/lsp/functions.lua
-function GoOrgImports(timeout_ms)
-  timeout_ms = timeout_ms or 1000
+-- Synchronously organise imports, courtesy of
+-- https://github.com/neovim/nvim-lspconfig/issues/115#issuecomment-656372575 and
+-- https://github.com/lucax88x/configs/blob/master/dotfiles/.config/nvim/lua/lt/lsp/functions.lua
+function OrgImports(ms)
+  ms = ms or 1000
 
   local context = {source = {organizeImports = true}}
   local params = vim.lsp.util.make_range_params()
   params.context = context
 
   local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params,
-                                          timeout_ms)
-  if not result or not result[1] then return end
+                                          ms)
+  if not result or vim.tbl_isempty(result) then return end
 
-  result = result[1].result
-  if not result then return end
-
-  local edit = result[1].edit
-  vim.lsp.util.apply_workspace_edit(edit)
+  for _, res in pairs(result) do
+    if res.result then
+      for _, r in pairs(res.result) do
+        if r.edit then
+          vim.lsp.util.apply_workspace_edit(r.edit)
+        else
+          vim.lsp.buf.execute_command(r.command)
+        end
+      end
+    end
+  end
 end
 
 -- inspired by https://vim.fandom.com/wiki/Smart_mapping_for_tab_completion

@@ -3,10 +3,13 @@ scriptencoding utf-8
 packadd nvim-lspconfig
 packadd nvim-lspupdate
 packadd nvim-treesitter
+packadd nvim-treesitter-textobjects
 packadd nvim-colorizer.lua
 packadd nvim-deus
 "packadd markdown-preview.nvim
 "packadd cfilter
+
+colo deus " TODO: why is this needed?!? It's already set in color.vim
 
 lua require('config')
 
@@ -134,9 +137,7 @@ aug Setup | au!
   au BufEnter *.tmpl set ft=gohtmltmpl
   au BufReadPost *.go,*.vim,*.lua JumpToLastLocation
   au BufWritePre * TrimTrailingSpace | TrimTrailingBlankLines
-  au BufWritePre *.go lua GoOrgImports(); vim.lsp.buf.formatting_sync()
-  au BufWritePre *.js exe 'Eslintfmt' | lua vim.lsp.buf.formatting_sync()
-  au BufWritePre *.R lua vim.lsp.buf.formatting()
+  au BufWritePre *.js Eslintfmt
   au BufWritePre *.vim AutoIndent
   au BufWritePre *.json 1,$JQ
   au BufWritePost *.tf Terrafmt
@@ -186,7 +187,5 @@ ino <expr>   <Tab>     luaeval("SmartTabComplete()")
 ino          (         ()<Left>
 ino          [         []<Left>
 ino          {         {}<Left>
-
-colo deus " TODO: why is this needed?!? It's already set in color.vim
 
 for i in systemlist('ls '.stdpath('config').'/*.vim|grep -v init') | exe 'so' i | endfor
