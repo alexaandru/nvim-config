@@ -17,10 +17,17 @@ local keys_cfg = { -- LuaFormatter off
   ["diagnostic.set_loclist"] = "<F7>",
 } -- LuaFormatter on
 
-local prettier = {
-  formatCommand = "npx prettier --arrow-parens avoid --stdin-filepath ${INPUT}",
-  formatStdin = true,
-}
+local function fmtCmd(cmd)
+  return {formatCommand = cmd, formatStdin = true}
+end
+
+local function lintCmd(cmd, fmt)
+  fmt = fmt or "%f:%l:%c: %m"
+  return {lintCommand = cmd, lintStdin = true, lintFormats = {fmt}}
+end
+
+local prettier = fmtCmd(
+                     "npx prettier --arrow-parens avoid --stdin-filepath ${INPUT}")
 
 local eslint = { -- WIP
   lintCommand = "npx eslint -f compact --stdin-filename ${INPUT}",
@@ -32,22 +39,13 @@ local eslint = { -- WIP
   },
 }
 
-local function fmtCmd(cmd)
-  return {formatCommand = cmd, formatStdin = true}
-end
-
-local function lintCmd(cmd, fmt)
-  fmt = fmt or "%f:%l:%c: %m"
-  return {lintCommand = cmd, lintStdin = true, lintFormats = {fmt}}
-end
-
 local efm_cfg = {
   lua = {
     fmtCmd("lua-format -i"),
     lintCmd("luacheck --formatter plain --globals vim -- ${INPUT}"),
   },
-  tf = {fmtCmd("terraform fmt -")},
-  json = {fmtCmd("jq .")},
+  tf = {fmtCmd("terraform fmt -"), lintCmd("tflint ${INPUT}")},
+  json = {fmtCmd("jq ."), lintCmd("jsonlint ${INPUT}")},
   javascript = {prettier},
   typescript = {prettier},
   yaml = {prettier},
@@ -56,6 +54,7 @@ local efm_cfg = {
   scss = {prettier},
   css = {prettier},
   markdown = {prettier},
+  vim = {lintCmd("vint --enable-neovim ${INPUT}")},
 }
 
 local function nno(key, cmd)

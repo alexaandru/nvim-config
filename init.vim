@@ -5,6 +5,7 @@ packadd nvim-lspupdate
 packadd nvim-treesitter
 packadd nvim-treesitter-textobjects
 packadd nvim-colorizer.lua
+packadd gomod
 packadd nvim-deus
 "packadd markdown-preview.nvim
 "packadd cfilter
@@ -43,16 +44,6 @@ let g:loaded_python3_provider = 0
 let g:loaded_node_provider = 0
 let g:loaded_ruby_provider = 0
 let g:loaded_perl_provider = 0
-let s:makeprg = {
-      \ 'go':         '(go build ./... && go vet ./...)',
-      \ 'gomod':      'go mod tidy',
-      \ 'gosum':      'go mod tidy',
-      \ 'vim':        'vint --enable-neovim %',
-      \ 'javascript': 'npm run lint',
-      \ 'terraform':  '(terraform validate -no-color && for i in $(find -iname ''*.tf''\|xargs dirname\|sort -u\|paste -s); do tflint $i; done)',
-      \ 'json':       'jsonlint %',
-      \ 'lua':        'luacheck --formatter plain --globals vim -- %',
-      \ }
 
 func! GolangCI(...)
   let l:scope = get(a:, 1, '.') | if l:scope ==# '%' | let l:scope = expand('%') | endif
@@ -90,10 +81,8 @@ func! TransparentBG()
   for s:i in split(s:tr_bg, ',') | exe 'hi '.s:i.' guibg=NONE' | endfor
 endf
 
-com! -bar     Make silent make
-com! -bar     SetMake let &makeprg = get(s:makeprg, &filetype, 'make')
 com! -nargs=1 Grep silent grep <args>
-com! -nargs=* Term split | resize 12 | term <args>
+com! -nargs=* Term 12split | term <args>
 com! -nargs=* -bar -complete=file_in_path GolangCI call GolangCI(<f-args>)
 com! -nargs=? -bar -complete=customlist,ListConfigs Cfg call Cfg(<q-args>)
 com!          LoadLocalCfg if filereadable('.nvimrc') | so .nvimrc | endif
@@ -113,7 +102,7 @@ com! -bar     Scratch <mods> new +Scratchify
 com! -bar     AutoWinHeight silent exe max([min([line('$'), 12]), 1]).'wincmd _'
 com! -bar     AutoIndent silent norm gg=G`.
 com! -bar     LspCapabilities lua LspCapabilities()
-com!          PlugUpdate silent exe '! cd' stdpath('config').'/pack && git submodule update --remote --rebase' | so $MYVIMRC
+com!          PlugUpdate silent exe '! cd' stdpath('config').'/pack && git submodule update --remote --rebase'
 com! -range   JQ <line1>,<line2>!jq .
 
 aug Setup | au!
@@ -128,21 +117,17 @@ aug Setup | au!
   au FileType gitcommit,asciidoc,markdown setl spell spl=en_us
   au FileType lua,vim setl ts=2 sw=2 sts=2 fdls=0 fdm=expr fde=nvim_treesitter#foldexpr()
   au FileType go setl ts=4 sw=4 noet fdm=expr fde=nvim_treesitter#foldexpr()
-  au BufEnter * SetMake | exe 'ColorizerAttachToBuffer' | LastWindow
-  au BufEnter go.mod set ft=gomod
-  au BufEnter go.sum set ft=gosum
+  au BufEnter * exe 'ColorizerAttachToBuffer' | LastWindow
   au BufReadPost *.go,*.vim,*.lua JumpToLastLocation
   au BufWritePre * TrimTrailingSpace | TrimTrailingBlankLines
   au BufWritePre *.vim AutoIndent
-  au BufWritePost ~/.config/nvim/*.{vim,lua} so $MYVIMRC | e
-  au BufWritePost,FileWritePost go.mod,go.sum silent! make | e
+  au BufWritePost ~/.config/nvim/*.{vim,lua} so $MYVIMRC | e | call TransparentBG()
 aug END
 
 nno <silent> gb        <Cmd>ls<CR>:b<Space>
 nno <silent> db        <Cmd>%bd<bar>e#<CR>
 nno <silent> <C-n>     <Cmd>let $CD=expand('%:p:h')<CR><Cmd>Term<CR>cd "$CD"<CR>clear<CR>
 nno <silent> <F3>      <Cmd>only<CR>
-nno <silent> <F5>      <Cmd>Make<CR>
 nno <silent> <F6>      <Cmd>GolangCI<CR>
 nno <silent> <F6>%     <Cmd>GolangCI %<CR>
 nno <silent> <F8>      <Cmd>Gdiff<CR>
@@ -177,4 +162,5 @@ hi LspDiagnosticsVirtualTextHint        guifg=Green
 hi StatusLineNC gui=NONE                guibg=#222222
 hi EndOfBuffer                          guifg=#992277
 
+" TODO: convert site.vim to a plugin and remove this.
 for i in systemlist('ls '.stdpath('config').'/*.vim|grep -v init') | exe 'so' i | endfor
