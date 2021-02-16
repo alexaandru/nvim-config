@@ -9,9 +9,7 @@ packadd nvim-deus
 "packadd markdown-preview.nvim
 "packadd cfilter
 
-colo deus " TODO: why is this needed?!? It's already set in color.vim
-
-lua require('config')
+lua require'config'
 
 set autowriteall hidden
 set clipboard+=unnamedplus
@@ -87,6 +85,11 @@ func! Cfg(...)
   exe 'e '.stdpath('config').'/'.l:file
 endf
 
+func! TransparentBG()
+  let s:tr_bg = 'Normal,SignColumn,VertSplit,PreProc,EndOfBuffer,Folded,htmlBold'
+  for s:i in split(s:tr_bg, ',') | exe 'hi '.s:i.' guibg=NONE' | endfor
+endf
+
 com! -bar     Make silent make
 com! -bar     SetMake let &makeprg = get(s:makeprg, &filetype, 'make')
 com! -nargs=1 Grep silent grep <args>
@@ -115,8 +118,8 @@ com! -range   JQ <line1>,<line2>!jq .
 
 aug Setup | au!
   au VimEnter,DirChanged * CdProjRoot | exe 'LoadLocalCfg' | call GitStatus()
-  au ColorScheme * exe 'so' stdpath('config').'/color.vim'
   au TextYankPost * silent! lua require'vim.highlight'.on_yank()
+  au ColorScheme * call TransparentBG()
   au QuickFixCmdPost [^l]* nested cw
   au QuickFixCmdPost    l* nested lw
   au TermOpen * star
@@ -128,11 +131,10 @@ aug Setup | au!
   au BufEnter * SetMake | exe 'ColorizerAttachToBuffer' | LastWindow
   au BufEnter go.mod set ft=gomod
   au BufEnter go.sum set ft=gosum
-  "au BufEnter *.tmpl set ft=gohtmltmpl
   au BufReadPost *.go,*.vim,*.lua JumpToLastLocation
   au BufWritePre * TrimTrailingSpace | TrimTrailingBlankLines
   au BufWritePre *.vim AutoIndent
-  au BufWritePost ~/.config/nvim/*.{vim,lua} so $MYVIMRC
+  au BufWritePost ~/.config/nvim/*.{vim,lua} so $MYVIMRC | e
   au BufWritePost,FileWritePost go.mod,go.sum silent! make | e
 aug END
 
@@ -148,7 +150,9 @@ nno <silent> <M-Right> <Cmd>cnext<CR>
 nno <silent> <M-Left>  <Cmd>cprev<CR>
 nno <silent> <F12>     <Cmd>Cfg<CR>
 nno <silent> <F12>l    <Cmd>Cfg config.lua<CR>
+nno <silent> <F12>c    <Cmd>Cfg setup.lua<CR>
 nno <silent> <Leader>w <Cmd>SaveAndClose<CR>
+nno          <Leader>c <Cmd>so $VIMRUNTIME/syntax/hitest.vim<CR>
 nno <silent> <Space>   @=((foldclosed(line('.')) < 0) ? 'zC' : 'zO')<CR>
 nno          <C-p>     :find *
 cno <expr>   <Up>      wildmenumode() ? "\<Left>"     : "\<Up>"
@@ -162,5 +166,15 @@ ino <expr>   <Tab>     luaeval("SmartTabComplete()")
 ino          (         ()<Left>
 ino          [         []<Left>
 ino          {         {}<Left>
+
+colo deus
+colo deus "beats me why I have to call this twice...
+
+hi LspDiagnosticsVirtualTextError       guifg=Red
+hi LspDiagnosticsVirtualTextWarning     guifg=Orange
+hi LspDiagnosticsVirtualTextInformation guifg=Pink
+hi LspDiagnosticsVirtualTextHint        guifg=Green
+hi StatusLineNC gui=NONE                guibg=#222222
+hi EndOfBuffer                          guifg=#992277
 
 for i in systemlist('ls '.stdpath('config').'/*.vim|grep -v init') | exe 'so' i | endfor
