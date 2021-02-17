@@ -1,20 +1,20 @@
-local async = true
-
 local keys_cfg = { -- LuaFormatter off
-  ["buf.declaration"]        = "gd",
-  ["buf.definition"]         = "<c-]>",
-  ["buf.hover"]              = "<F1>",
-  ["buf.implementation"]     = "gD",
-  ["buf.signature_help"]     = "<c-k>",
-  ["buf.type_definition"]    = "1gD",
-  ["buf.references"]         = "gr",
-  ["buf.document_symbol"]    = "g0",
-  ["buf.workspace_symbol"]   = "gW",
-  ["buf.rename"]             = "<F2>",
-  ["buf.code_action"]        = "<F16>",
-  ["diagnostic.goto_next"]   = "g[",
-  ["diagnostic.goto_prev"]   = "g]",
-  ["diagnostic.set_loclist"] = "<F7>",
+  buf = {
+    declaration      = "gd",
+    definition       = "<c-]>",
+    hover            = "<F1>",
+    implementation   = "gD",
+    signature_help   = "<c-k>",
+    type_definition  = "1gD",
+    references       = "gr",
+    document_symbol  = "g0",
+    workspace_symbol = "gW",
+    rename           = "<F2>",
+    code_action      = "<F16>"},
+  diagnostic = {
+    goto_next        = "<M-Right>",
+    goto_prev        = "<M-Left>",
+    set_loclist      = "<F7>"},
 } -- LuaFormatter on
 
 local function fmtCmd(cmd)
@@ -23,27 +23,16 @@ end
 
 local function lintCmd(cmd, fmt)
   fmt = fmt or "%f:%l:%c: %m"
-  return {lintCommand = cmd, lintStdin = true, lintFormats = {fmt}}
+  return {lintCommand = cmd, lintStdin = true, lintFormats = {fmt}, lintIgnoreExitCode = true}
 end
 
-local prettier = fmtCmd(
-                     "npx prettier --arrow-parens avoid --stdin-filepath ${INPUT}")
+local prettier = fmtCmd("npx prettier --arrow-parens avoid --stdin-filepath ${INPUT}")
 
-local eslint = { -- WIP
-  lintCommand = "npx eslint -f compact --stdin-filename ${INPUT}",
-  lintStdin = true,
-  lintIgnoreExitCode = true,
-  lintFormats = {
-    "%f: line %l, col %c, %trror - %m",
-    "%f: line %l, col %c, %tarning - %m",
-  },
-}
-
+-- https://github.com/tomaskallup/dotfiles/blob/master/nvim/lua/lsp-config.lua,
+-- https://github.com/lukas-reineke/dotfiles/tree/master/vim/lua
+-- https://github.com/tsuyoshicho/vim-efm-langserver-settings
 local efm_cfg = {
-  lua = {
-    fmtCmd("lua-format -i"),
-    lintCmd("luacheck --formatter plain --globals vim -- ${INPUT}"),
-  },
+  lua = {fmtCmd("lua-format -i"), lintCmd("luacheck --formatter plain --globals vim -- ${INPUT}")},
   tf = {fmtCmd("terraform fmt -"), lintCmd("tflint ${INPUT}")},
   json = {fmtCmd("jq ."), lintCmd("jsonlint ${INPUT}")},
   javascript = {prettier},
@@ -55,6 +44,14 @@ local efm_cfg = {
   css = {prettier},
   markdown = {prettier},
   vim = {lintCmd("vint --enable-neovim ${INPUT}")},
+  go = {
+    {
+      lintCommand = [[bash -c 'golangci-lint run|grep ^$(realpath --relative-to . ${INPUT})|sed s"/^/Info /"']],
+      lintStdin = false,
+      lintFormats = {"%tnfo %f:%l:%c: %m"},
+      lintIgnoreExitCode = true,
+    },
+  },
 }
 
 local function nno(key, cmd)
@@ -63,32 +60,36 @@ local function nno(key, cmd)
 end
 
 local function on_attacher(keys, isasync)
-  local fmt_cmd =
-      "vim.lsp.buf.formatting" .. (isasync and "" or "_sync") .. "()"
-  return function(client, _)
-    for cmd, key in pairs(keys) do nno(key, cmd) end
+  local fmt_cmd = "vim.lsp.buf.formatting" .. (isasync and "" or "_sync") .. "()"
+  return function(client, bufnr)
+    for c1, kx in pairs(keys) do --
+      for c2, k in pairs(kx) do nno(k, c1 .. "." .. c2) end
+    end
 
+    local okFmt = client.name ~= "efm" or vim.fn.getbufvar(bufnr, "&filetype") ~= "go"
+    local orgImp = client.resolved_capabilities.code_action
+                       and (type(client.resolved_capabilities.code_action) == "boolean"
+                           or client.resolved_capabilities.code_action.codeActionKinds
+                           and vim.tbl_contains(client.resolved_capabilities.code_action
+                                                    .codeActionKinds, "source.organizeImports"))
     local au = {
-      ["OrgImports()"] = client.resolved_capabilities.code_action or nil,
-      [fmt_cmd] = client.resolved_capabilities.document_formatting or nil,
+      ["require'util'.OrgImports()"] = orgImp or nil,
+      [fmt_cmd] = okFmt and client.resolved_capabilities.document_formatting or nil,
     }
 
     if vim.tbl_isempty(au) then return end
 
-    vim.cmd(("au Setup BufWritePre <buffer> lua %s"):format(
-                table.concat(vim.tbl_keys(au), "; ")))
+    vim.cmd(("au Setup BufWritePre <buffer> lua %s"):format(table.concat(vim.tbl_keys(au), "; ")))
   end
 end
 
 local sumneko_root = "/home/alex/.lua_lsp"
 local sumneko_binary = sumneko_root .. "/bin/Linux/lua-language-server"
+local async = true
 local lsp_cfg = {
   bashls = {},
   cssls = {},
   dockerls = {},
-  -- https://github.com/tomaskallup/dotfiles/blob/master/nvim/lua/lsp-config.lua,
-  -- https://github.com/lukas-reineke/dotfiles/tree/master/vim/lua
-  -- https://github.com/tsuyoshicho/vim-efm-langserver-settings
   efm = {
     on_attach = on_attacher(keys_cfg, async),
     init_options = {documentFormatting = true, codeAction = false},
@@ -96,16 +97,10 @@ local lsp_cfg = {
     settings = {rootMarkers = {".git"}, languages = efm_cfg},
   },
   gopls = { -- https://github.com/golang/tools/blob/master/gopls/doc/settings.md
-    cmd = {"gopls", "serve"},
     settings = {
       gopls = {
         analyses = {fieldalignment = true, shadow = true, unusedparams = true},
-        codelenses = {
-          gc_details = true,
-          test = true,
-          generate = true,
-          tidy = true,
-        },
+        codelenses = {gc_details = true, test = true, generate = true, tidy = true},
         staticcheck = true,
         gofumpt = true,
         hoverKind = "SynopsisDocumentation",
@@ -148,7 +143,7 @@ local lsp_cfg = {
 local diagnostics_cfg = {
   underline = true,
   virtual_text = {spacing = 5, prefix = "->"},
-  signs = false,
+  signs = true,
   update_in_insert = true,
 }
 
@@ -167,7 +162,7 @@ local treesitter_cfg = {
   textobjects = {
     select = {
       enable = true,
-      keymaps = { -- You can use the capture groups defined in textobjects.scm
+      keymaps = {
         af = "@function.outer",
         ["if"] = "@function.inner",
         ac = "@class.outer",
@@ -182,7 +177,19 @@ local treesitter_cfg = {
   ensure_installed = "all",
 }
 
+local packadd = require"util".packadd
+local set = require"util".set
+
 return function()
+  packadd "nvim-lspconfig"
+  packadd "nvim-lspupdate"
+  packadd "nvim-treesitter"
+  packadd "nvim-treesitter-textobjects"
+  packadd "nvim-colorizer.lua"
+  packadd "nvim-deus"
+  packadd "gomod"
+  packadd "site-util"
+
   local lsp = require "lspconfig"
   for k, v in pairs(lsp_cfg) do
     lsp[k].setup(vim.tbl_extend("keep", v, {on_attach = on_attacher(keys_cfg)}))
@@ -193,6 +200,6 @@ return function()
 
   require"nvim-treesitter.configs".setup(treesitter_cfg)
 
-  vim.cmd("set termguicolors")
+  set "termguicolors"
   require"colorizer".setup()
 end
