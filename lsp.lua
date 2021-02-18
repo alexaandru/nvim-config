@@ -1,0 +1,17 @@
+return {
+  bashls = {},
+  cssls = {},
+  dockerls = {},
+  efm = "config.efm",
+  gopls = "config.gopls",
+  html = {},
+  jsonls = {},
+  pyls = {},
+  r_language_server = "config.r",
+  sumneko_lua = "config.sumneko",
+  terraformls = "config.tf",
+  tsserver = "config.tsserver",
+  vimls = {},
+  vuels = {},
+  yamlls = {},
+}
