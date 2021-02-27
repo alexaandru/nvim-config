@@ -1,22 +1,35 @@
-local util = {}
-
-local function nno(key, cmd)
-  cmd = ("<Cmd>lua vim.lsp.%s()<CR>"):format(cmd)
-  vim.api.nvim_buf_set_keymap(0, "n", key, cmd, {noremap = true, silent = true})
+-- luacheck: globals vim
+local function each(cmd)
+  return function(...)
+    local args = vim.tbl_flatten({...})
+    for _, v in ipairs(args) do vim.cmd(cmd .. " " .. v) end
+  end
 end
 
-local function each(cmd, ...)
-  local args = vim.tbl_flatten({...})
-  for _, v in ipairs(args) do vim.cmd(cmd .. " " .. v) end
+local util = {
+  pa = each "pa",
+  se = each "se", -- TODO: https://github.com/neovim/neovim/pull/13479
+  hi = each "hi!", -- TODO: https://github.com/neovim/neovim/issues/9876
+  sig = each "sig define", -- ^^^
+  com = each "com!", -- TODO: https://github.com/neovim/neovim/pull/11613
+  colo = each "colo",
+  notify_beautify = require "notify",
+  save_hooks = {},
+}
+
+local wait_default = 1200
+
+function util.Format(wait_ms)
+  vim.lsp.buf.formatting_sync(nil, wait_ms)
 end
 
 -- Synchronously organise imports, courtesy of
 -- https://github.com/neovim/nvim-lspconfig/issues/115#issuecomment-656372575 and
 -- https://github.com/lucax88x/configs/blob/master/dotfiles/.config/nvim/lua/lt/lsp/functions.lua
-function util.OrgImports(ms)
+function util.OrgImports(wait_ms)
   local params = vim.lsp.util.make_range_params()
   params.context = {source = {organizeImports = true}}
-  local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, ms or 1000)
+  local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, wait_ms)
   for _, res in pairs(result or {}) do
     for _, r in pairs(res.result or {}) do
       if r.edit then
@@ -28,17 +41,43 @@ function util.OrgImports(ms)
   end
 end
 
+function util.BufWritePre(wait_ms)
+  local hooks = util.save_hooks[vim.api.nvim_win_get_buf(0)]
+  if not hooks then return end
+
+  for k in pairs(hooks) do util[k](wait_ms or wait_default) end
+  vim.cmd("up!")
+end
+
 -- inspired by https://vim.fandom.com/wiki/Smart_mapping_for_tab_completion
 function util.SmartTabComplete()
-  local T = function(str)
+  local s = vim.fn.getline("."):sub(1, vim.fn.col(".") - 1):gsub("%s+", "")
+  local t = function(str)
     return vim.api.nvim_replace_termcodes(str, true, true, true)
   end
-  local s = vim.fn.getline("."):sub(1, vim.fn.col(".") - 1):gsub("%s+", "")
 
-  if s == "" then return T "<Tab>" end
-  if s:sub(s:len(), s:len()) == "/" then return T "<C-x><C-f>" end
+  if s == "" then return t "<Tab>" end
+  if s:sub(s:len(), s:len()) == "/" then return t "<C-x><C-f>" end
 
-  return T "<C-x><C-o>"
+  return t "<C-x><C-o>"
+end
+
+local cfg_files = (function()
+  local pat = "*.lua"
+  local c = vim.fn.stdpath("config")
+  local x = function(v)
+    return string.sub(v, #c + 2)
+  end
+
+  return vim.tbl_map(x, vim.fn.glob(c .. "/" .. pat, 0, 1))
+end)()
+
+function util.CfgComplete(argLead)
+  local fn = function(v)
+    return argLead == "" or vim.startswith(v, argLead)
+  end
+
+  return vim.tbl_filter(fn, cfg_files)
 end
 
 function util.GitStatus()
@@ -66,95 +105,25 @@ function util.unpack(...)
   return unpack(what)
 end
 
-function util.on_attacher(async)
-  local keys = require"config.keys".lsp
-  local fmt_cmd = "vim.lsp.buf.formatting" .. (async and "" or "_sync") .. "()"
-
-  return function(client, bufnr)
-    for c1, kx in pairs(keys) do --
-      for c2, k in pairs(kx) do nno(k, c1 .. "." .. c2) end
-    end
-
-    local okFmt = client.name ~= "efm"
-                      or (vim.fn.getbufvar(bufnr, "&filetype") ~= "go"
-                          and vim.fn.getbufvar(bufnr, "&filetype") ~= "tf")
-    local orgImp = client.resolved_capabilities.code_action
-                       and (type(client.resolved_capabilities.code_action) == "boolean"
-                           or client.resolved_capabilities.code_action.codeActionKinds
-                           and vim.tbl_contains(client.resolved_capabilities.code_action
-                                                    .codeActionKinds, "source.organizeImports"))
-    local au = {
-      ["require'util'.OrgImports()"] = orgImp or nil,
-      [fmt_cmd] = okFmt and client.resolved_capabilities.document_formatting or nil,
-    }
-
-    if vim.tbl_isempty(au) then return end
-
-    vim.cmd(("au Setup BufWritePre <buffer> lua %s"):format(table.concat(vim.tbl_keys(au), "; ")))
-  end
-end
-
-function util.lsp_setup(cfg)
-  local lsp = require "lspconfig"
-  for k, v in pairs(cfg.lsp) do
-    v = type(v) == "table" and v or require(v)
-    lsp[k].setup(vim.tbl_extend("keep", v, {on_attach = util.on_attacher()}))
-  end
-
-  local opd = vim.lsp.diagnostic.on_publish_diagnostics
-  vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(opd, cfg.diagnostics)
-end
-
-function util.configs(pat)
-  pat = pat or "*.lua"
-  local c = vim.fn.stdpath("config")
-  local x = function(v)
-    return string.sub(v, #c + 2)
-  end
-
-  return vim.tbl_map(x, vim.fn.glob(c .. "/" .. pat, 0, 1))
-end
-
-function util.pa(...)
-  each("pa", ...)
-end
-
-function util.set(...)
-  each("set", ...)
-end
-
--- TODO: watch https://github.com/neovim/neovim/issues/9876
-function util.hi(...)
-  each("hi!", ...)
-end
-
--- TODO: watch hi ^^^
-function util.sig(...)
-  each("sig define", ...)
+function util.unpack_G(...)
+  local arg = vim.tbl_flatten {...}
+  for _, v in ipairs(arg) do _G[v] = util[v] end
 end
 
 function util.so(s)
   vim.cmd(("so %s/%s"):format(vim.fn.stdpath("config"), s))
 end
 
-function util.colo(c)
-  vim.cmd("colo " .. c)
-end
-
--- TODO: watch https://github.com/neovim/neovim/pull/11613
-function util.com(...)
-  each("com!", ...)
-end
-
--- TODO: watch https://github.com/neovim/neovim/pull/12378
+-- TODO: https://github.com/neovim/neovim/pull/12378
 function util.au(...)
   for name, au in pairs(...) do
-    vim.cmd(("aug %s | au! | END"):format(name))
-    each(("au %s "):format(name), unpack(au))
+    vim.cmd(("aug %s | au!"):format(name))
+    each("au")(au)
+    vim.cmd "aug END"
   end
 end
 
-function util.kmap(mappings)
+function util.map(mappings)
   for mode, mx in pairs(mappings) do
     for _, m in ipairs(mx) do
       local lhs, rhs, opts = unpack(m)
@@ -165,13 +134,27 @@ function util.kmap(mappings)
   end
 end
 
-function util.disable_provider(p)
-  vim.g["loaded_" .. p .. "_provider"] = 0
+function util.disable_providers(px)
+  local fn = function(p)
+    vim.g["loaded_" .. p .. "_provider"] = 0
+  end
+  vim.tbl_map(fn, px)
 end
 
 function util.exec(cmd, ret)
-  ret = ret ~= nil and ret
-  vim.api.nvim_exec(cmd, ret)
+  vim.api.nvim_exec(cmd, ret ~= nil and ret)
+end
+
+function util.let(cfg)
+  for group, vars in pairs(cfg) do
+    for k, v in pairs(vars) do
+      if type(v) == "table" then
+        for kk, vv in pairs(v) do vim[group][k .. "_" .. kk] = vv end
+      else
+        vim[group][k] = v
+      end
+    end
+  end
 end
 
 return util

@@ -1,3 +1,4 @@
+-- luacheck: globals vim
 local S = {silent = true}
 local E = {expr = true}
 local function T(str)
@@ -28,12 +29,14 @@ return { -- LuaFormatter off
       {"gb",             "<Cmd>ls<CR>:b<Space>", S},
       {"db",             "<Cmd>%bd<bar>e#<CR>", S},
       {"<C-n>",          [[<Cmd>let $CD=expand('%:p:h')<CR><Cmd>Term<CR>cd "$CD"<CR>clear<CR>]], S},
+      {"<Leader>x",      "<Cmd>Lexplore<CR>"},
       {"<F3>",           "<Cmd>only<CR>", S},
       {"<F8>",           "<Cmd>Gdiff<CR>", S},
       {"<Leader>w",      "<Cmd>SaveAndClose<CR>", S},
       {"<Leader>c",      "<Cmd>so $VIMRUNTIME/syntax/hitest.vim<CR>", S},
       {"<Space>",        "@=((foldclosed(line('.')) < 0) ? 'zC' : 'zO')<CR>", S},
-      {"Q",              "<Nop>", S}
+      {"Q",              "<Nop>", S},
+      {"<Esc>",          "<Cmd>noh<CR>"},
     },
     c = {
       {"<Up>",           T'wildmenumode() ? "<Left>" : "<Up>"', E},

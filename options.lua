@@ -22,6 +22,8 @@ return { -- LuaFormatter off
   "termguicolors",
   "title",
   "titlestring=🐙\\ %{get(w:,'git_status','~git')}\\ 📚\\ %<%f%=%M\\ \\ 📦\\ %{nvim_treesitter#statusline(150)}",
+  "updatetime=2000",
+  "virtualedit=block,onemore",
   "wildcharm=<C-Z>",
   "wildignore+=*/.git/*,*/node_modules/*",
   "wildignorecase",

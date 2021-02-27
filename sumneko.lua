@@ -1,4 +1,5 @@
-local root = "/home/alex/.lua_lsp"
+-- luacheck: globals vim
+local root = vim.fn.expand("$HOME/.lua_lsp")
 local binary = root .. "/bin/Linux/lua-language-server"
 
 -- https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json
@@ -13,6 +14,7 @@ return {
           [vim.fn.expand("$VIMRUNTIME/lua")] = true,
           [vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true,
         },
+        ignoreDir = {"aniseed/deps"},
       },
     },
   },
