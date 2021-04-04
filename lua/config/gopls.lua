@@ -2,7 +2,7 @@
 return {
   settings = {
     gopls = {
-      analyses = {fieldalignment = true, shadow = true, unusedparams = true},
+      analyses = {fieldalignment = true, nilness = true, shadow = true, unusedparams = true},
       codelenses = {gc_details = true, test = true, generate = true, tidy = true},
       staticcheck = true,
       gofumpt = true,

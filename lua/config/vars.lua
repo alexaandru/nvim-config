@@ -11,5 +11,6 @@ return {
       list_hide = [[^\.[a-zA-Z].*,^\./$]],
       winsize = -25,
     },
+    froggy = {default_bg = nil}, -- "#3F333F"},
   },
 }

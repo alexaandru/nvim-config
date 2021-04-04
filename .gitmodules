@@ -1,0 +1,36 @@
+[submodule "pack/colors/start/froggy"]
+	path = pack/colors/start/froggy
+	url = https://github.com/alexaandru/froggy.git
+[submodule "pack/plugins/opt/lsp_signature"]
+	path = pack/plugins/opt/lsp_signature
+	url = https://github.com/ray-x/lsp_signature.nvim.git
+[submodule "pack/plugins/opt/markdown-preview"]
+	path = pack/plugins/opt/markdown-preview
+	url = https://github.com/iamcco/markdown-preview.nvim
+[submodule "pack/plugins/opt/nvim-colorizer"]
+	path = pack/plugins/opt/nvim-colorizer
+	url = https://github.com/norcalli/nvim-colorizer.lua.git
+[submodule "pack/plugins/opt/nvim-lspconfig"]
+	path = pack/plugins/opt/nvim-lspconfig
+	url = https://github.com/neovim/nvim-lspconfig.git
+[submodule "pack/plugins/opt/nvim-lspupdate"]
+	path = pack/plugins/opt/nvim-lspupdate
+	url = https://github.com/alexaandru/nvim-lspupdate.git
+[submodule "pack/plugins/opt/nvim-treesitter"]
+	path = pack/plugins/opt/nvim-treesitter
+	url = https://github.com/nvim-treesitter/nvim-treesitter.git
+[submodule "pack/plugins/opt/nvim-treesitter-context"]
+	path = pack/plugins/opt/nvim-treesitter-context
+	url = https://github.com/romgrk/nvim-treesitter-context.git
+[submodule "pack/plugins/opt/nvim-treesitter-textobjects"]
+	path = pack/plugins/opt/nvim-treesitter-textobjects
+	url = https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+[submodule "pack/plugins/opt/playground"]
+	path = pack/plugins/opt/playground
+	url = https://github.com/nvim-treesitter/playground.git
+[submodule "pack/plugins/start/FixCursorHold"]
+	path = pack/plugins/start/FixCursorHold
+	url = https://github.com/antoinemadec/FixCursorHold.nvim
+[submodule "pack/plugins/start/site-util"]
+	path = pack/plugins/start/site-util
+	url = https://github.com/alexaandru/site-util.git

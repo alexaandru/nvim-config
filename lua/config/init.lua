@@ -5,10 +5,8 @@ for _, v in ipairs {
   "options",
   "autocmd",
   "commands",
-  "highlight",
   "signs",
   "keys",
-  "diagnostics",
   "treesitter",
 } do cfg[v] = require("config." .. v) end
 

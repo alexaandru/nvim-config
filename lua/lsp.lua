@@ -2,6 +2,13 @@
 local util = require "util"
 local keys = require"config.keys".lsp
 local lsp = {
+  diagnostics = {
+    underline = true,
+    virtual_text = {spacing = 5, prefix = "->"},
+    signs = true,
+    update_in_insert = true,
+  },
+
   -- lspconfig setup() arguments, as defined at
   -- https://github.com/neovim/nvim-lspconfig/blob/master/CONFIG.md
   cfg = {
@@ -11,13 +18,13 @@ local lsp = {
     efm = require "config.efm",
     gopls = require "config.gopls",
     html = {},
-    jsonls = {},
-    pyls = {},
+    jsonls = require "config.noformat",
+    pylsp = {},
     r_language_server = nil,
     solargraph = nil,
     sumneko_lua = require "config.sumneko",
     terraformls = require "config.tf",
-    tsserver = require "config.tsserver",
+    tsserver = require "config.noformat",
     vimls = {},
     vuels = {},
     yamlls = {},
@@ -44,54 +51,36 @@ local function set_highlight()
   }
 end
 
-local function can_format(opts)
-  for _, v in ipairs(opts) do if v.formatCommand then return true end end
-  return false
-end
-
 function lsp.on_attach(client, bufnr)
-  local set_hook = function(hook, ok)
-    util.save_hooks[bufnr] = util.save_hooks[bufnr] or {}
-    util.save_hooks[bufnr][hook] = util.save_hooks[bufnr][hook] or ok or nil
-  end
-
-  local Format = function(ok)
-    set_hook("Format", ok)
-  end
-
-  local OrgImports = function(ok)
-    set_hook("OrgImports", ok)
-  end
-
+  local _ = bufnr
   local rc = client.resolved_capabilities
-  local ca = rc.code_action
 
   set_keys()
   if rc.document_highlight then set_highlight() end
 
-  if client.name == "efm" then
-    local ft = vim.fn.getbufvar(bufnr, "&filetype")
-    rc.document_formatting = can_format(lsp.cfg.efm.settings.languages[ft])
-  end
+  require"lsp_signature".on_attach(require "config.lsp_signature")
 
-  Format(rc.document_formatting)
-  OrgImports(ca and (type(ca) == "boolean" or ca.codeActionKinds
-                 and vim.tbl_contains(ca.codeActionKinds, "source.organizeImports")))
+  -- FIXME: this gets added over and over. Also adds it when not supported.
+  -- vim.cmd "au LSP BufEnter,CursorHold,InsertLeave <buffer> lua vim.lsp.codelens.refresh()"
 end
 
-function lsp.setup(diagnostics)
+function lsp.setup()
   vim.cmd "aug LSP | au!"
   local lspc = require "lspconfig"
-  for k, v in pairs(lsp.cfg) do
-    lspc[k].setup(vim.tbl_extend("keep", v, {on_attach = lsp.on_attach}))
-  end
+  local cfg_default = {on_attach = lsp.on_attach, flags = {debounce_text_changes = 150}}
+  for k, cfg in pairs(lsp.cfg) do lspc[k].setup(vim.tbl_extend("keep", cfg, cfg_default)) end
   vim.cmd "aug END"
 
   local opd = vim.lsp.diagnostic.on_publish_diagnostics
-  vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(opd, diagnostics)
+  vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(opd, lsp.diagnostics)
 
-  vim.cmd("aug Format | au! | aug END")
-  vim.cmd("au Format BufWritePre * lua BufWritePre()")
+  util.au {
+    Format = {
+      "BufWritePre *.go lua OrgImports()",
+      "BufWritePre *.js lua OrgJSImports()",
+      "BufWritePre * lua Format()",
+    },
+  }
 end
 
 return lsp

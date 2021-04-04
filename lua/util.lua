@@ -7,19 +7,33 @@ local function each(cmd)
 end
 
 local util = {
-  pa = each "pa",
-  se = each "se", -- TODO: https://github.com/neovim/neovim/pull/13479
+  packadd = each "pa",
   hi = each "hi!", -- TODO: https://github.com/neovim/neovim/issues/9876
   sig = each "sig define", -- ^^^
   com = each "com!", -- TODO: https://github.com/neovim/neovim/pull/11613
   colo = each "colo",
-  notify_beautify = require "notify",
-  save_hooks = {},
 }
 
-local wait_default = 1200
+local icons = {
+  [vim.log.levels.INFO] = "information",
+  [vim.log.levels.WARN] = "warning",
+  [vim.log.levels.ERROR] = "error",
+  [vim.log.levels.DEBUG] = "applications-debugging",
+  [vim.log.levels.TRACE] = "zoom-in",
+}
+
+local wait_default = 2000
+
+function util.SynStack()
+  local out = {}
+  for id in ipairs(vim.fn.synstack(vim.fn.line("."), vim.fn.col("."))) do
+    out[#out + 1] = vim.fn.synIDattr(id, "name")
+  end
+  return out
+end
 
 function util.Format(wait_ms)
+  wait_ms = wait_ms or wait_default
   vim.lsp.buf.formatting_sync(nil, wait_ms)
 end
 
@@ -27,8 +41,9 @@ end
 -- https://github.com/neovim/nvim-lspconfig/issues/115#issuecomment-656372575 and
 -- https://github.com/lucax88x/configs/blob/master/dotfiles/.config/nvim/lua/lt/lsp/functions.lua
 function util.OrgImports(wait_ms)
+  wait_ms = wait_ms or wait_default
   local params = vim.lsp.util.make_range_params()
-  params.context = {source = {organizeImports = true}}
+  params.context = {only = {"source.organizeImports"}}
   local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, wait_ms)
   for _, res in pairs(result or {}) do
     for _, r in pairs(res.result or {}) do
@@ -41,12 +56,11 @@ function util.OrgImports(wait_ms)
   end
 end
 
-function util.BufWritePre(wait_ms)
-  local hooks = util.save_hooks[vim.api.nvim_win_get_buf(0)]
-  if not hooks then return end
-
-  for k in pairs(hooks) do util[k](wait_ms or wait_default) end
-  vim.cmd("up!")
+function util.OrgJSImports()
+  vim.lsp.buf.execute_command {
+    command = "_typescript.organizeImports",
+    arguments = {vim.fn.expand("%:p")},
+  }
 end
 
 -- inspired by https://vim.fandom.com/wiki/Smart_mapping_for_tab_completion
@@ -63,18 +77,18 @@ function util.SmartTabComplete()
 end
 
 local cfg_files = (function()
-  local pat = "*.lua"
+  local pat = "lua/**/*.lua"
   local c = vim.fn.stdpath("config")
   local x = function(v)
     return string.sub(v, #c + 2)
   end
 
-  return vim.tbl_map(x, vim.fn.glob(c .. "/" .. pat, 0, 1))
+  return vim.tbl_flatten {"init.lua", vim.tbl_map(x, vim.fn.glob(c .. "/" .. pat, 0, 1))}
 end)()
 
 function util.CfgComplete(argLead)
   local fn = function(v)
-    return argLead == "" or vim.startswith(v, argLead)
+    return argLead == "" or v:find(argLead)
   end
 
   return vim.tbl_filter(fn, cfg_files)
@@ -98,6 +112,23 @@ function util.LspCapabilities()
   print(vim.inspect(cap))
 end
 
+function util.RunTests()
+  vim.cmd("echo") -- clear prompt
+
+  local curr_fn = require"nvim-treesitter".statusline()
+
+  if not vim.startswith(curr_fn, "func ") then
+    curr_fn = "*"
+  else
+    curr_fn = curr_fn:sub(6, curr_fn:find("%(") - 1)
+  end
+
+  vim.lsp.buf.execute_command {
+    command = "gopls.run_tests",
+    arguments = {{URI = vim.uri_from_bufnr(0), Tests = {curr_fn}}},
+  }
+end
+
 function util.unpack(...)
   local arg = vim.tbl_flatten {...}
   local what = {}
@@ -110,8 +141,17 @@ function util.unpack_G(...)
   for _, v in ipairs(arg) do _G[v] = util[v] end
 end
 
-function util.so(s)
-  vim.cmd(("so %s/%s"):format(vim.fn.stdpath("config"), s))
+function util.setup_notify()
+  local orig_notify = vim.notify
+
+  vim.notify = function(msg, log_level)
+    log_level = log_level or vim.log.levels.INFO
+    local icon = icons[log_level]
+
+    orig_notify(msg, log_level)
+
+    vim.fn.jobstart {"notify-send", "-i", "dialog-" .. icon, msg}
+  end
 end
 
 -- TODO: https://github.com/neovim/neovim/pull/12378
@@ -120,6 +160,19 @@ function util.au(...)
     vim.cmd(("aug %s | au!"):format(name))
     each("au")(au)
     vim.cmd "aug END"
+  end
+end
+
+function util.set(...)
+  for k, v in pairs(...) do
+    if type(v) == "string" and vim.startswith(v, "+") then
+      v = v:sub(2)
+      vim.opt[k]:append(v)
+    elseif type(v) == "table" and v[1] == "defaults" then
+      vim.opt[k]:append(vim.list_slice(v, 2))
+    else
+      vim.opt[k] = v
+    end
   end
 end
 
@@ -139,10 +192,6 @@ function util.disable_providers(px)
     vim.g["loaded_" .. p .. "_provider"] = 0
   end
   vim.tbl_map(fn, px)
-end
-
-function util.exec(cmd, ret)
-  vim.api.nvim_exec(cmd, ret ~= nil and ret)
 end
 
 function util.let(cfg)

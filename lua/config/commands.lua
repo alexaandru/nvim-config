@@ -21,7 +21,6 @@ return {
   [[-bar AutoWinHeight silent exe max([min([line('$'), 12]), 1]).'wincmd _']],
   [[-bar AutoIndent silent norm gg=G`.]],
   [[-bar LspCapabilities lua LspCapabilities()]],
-  [[-bar PlugUpdate silent exe '! cd' stdpath('config').'/pack && git submodule foreach git pull']],
-  [[-bar HiFix lua require'util'.hi(require'config'.highlight)]],
+  [[-bar PlugUpdate silent exe '! cd' stdpath('config').' && git submodule foreach git pull']],
   [[-bar -range JQ <line1>,<line2>!jq .]],
 }
