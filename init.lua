@@ -17,6 +17,7 @@ util.unpack_G {
 }
 
 util.disable_providers {"python", "python3", "node", "ruby", "perl"}
+util.disable_builtin(cfg.plugins)
 
 -- TODO: https://github.com/neovim/neovim/issues/12587 when resolved,
 -- remove https://github.com/antoinemadec/FixCursorHold.nvim

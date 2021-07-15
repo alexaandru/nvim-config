@@ -194,6 +194,10 @@ function util.disable_providers(px)
   vim.tbl_map(fn, px)
 end
 
+function util.disable_builtin(plugins)
+  for _, v in ipairs(plugins) do vim.g["loaded_" .. v] = 1 end
+end
+
 function util.let(cfg)
   for group, vars in pairs(cfg) do
     for k, v in pairs(vars) do
