@@ -1,6 +1,6 @@
 -- luacheck: globals vim
 local function fmt(cmd, stdin)
-  return {formatCommand = cmd, formatStdin = not (stdin == false)}
+  return {formatCommand = cmd, formatStdin = (stdin ~= false)}
 end
 
 local function lint(cmd, fmts, stdin)
