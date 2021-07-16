@@ -1,4 +1,5 @@
 return {
+  ensure_installed = "all",
   highlight = {enable = true},
   indent = {enable = true},
   incremental_selection = {
@@ -26,5 +27,4 @@ return {
       peek_definition_code = {df = "@function.outer", dF = "@class.outer"},
     },
   },
-  ensure_installed = "all",
 }
