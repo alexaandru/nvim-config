@@ -7,6 +7,8 @@ return {
   completeopt = {"menuone", "noselect", "noinsert"},
   diffopt = {d, "algorithm:patience", "indent-heuristic", "vertical"},
   expandtab = true,
+  foldmethod = "expr",
+  foldexpr = "nvim_treesitter#foldexpr()",
   grepprg = "git grep -n",
   hidden = true,
   icon = true,
