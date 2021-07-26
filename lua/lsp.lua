@@ -24,6 +24,7 @@ local lsp = {
     solargraph = nil,
     sumneko_lua = require "config.sumneko",
     terraformls = require "config.tf",
+    tflint = {},
     tsserver = require "config.noformat",
     vimls = {},
     vuels = {},

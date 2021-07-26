@@ -1,7 +1,7 @@
 -- luacheck: globals vim
 return {
   Setup = {
-    "VimEnter,DirChanged * CdProjRoot | exe 'LoadLocalCfg' | lua GitStatus()",
+    "VimEnter,DirChanged * exe 'LoadLocalCfg' | lua GitStatus()",
     "WinNew,WinEnter * lua GitStatus()",
     "TextYankPost * silent! lua vim.highlight.on_yank()",
     "QuickFixCmdPost [^l]* nested cw",
@@ -11,7 +11,7 @@ return {
     "FileType qf AutoWinHeight",
     "FileType gitcommit,asciidoc,markdown setl spell spl=en_us",
     "FileType lua,vim setl ts=2 sw=2 sts=2 fdls=0",
-    "FileType go setl ts=4 sw=4 noet",
+    "FileType go setl ts=4 sw=4 noet cole=1",
     "BufEnter * exe 'ColorizerAttachToBuffer' | LastWindow",
     "BufEnter nginx/* setl ft=nginx",
     "BufEnter *.tf,*.tfvars setl ft=hcl",

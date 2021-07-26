@@ -20,9 +20,6 @@ local eslint = vim.tbl_extend("keep",
                               lint("eslint_d -f visualstudio --stdin --stdin-filename ${INPUT}",
                                    {"%f(%l,%c): %trror %m", "%f(%l,%c): %tarning %m"}))
 
-local tflint = lint("bash -c 'tflint -f compact $(realpath --relative-to . ${INPUT})'",
-                    {"%f:%l:%c: %trror - %m", "%f:%l:%c: %tarning - %m", "%f:%l:%c: %totice - %m"})
-
 local golangciCmd =
     "bash -c 'golangci-lint run --out-format github-actions|grep =$(realpath --relative-to . ${INPUT})'"
 local golangci = lint(golangciCmd, {
@@ -50,7 +47,6 @@ local luacheck = lint([[bash -c 'luacheck --formatter plain -- ${INPUT}|sed s"/^
 
 local cfg = { -- LuaFormatter off
   go         = {golangci},
-  hcl        = {tflint},
   lua        = {fmt("lua-format -i"), luacheck},
   fennel     = {fmt("fnlfmt ${INPUT}", true), fennel},
   vim        = {lint("vint --enable-neovim ${INPUT}")},

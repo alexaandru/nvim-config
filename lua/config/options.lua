@@ -5,6 +5,7 @@ return {
   clipboard = "unnamedplus",
   complete = {d, "kspell"},
   completeopt = {"menuone", "noselect", "noinsert"},
+  conceallevel = 3,
   diffopt = {d, "algorithm:patience", "indent-heuristic", "vertical"},
   expandtab = true,
   foldmethod = "expr",
