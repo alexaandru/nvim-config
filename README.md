@@ -4,11 +4,12 @@ Requires v0.5+
 
 Features:
 
-- 100% Lua based;
+- 100% ~~Lua~~ [Fennel](https://fennel-lang.org) based (well, technically, it's still Lua ;-))
+  thanks to [Hotpot](https://github.com/rktjmp/hotpot.nvim);
 - **syntax highlighting** (as well as **code folding**, **incremental selection**, **text objects** & more)
   powered by [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter);
 - [builtin LSP](https://neovim.io/doc/user/lsp.html) setup for a dozen languages, of which I mostly use Go,
-  Terraform, Lua, JavaScript;
+  Terraform, Lua, JavaScript and now Fennel :-);
 - dual LSP setup, via [EFM](https://github.com/mattn/efm-langserver) to cover for "gaps", where needed,
   i.e.: I use `tsserver` for **JS**, but prefer `prettier` for formatting; I use `gopls` for **Go**, but I also
   want warnings from `golangci-lint`, etc.; I use `sumneko` for **Lua**, but also `efm` to run `lua-format` and

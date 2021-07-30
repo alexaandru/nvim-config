@@ -34,3 +34,6 @@
 [submodule "pack/plugins/start/site-util"]
 	path = pack/plugins/start/site-util
 	url = https://github.com/alexaandru/site-util.git
+[submodule "pack/plugins/opt/hotpot"]
+	path = pack/plugins/opt/hotpot
+	url = https://github.com/rktjmp/hotpot.nvim.git
