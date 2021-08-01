@@ -42,10 +42,24 @@
 (local luacheck (lint "bash -c 'luacheck --globals vim --formatter plain -- ${INPUT}|sed s\"/^/Warn /\"'"
                       ["%tarn %f:%l:%c: %m"]))
 
+(local tfsec (lint (.. "bash -c 'tfsec --tfvars-file terraform.tfvars -fcsv|"
+                       "sed \"s/,CRITICAL,/,ERROR,/i; s/,HIGH,/,ERROR,/i; s/,MEDIUM,/,WARN,/i; s/,LOW,/,NOTICE,/i\"|"
+                       "cut -f1,2,3,5,6 -d,|grep ${INPUT}'")
+                   ["%f,%l,%c,%tARN,%m"
+                    "%f,%l,%c,%tRROR,%m"
+                    "%f,%l,%c,%tOTICE,%m"]))
+
+(local terrascan
+       (lint (.. "bash -c 'terrascan scan -o json|"
+                 "jq -r \".results.violations[]|[.file,.line,.severity,.description]|join(\\\",\\\")\"|"
+                 "sed \"s#^deployment/##; s/,CRITICAL,/,ERROR,/i; s/,HIGH,/,ERROR,/i; s/,MEDIUM,/,WARN,/i; s/,LOW,/,NOTICE,/i\"|"
+                 "grep $(realpath --relative-to . ${INPUT})'")
+             ["%f,%l,%tARN,%m" "%f,%l,%tRROR,%m" "%f,%l,%tOTICE,%m"]))
+
 (local cfg {:go [golangci]
+            :hcl [tfsec terrascan]
             :lua [(fmt "lua-format -i") luacheck]
             :fennel [(fmt "fnlfmt /dev/stdin" true) fennel]
-            :vim [(lint "vint --enable-neovim ${INPUT}")]
             :json [(fmt "jq .") (lint "jsonlint ${INPUT}")]
             :javascript [prettier eslint]
             :typescript [prettier eslint]

@@ -17,7 +17,7 @@
                   :terraformls (require :config.tf)
                   :tflint {}
                   :tsserver (require :config.noformat)
-                  :vimls {}
+                  :vimls nil
                   :vuels {}
                   :yamlls {}}
             :dia {;gnostics
