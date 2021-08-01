@@ -1,7 +1,4 @@
-(local cfg {})
-
-(each [_ v (ipairs [:autocmd :commands :keys :options :signs :treesitter :vars])]
-  (tset cfg v (require (.. :config. v))))
-
-cfg
+(local configs [:autocmd :commands :keys :options :signs :treesitter :vars])
+(collect [_ v (ipairs configs)]
+  (values v (require (.. :config. v))))
 

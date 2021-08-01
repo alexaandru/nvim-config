@@ -1,7 +1,6 @@
 (fn all [cmd]
   (fn [...]
-    (local args (vim.tbl_flatten [...]))
-    (each [_ v (ipairs args)]
+    (each [_ v (ipairs (vim.tbl_flatten [...]))]
       (vim.cmd (.. cmd " " v)))))
 
 (local util {:sig (all "sig define")
@@ -12,19 +11,18 @@
              ;; TODO: https://github.com/neovim/neovim/issues/9876
              :hi (all :hi!)})
 
-(local icons {vim.log.levels.TRACE :zoom-in
-              vim.log.levels.INFO :information
-              vim.log.levels.WARN :warning
-              vim.log.levels.ERROR :error
-              vim.log.levels.DEBUG :applications-debugging})
-
 (local wait-default 2000)
 
-(fn util.SynStack []
-  (let [out {}]
-    (each [id (ipairs (vim.fn.synstack (vim.fn.line ".") (vim.fn.col ".")))]
-      (tset out (+ (length out) 1) (vim.fn.synIDattr id :name)))
-    out))
+(fn util.Fenval []
+  (fn setline [job data name]
+    (local result (. data 1))
+    (if (not= result "")
+        (vim.fn.setline "." (.. (vim.fn.getline ".") " ;; => " result))))
+
+  (local line (vim.fn.getline "."))
+  (local job (vim.fn.jobstart "fennel -" {:on_stdout setline}))
+  (vim.fn.chansend job (.. "(print " line ")"))
+  (vim.fn.chanclose job :stdin))
 
 (fn util.Format [wait-ms]
   (set-forcibly! wait-ms (or wait-ms wait-default))
@@ -92,10 +90,10 @@
   (string.sub (vim.fn.expand "%:p") (+ (length vim.w.proj_root) 1)))
 
 (fn util.LspCapabilities []
-  (let [cap {}]
-    (each [_ c (pairs (vim.lsp.buf_get_clients))]
-      (tset cap c.name c.resolved_capabilities))
-    (print (vim.inspect cap))))
+  (print (vim.inspect (collect [_ c (pairs (vim.lsp.buf_get_clients))]
+                        (values c.name
+                                (collect [k v (pairs c.resolved_capabilities)]
+                                  (if (not= v false) (values k v))))))))
 
 (fn util.RunTests []
   (vim.cmd :echo)
@@ -114,22 +112,8 @@
     (unpack what)))
 
 (fn util.unpack_G [...]
-  (let [arg (vim.tbl_flatten [...])]
-    (each [_ v (ipairs arg)]
-      (tset _G v (. util v)))))
-
-(fn util.setup_notify []
-  (let [orig-notify vim.notify]
-    (set vim.notify (fn [msg log-level]
-                      (do
-                        (set-forcibly! log-level
-                                       (or log-level vim.log.levels.INFO))
-                        (local icon (. icons log-level))
-                        (orig-notify msg log-level)
-                        (vim.fn.jobstart [:notify-send
-                                          :-i
-                                          (.. :dialog- icon)
-                                          msg]))))))
+  (each [_ v (ipairs (vim.tbl_flatten [...]))]
+    (tset _G v (. util v))))
 
 ;; TODO: https://github.com/neovim/neovim/pull/12378
 (fn util.au [...]

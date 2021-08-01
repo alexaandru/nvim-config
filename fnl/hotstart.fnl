@@ -9,7 +9,8 @@
                 :OrgImports
                 :OrgJSImports
                 :LspCapabilities
-                :RunTests])
+                :RunTests
+                :Fenval])
 
 (util.disable_providers [:python :python3 :node :ruby :perl])
 
@@ -50,8 +51,6 @@
 (util.map cfg.keys.global)
 
 (util.sig cfg.signs)
-
-(util.setup_notify)
 
 (util.colo :froggy)
 

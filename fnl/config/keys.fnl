@@ -29,6 +29,7 @@
               [:<Leader>w :<Cmd>SaveAndClose<CR> S]
               [:<Leader>c "<Cmd>so $VIMRUNTIME/syntax/hitest.vim<CR>" S]
               [:<Leader>f "<Cmd>!fennel %<CR>" S]
+              [:<Leader>l "<Cmd>lua Fenval()<CR>" S]
               [:<Space> "@=((foldclosed(line('.')) < 0) ? 'zC' : 'zO')<CR>" S]
               [:Q :<Nop> S]
               [:<Esc> :<Cmd>noh<CR>]

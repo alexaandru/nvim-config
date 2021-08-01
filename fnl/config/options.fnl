@@ -1,11 +1,9 @@
-(local d :defaults)
-
 {:autowriteall true
  :clipboard :unnamedplus
- :complete [d :kspell]
+ :complete [:defaults :kspell]
  :completeopt [:menuone :noselect :noinsert]
  :conceallevel 3
- :diffopt [d "algorithm:patience" :indent-heuristic :vertical]
+ :diffopt [:defaults "algorithm:patience" :indent-heuristic :vertical]
  :expandtab true
  :foldmethod :expr
  :foldexpr "nvim_treesitter#foldexpr()"

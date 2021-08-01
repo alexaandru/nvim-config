@@ -8,6 +8,7 @@
    :lintFormats fmts
    :lintIgnoreExitCode true})
 
+;; consider using https://github.com/fsouza/prettierd
 (local prettier (fmt "prettier -w --stdin-filepath ${INPUT}"))
 
 (local eslint (vim.tbl_extend :keep
