@@ -16,14 +16,13 @@
 
 (fn util.Fenval []
   (fn setline [job data name]
-    (local result (. data 1))
-    (if (not= result "")
-        (vim.fn.setline "." (.. (vim.fn.getline ".") " ;; => " result))))
-
-  (local line (vim.fn.getline "."))
-  (local job (vim.fn.jobstart "fennel -" {:on_stdout setline}))
-  (vim.fn.chansend job (.. "(print " line ")"))
-  (vim.fn.chanclose job :stdin))
+    (let [result (. data 1)]
+      (if (not= result "")
+          (vim.fn.setline "." (.. (vim.fn.getline ".") " ;; => " result))))
+    (let [job (vim.fn.jobstart "fennel -" {:on_stdout setline})
+          line (vim.fn.getline ".")]
+      (vim.fn.chansend job (.. "(print " line ")"))
+      (vim.fn.chanclose job :stdin))))
 
 (fn util.Format [wait-ms]
   (vim.lsp.buf.formatting_sync nil (or wait-ms wait-default)))
