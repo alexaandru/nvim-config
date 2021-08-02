@@ -1,7 +1,8 @@
+(local map vim.tbl_map)
+
 (fn all [cmd]
   (fn [...]
-    (each [_ v (ipairs (vim.tbl_flatten [...]))]
-      (vim.cmd (.. cmd " " v)))))
+    (map #(vim.cmd (.. cmd " " $)) (vim.tbl_flatten [...]))))
 
 (local util {:sig (all "sig define")
              :packadd (all :pa)
@@ -25,8 +26,7 @@
   (vim.fn.chanclose job :stdin))
 
 (fn util.Format [wait-ms]
-  (set-forcibly! wait-ms (or wait-ms wait-default))
-  (vim.lsp.buf.formatting_sync nil wait-ms))
+  (vim.lsp.buf.formatting_sync nil (or wait-ms wait-default)))
 
 ;; Synchronously organise imports, courtesy of
 ;; https://github.com/neovim/nvim-lspconfig/issues/115#issuecomment-656372575 and
@@ -62,20 +62,12 @@
   out)
 
 (local cfg-files
-       (do
-         (local pat :fnl/**/*.fnl)
-         (local c (vim.fn.stdpath :config))
-
-         (fn f [v]
-           (string.sub v (+ (length c) 2)))
-
-         (vim.tbl_map f (vim.fn.glob (.. c "/" pat) 0 1))))
+       (let [c (vim.fn.stdpath :config)]
+         (map #(string.sub $ (+ (length c) 2))
+              (vim.fn.glob (.. c "/" :fnl/**/*.fnl) 0 1))))
 
 (fn util.CfgComplete [arg-lead]
-  (fn f [v]
-    (or (= arg-lead "") (v:find arg-lead)))
-
-  (vim.tbl_filter f cfg-files))
+  (vim.tbl_filter #(or (= arg-lead "") ($:find arg-lead)) cfg-files))
 
 (fn util.GitStatus []
   (let [branch (vim.trim (vim.fn.system "git rev-parse --abbrev-ref HEAD 2> /dev/null"))]
@@ -93,7 +85,7 @@
   (print (vim.inspect (collect [_ c (pairs (vim.lsp.buf_get_clients))]
                         (values c.name
                                 (collect [k v (pairs c.resolved_capabilities)]
-                                  (if (not= v false) (values k v))))))))
+                                  (if v (values k v))))))))
 
 (fn util.RunTests []
   (vim.cmd :echo)
@@ -105,15 +97,11 @@
                                 :command :gopls.run_tests}))
 
 (fn util.unpack [...]
-  (let [arg (vim.tbl_flatten [...])
-        what []]
-    (each [_ v (ipairs arg)]
-      (table.insert what (. util v)))
-    (unpack what)))
+  (unpack (collect [_ v (ipairs vim.tbl_flatten [...])]
+            (. util v))))
 
 (fn util.unpack_G [...]
-  (each [_ v (ipairs (vim.tbl_flatten [...]))]
-    (tset _G v (. util v))))
+  (map #(tset _G $ (. util $)) (vim.tbl_flatten [...])))
 
 ;; TODO: https://github.com/neovim/neovim/pull/12378
 (fn util.au [...]
@@ -141,14 +129,10 @@
       (vim.api.nvim_set_keymap mode lhs rhs opts))))
 
 (fn util.disable_providers [px]
-  (fn f [p]
-    (tset vim.g (.. :loaded_ p :_provider) 0))
+  (map #(tset vim.g (.. :loaded_ $ :_provider) 0) px))
 
-  (vim.tbl_map f px))
-
-(fn util.disable_builtin [plugins]
-  (each [_ v (ipairs plugins)]
-    (tset vim.g (.. :loaded_ v) 1)))
+(fn util.disable_builtin [px]
+  (map #(tset vim.g (.. :loaded_ $) 1) px))
 
 (fn util.let [cfg]
   (each [group vars (pairs cfg)]
