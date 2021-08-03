@@ -41,12 +41,11 @@
 (fn lsp.on_attach [client bufnr]
   (set_keys)
   (let [rc client.resolved_capabilities]
-    (if rc.document_highlight (set_highlight)))
+    (if rc.document_highlight (set_highlight))
+    (if rc.code_lens
+        (au {:CodeLens ["BufEnter,CursorHold,InsertLeave <buffer> lua vim.lsp.codelens.refresh()"]})))
   (let [lsa (. (require :lsp_signature) :on_attach)]
-    (lsa (require :config.lsp_signature)))
-  ;; FIXME: this gets added over and over. Also adds it when not supported.
-  ;; vim.cmd "au LSP BufEnter,CursorHold,InsertLeave <buffer> lua vim.lsp.codelens.refresh()"
-  )
+    (lsa (require :config.lsp_signature))))
 
 (fn lsp.setup []
   (vim.cmd "aug LSP | au!")

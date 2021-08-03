@@ -16,7 +16,8 @@
              :code_action :<F16>}
        :diagnostic {:goto_next :<M-Right>
                     :goto_prev :<M-Left>
-                    :set_loclist :<F7>}}
+                    :set_loclist :<F7>}
+       :codelens {:run :<Leader>k}}
  :global {:n [[:gb "<Cmd>ls<CR>:b<Space>" S]
               [:db "<Cmd>%bd<bar>e#<CR>" S]
               [:<C-n>

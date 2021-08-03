@@ -8,6 +8,9 @@
    :lintFormats fmts
    :lintIgnoreExitCode true})
 
+;; TODO: use lintCategoryMap, see https://github.com/mattn/efm-langserver/issues/153,
+;; wherever applicable.
+
 ;; consider using https://github.com/fsouza/prettierd
 (local prettier (fmt "prettier -w --stdin-filepath ${INPUT}"))
 
@@ -28,7 +31,7 @@
                       false))
 
 (local fennelCmd
-       (.. "bash -c 'export out=$(fennel --globals vim,unpack ${INPUT} 2>&1); "
+       (.. "bash -c 'export out=$(fennel --globals vim,jit,unpack ${INPUT} 2>&1); "
            "[[ \"$out\" =~ ^([a-zA-Z\\s\\d]*).error.in.(.*):([0-9]+) ]] && "
            "(echo -n \"Error ${BASH_REMATCH[2]}:${BASH_REMATCH[3]} ${BASH_REMATCH[1]} error: \"; "
            "echo \"$out\"|head -n2|tail -n1|cut -b3-)'"))

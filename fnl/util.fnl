@@ -31,15 +31,14 @@
 ;; https://github.com/neovim/nvim-lspconfig/issues/115#issuecomment-656372575 and
 ;; https://github.com/lucax88x/configs/blob/master/dotfiles/.config/nvim/lua/lt/lsp/functions.lua
 (fn util.OrgImports [wait-ms]
-  (set-forcibly! wait-ms (or wait-ms wait-default))
-  (local params (vim.lsp.util.make_range_params))
-  (set params.context {:only [:source.organizeImports]})
-  (local result (vim.lsp.buf_request_sync 0 :textDocument/codeAction params
-                                          wait-ms))
-  (each [_ res (pairs (or result {}))]
-    (each [_ r (pairs (or res.result {}))]
-      (if r.edit (vim.lsp.util.apply_workspace_edit r.edit)
-          (vim.lsp.buf.execute_command r.command)))))
+  (let [params (vim.lsp.util.make_range_params)]
+    (set params.context {:only [:source.organizeImports]})
+    (let [result (vim.lsp.buf_request_sync 0 :textDocument/codeAction params
+                                           (or wait-ms wait-default))]
+      (each [_ res (pairs (or result {}))]
+        (each [_ r (pairs (or res.result {}))]
+          (if r.edit (vim.lsp.util.apply_workspace_edit r.edit)
+              (vim.lsp.buf.execute_command r.command)))))))
 
 (fn util.OrgJSImports []
   (vim.lsp.buf.execute_command {:arguments [(vim.fn.expand "%:p")]
@@ -47,18 +46,16 @@
 
 ;; inspired by https://vim.fandom.com/wiki/Smart_mapping_for_tab_completion
 (fn util.SmartTabComplete []
-  (local s (: (: (vim.fn.getline ".") :sub 1 (- (vim.fn.col ".") 1)) :gsub
-              "%s+" ""))
-
-  (fn t [str]
-    (vim.api.nvim_replace_termcodes str true true true))
-
-  (var out (t :<C-x><C-o>))
-  (when (= s "")
-    (set out (t :<Tab>)))
-  (when (= (s:sub (s:len) (s:len)) "/")
-    (set out (t :<C-x><C-f>)))
-  out)
+  (let [s (string.gsub (string.sub (vim.fn.getline ".") 1
+                                   (- (vim.fn.col ".") 1))
+                       "%s+" "")]
+    (local t #(vim.api.nvim_replace_termcodes $ true true true))
+    (var out (t :<C-x><C-o>))
+    (when (= s "")
+      (set out (t :<Tab>)))
+    (when (= (s:sub (s:len) (s:len)) "/")
+      (set out (t :<C-x><C-f>)))
+    out))
 
 (local cfg-files
        (let [c (vim.fn.stdpath :config)]
@@ -70,12 +67,10 @@
 
 (fn util.GitStatus []
   (let [branch (vim.trim (vim.fn.system "git rev-parse --abbrev-ref HEAD 2> /dev/null"))]
-    (when (= branch "")
-      (lua "return "))
-    (local dirty
-           (.. (vim.fn.system "git diff --quiet || echo -n \\*")
-               (vim.fn.system "git diff --cached --quiet || echo -n \\+")))
-    (set vim.w.git_status (.. branch dirty))))
+    (if (not= branch "")
+        (let [dirty (.. (vim.fn.system "git diff --quiet || echo -n \\*")
+                        (vim.fn.system "git diff --cached --quiet || echo -n \\+"))]
+          (set vim.w.git_status (.. branch dirty))))))
 
 (fn util.ProjRelativePath []
   (string.sub (vim.fn.expand "%:p") (+ (length vim.w.proj_root) 1)))
@@ -103,6 +98,7 @@
   (map #(tset _G $ (. util $)) (vim.tbl_flatten [...])))
 
 ;; TODO: https://github.com/neovim/neovim/pull/12378
+;;       https://github.com/neovim/neovim/pull/14661
 (fn util.au [...]
   (each [name au (pairs ...)]
     (vim.cmd (: "aug %s | au!" :format name))
