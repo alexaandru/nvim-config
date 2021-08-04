@@ -9,7 +9,7 @@
    :lintIgnoreExitCode true})
 
 ;; TODO: use lintCategoryMap, see https://github.com/mattn/efm-langserver/issues/153,
-;; wherever applicable.
+;; wherever applicable. Also see :errorformat
 
 ;; consider using https://github.com/fsouza/prettierd
 (local prettier (fmt "prettier -w --stdin-filepath ${INPUT}"))
@@ -31,7 +31,7 @@
                       false))
 
 (local fennelCmd
-       (.. "bash -c 'export out=$(fennel --globals vim,jit,unpack ${INPUT} 2>&1); "
+       (.. "bash -c 'export out=$(fennel --globals vim,jit,unpack,au,DisableProviders,DisableBuiltin,packadd ${INPUT} 2>&1); "
            "[[ \"$out\" =~ ^([a-zA-Z\\s\\d]*).error.in.(.*):([0-9]+) ]] && "
            "(echo -n \"Error ${BASH_REMATCH[2]}:${BASH_REMATCH[3]} ${BASH_REMATCH[1]} error: \"; "
            "echo \"$out\"|head -n2|tail -n1|cut -b3-)'"))
@@ -59,13 +59,23 @@
                  "grep $(realpath --relative-to . ${INPUT})'")
              ["%f,%l,%tARN,%m" "%f,%l,%tRROR,%m" "%f,%l,%tOTICE,%m"]))
 
+(local credo {:lintCommand "mix credo suggest --format=flycheck --read-from-stdin ${INPUT}"
+              :lintStdin true
+              :lintFormats ["%f:%l:%c: %t: %m" "%f:%l: %t: %m"]
+              :lintCategoryMap {:R :N :D :I :F :E :W :W}
+              :rootMarkers [:mix.exs :mix.lock]})
+
 (local cfg {:go [golangci]
-            :hcl [tfsec terrascan]
+            ;:hcl [tfsec terrascan] ;; FIXME: stability issues...
             :lua [(fmt "lua-format -i") luacheck]
             :fennel [(fmt "fnlfmt /dev/stdin" true) fennel]
+            :elixir [credo]
+            :erlang [(fmt "rebar3 fmt -")]
             :json [(fmt "jq .") (lint "jsonlint ${INPUT}")]
             :javascript [prettier eslint]
             :typescript [prettier eslint]
+            :javascriptreact [prettier eslint]
+            :typescriptreact [prettier eslint]
             :vue [prettier eslint]
             :yaml [prettier]
             :html [prettier]

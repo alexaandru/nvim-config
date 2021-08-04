@@ -12,7 +12,7 @@
          "BufEnter * exe 'ColorizerAttachToBuffer' | LastWindow"
          "BufEnter nginx/* setl ft=nginx"
          "BufEnter *.tf,*.tfvars setl ft=hcl"
-         "BufReadPost *.go,*.lua,*.fnl JumpToLastLocation"
+         "BufReadPost * JumpToLastLocation"
          "BufWritePre *.txt TrimTrailingSpace | TrimTrailingBlankLines"
          "BufWritePre *.vim AutoIndent"
          (string.format "BufWritePost %s/**/*.fnl exe 'so' $MYVIMRC"

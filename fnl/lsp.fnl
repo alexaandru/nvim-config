@@ -1,5 +1,4 @@
 (local util (require :util))
-(local au util.au)
 (local keys (. (require :config.keys) :lsp))
 (local lsp {;; lspconfig setup() arguments, as defined at
             ;; https://github.com/neovim/nvim-lspconfig/blob/master/CONFIG.md
@@ -7,6 +6,8 @@
                   :cssls {}
                   :dockerls {}
                   :efm (require :config.efm)
+                  :elixirls (require :config.elixirls)
+                  :erlangls (require :config.noformat)
                   :gopls (require :config.gopls)
                   :html {}
                   :jsonls (require :config.noformat)
@@ -43,7 +44,8 @@
   (let [rc client.resolved_capabilities]
     (if rc.document_highlight (set_highlight))
     (if rc.code_lens
-        (au {:CodeLens ["BufEnter,CursorHold,InsertLeave <buffer> lua vim.lsp.codelens.refresh()"]})))
+        (au {:CodeLens ["BufEnter,CursorHold,InsertLeave <buffer> lua vim.lsp.codelens.refresh()"]}))
+    (if rc.completion (set vim.bo.omnifunc "v:lua.vim.lsp.omnifunc")))
   (let [lsa (. (require :lsp_signature) :on_attach)]
     (lsa (require :config.lsp_signature))))
 
@@ -60,7 +62,7 @@
     (tset vim.lsp.handlers :textDocument/publishDiagnostics
           (vim.lsp.with opd lsp.dia)))
   (au {:Format ["BufWritePre *.go lua OrgImports()"
-                "BufWritePre *.js lua OrgJSImports()"
+                "BufWritePre *.js,*.jsx lua OrgJSImports()"
                 "BufWritePre * lua Format()"]}))
 
 lsp
