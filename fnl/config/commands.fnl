@@ -21,5 +21,6 @@
  "-bar AutoIndent silent norm gg=G`."
  "-bar LspCapabilities lua LspCapabilities()"
  "-bar PlugUpdate silent exe '! cd' stdpath('config').' && git submodule foreach git pull'"
+ "-bar FnlCompile lua FnlCompile()"
  "-bar -range JQ <line1>,<line2>!jq ."]
 

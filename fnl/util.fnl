@@ -22,6 +22,25 @@
 (fn _G.packadd [px]
   ((all :pa) px))
 
+(fn _G.FnlCompile []
+  (if (= vim.bo.filetype :fennel)
+      (let [(ok code) ((. (require :hotpot.api.compile) :compile-buffer) 0)]
+        (set vim.wo.scrollbind true)
+        (var buf vim.w.luascratch)
+        (when (not buf)
+          (set buf (vim.api.nvim_create_buf false true))
+          (set vim.w.luascratch buf)
+          (vim.api.nvim_buf_set_option buf :filetype :lua))
+        (let [nextLine (vim.gsplit code "\n" true)
+              lines (icollect [v nextLine]
+                      v)]
+          (vim.api.nvim_buf_set_lines buf 0 -1 false lines)
+          (let [wnum (vim.fn.bufwinnr buf)
+                jump-or-split (if (= -1 wnum) (.. :vs|b buf)
+                                  (.. wnum "wincmd w"))]
+            (vim.cmd jump-or-split)
+            (vim.fn.setpos "." [0 0 0 0]))))))
+
 (fn _G.Format [wait-ms]
   (vim.lsp.buf.formatting_sync nil (or wait-ms wait-default)))
 
