@@ -1,7 +1,5 @@
-(local cfgdir (vim.fn.stdpath :config))
-
 [(string.format "-nargs=1 -bar -complete=customlist,v:lua.CfgComplete Cfg e %s/<args>"
-                cfgdir)
+                (vim.fn.stdpath :config))
  "-nargs=1 Grep silent grep <args>"
  "-nargs=* Term 12split | term <args>"
  "     LoadLocalCfg if filereadable('.nvimrc') | so .nvimrc | endif"
@@ -21,6 +19,7 @@
  "-bar AutoIndent silent norm gg=G`."
  "-bar LspCapabilities lua LspCapabilities()"
  "-bar PlugUpdate silent exe '! cd' stdpath('config').' && git submodule foreach git pull'"
- "-bar FnlCompile lua FnlCompile()"
+ "-bar -range=% FnlCompile lua FnlCompile(<line1>,<line2>)"
+ "-bar -range=% FnlEval lua FnlEval(<line1>,<line2>)"
  "-bar -range JQ <line1>,<line2>!jq ."]
 

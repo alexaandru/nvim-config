@@ -1,3 +1,3 @@
-{:filetypes [:tf :hcl]
+{:filetypes [:terraform :tf :hcl]
  :init_options {:experimentalFeatures {:validateOnSave true}}}
 

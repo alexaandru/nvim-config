@@ -8,11 +8,16 @@
                   :efm (require :config.efm)
                   :elixirls (require :config.elixirls)
                   :erlangls (require :config.noformat)
+                  :elmls {}
                   :gopls (require :config.gopls)
                   :html {}
                   :jsonls (require :config.noformat)
+                  :purescriptls {}
                   :pylsp {}
                   :r_language_server nil
+                  :rescriptls {:cmd [:node
+                                     (vim.fn.expand "~/.rescript-lsp/server/out/server.js")
+                                     :--stdio]}
                   :solargraph nil
                   :sumneko_lua (require :config.sumneko)
                   :terraformls (require :config.tf)
@@ -47,16 +52,16 @@
         (au {:CodeLens ["BufEnter,CursorHold,InsertLeave <buffer> lua vim.lsp.codelens.refresh()"]}))
     (if rc.completion (set vim.bo.omnifunc "v:lua.vim.lsp.omnifunc")))
   (let [lsa (. (require :lsp_signature) :on_attach)]
-    (lsa (require :config.lsp_signature))))
+    (lsa (require :config.signature))))
 
 (fn lsp.setup []
   (vim.cmd "aug LSP | au!")
-  (local lspc (require :lspconfig))
-  (local cfg_default {:on_attach lsp.on_attach
-                      :flags {:debounce_text_changes 150}})
-  (each [k cfg (pairs lsp.cfg)]
-    (let [setup (. (. lspc k) :setup)]
-      (setup (vim.tbl_extend :keep cfg cfg_default))))
+  (let [lspc (require :lspconfig)
+        cfg_default {:on_attach lsp.on_attach
+                     :flags {:debounce_text_changes 150}}]
+    (each [k cfg (pairs lsp.cfg)]
+      (let [setup (. (. lspc k) :setup)]
+        (setup (vim.tbl_extend :keep cfg cfg_default)))))
   (vim.cmd "aug END")
   (let [opd vim.lsp.diagnostic.on_publish_diagnostics]
     (tset vim.lsp.handlers :textDocument/publishDiagnostics

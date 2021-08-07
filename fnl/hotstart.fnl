@@ -21,8 +21,10 @@
           :nvim-treesitter
           :nvim-treesitter-textobjects
           :nvim-colorizer
+          :nvim-notify
           :lsp_signature])
 
+(set vim.notify (require :notify))
 (util.let cfg.vars)
 
 (lsp.setup)

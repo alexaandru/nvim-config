@@ -1,8 +1,9 @@
 (local map vim.tbl_map)
+(local cmd vim.cmd)
 
-(fn all [cmd]
+(fn all [cmds]
   (fn [...]
-    (map #(vim.cmd (.. cmd " " $)) (vim.tbl_flatten [...]))))
+    (map #(cmd (.. cmds " " $)) (vim.tbl_flatten [...]))))
 
 (local util {:sig (all "sig define")
              ;; TODO: https://github.com/neovim/neovim/pull/11613
@@ -22,24 +23,41 @@
 (fn _G.packadd [px]
   ((all :pa) px))
 
-(fn _G.FnlCompile []
+(fn _G.FnlEval [start stop]
   (if (= vim.bo.filetype :fennel)
-      (let [(ok code) ((. (require :hotpot.api.compile) :compile-buffer) 0)]
-        (set vim.wo.scrollbind true)
-        (var buf vim.w.luascratch)
-        (when (not buf)
-          (set buf (vim.api.nvim_create_buf false true))
-          (set vim.w.luascratch buf)
-          (vim.api.nvim_buf_set_option buf :filetype :lua))
-        (let [nextLine (vim.gsplit code "\n" true)
-              lines (icollect [v nextLine]
-                      v)]
-          (vim.api.nvim_buf_set_lines buf 0 -1 false lines)
-          (let [wnum (vim.fn.bufwinnr buf)
-                jump-or-split (if (= -1 wnum) (.. :vs|b buf)
-                                  (.. wnum "wincmd w"))]
-            (vim.cmd jump-or-split)
-            (vim.fn.setpos "." [0 0 0 0]))))))
+      ;; WIP ... can't get it to detect mode yet...
+      ;(let [comp-fn (if (= (vim.fn.mode) :n) :compile-buffer :compile-selection)
+      ;      (ok code) ((. (require :hotpot.api.compile) comp-fn) 0)]
+      (let [(any) ((. (require :hotpot.api.eval) :eval-range) 0 start stop)]
+        (_G.FnlDo true (vim.inspect any) true))))
+
+(fn _G.FnlCompile [start stop]
+  (if (= vim.bo.filetype :fennel)
+      ;; WIP ... can't get it to detect mode yet...
+      ;(let [comp-fn (if (= (vim.fn.mode) :n) :compile-buffer :compile-selection)
+      ;      (ok code) ((. (require :hotpot.api.compile) comp-fn) 0)]
+      (let [(ok code) ((. (require :hotpot.api.compile) :compile-range) 0 start
+                                                                        stop)]
+        (_G.FnlDo ok code))))
+
+;; https://github.com/neovim/neovim/pull/13896
+(fn _G.FnlDo [ok code noformat]
+  (set vim.wo.scrollbind true)
+  (var buf vim.g.luascratch)
+  (when (not buf)
+    (set buf (vim.api.nvim_create_buf false true))
+    (set vim.g.luascratch buf)
+    (vim.api.nvim_buf_set_option buf :filetype :lua))
+  (let [nextLine (vim.gsplit code "\n" true)
+        lines (icollect [v nextLine]
+                v)]
+    (vim.api.nvim_buf_set_lines buf 0 -1 false lines)
+    (let [wnum (vim.fn.bufwinnr buf)
+          jump-or-split (if (= -1 wnum) (.. :vs|b buf) (.. wnum "wincmd w"))]
+      (cmd jump-or-split)
+      (if (and ok (not noformat)) (cmd "%!lua-format"))
+      (cmd "setl nofoldenable")
+      (vim.fn.setpos "." [0 0 0 0]))))
 
 (fn _G.Format [wait-ms]
   (vim.lsp.buf.formatting_sync nil (or wait-ms wait-default)))
@@ -99,7 +117,7 @@
                                   (if v (values k v))))))))
 
 (fn _G.RunTests []
-  (vim.cmd :echo)
+  (cmd :echo)
   (var curr-fn ((. (require :nvim-treesitter) :statusline)))
   (if (not (vim.startswith curr-fn "func ")) (set curr-fn "*")
       (set curr-fn (curr-fn:sub 6 (- (curr-fn:find "%(") 1))))
@@ -111,9 +129,9 @@
 ;;       https://github.com/neovim/neovim/pull/14661
 (fn _G.au [...]
   (each [name aux (pairs ...)]
-    (vim.cmd (: "aug %s | au!" :format name))
+    (cmd (: "aug %s | au!" :format name))
     ((all :au) aux)
-    (vim.cmd "aug END")))
+    (cmd "aug END")))
 
 (fn util.set [...]
   (each [k v (pairs ...)]
