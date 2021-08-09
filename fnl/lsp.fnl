@@ -1,8 +1,6 @@
-(local util (require :util))
-(local keys (. (require :config.keys) :lsp))
-(local lsp {;; lspconfig setup() arguments, as defined at
-            ;; https://github.com/neovim/nvim-lspconfig/blob/master/CONFIG.md
-            :cfg {:bashls {}
+(local {: au} (require :setup))
+(local {:lsp keys} (require :config.keys))
+(local lsp {:cfg {:bashls {}
                   :cssls {}
                   :dockerls {}
                   :efm (require :config.efm)
@@ -12,12 +10,11 @@
                   :gopls (require :config.gopls)
                   :html {}
                   :jsonls (require :config.noformat)
+                  :nimls {}
                   :purescriptls {}
                   :pylsp {}
                   :r_language_server nil
-                  :rescriptls {:cmd [:node
-                                     (vim.fn.expand "~/.rescript-lsp/server/out/server.js")
-                                     :--stdio]}
+                  :rescriptls (require :config.rescript)
                   :solargraph nil
                   :sumneko_lua (require :config.sumneko)
                   :terraformls (require :config.tf)
@@ -28,9 +25,10 @@
                   :yamlls {}}
             :dia {;gnostics
                   :underline true
-                  :virtual_text {:spacing 5 :prefix "🚩"}
+                  :virtual_text {:spacing 1 :prefix "🚩"}
                   :signs true
-                  :update_in_insert true}})
+                  :update_in_insert true
+                  :severity_sort true}})
 
 (fn set_keys []
   (let [ns {:noremap true :silent true}]
@@ -51,7 +49,8 @@
     (if rc.code_lens
         (au {:CodeLens ["BufEnter,CursorHold,InsertLeave <buffer> lua vim.lsp.codelens.refresh()"]}))
     (if rc.completion (set vim.bo.omnifunc "v:lua.vim.lsp.omnifunc")))
-  (let [lsa (. (require :lsp_signature) :on_attach)]
+  ;; TODO: require them at top level, not on EVERY on_attach() call!
+  (let [{:on_attach lsa} (require :lsp_signature)]
     (lsa (require :config.signature))))
 
 (fn lsp.setup []
@@ -60,7 +59,7 @@
         cfg_default {:on_attach lsp.on_attach
                      :flags {:debounce_text_changes 150}}]
     (each [k cfg (pairs lsp.cfg)]
-      (let [setup (. (. lspc k) :setup)]
+      (let [{: setup} (. lspc k)]
         (setup (vim.tbl_extend :keep cfg cfg_default)))))
   (vim.cmd "aug END")
   (let [opd vim.lsp.diagnostic.on_publish_diagnostics]

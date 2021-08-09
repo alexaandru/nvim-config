@@ -1,43 +1,15 @@
-(local map vim.tbl_map)
-(local cmd vim.cmd)
-
-(fn all [cmds]
-  (fn [...]
-    (map #(cmd (.. cmds " " $)) (vim.tbl_flatten [...]))))
-
-(local util {:sig (all "sig define")
-             ;; TODO: https://github.com/neovim/neovim/pull/11613
-             :com (all :com!)
-             :colo (all :colo)
-             ;; TODO: https://github.com/neovim/neovim/issues/9876
-             :hi (all :hi!)})
-
 (local wait-default 2000)
-
-(fn _G.DisableProviders [px]
-  (map #(tset vim.g (.. :loaded_ $ :_provider) 0) px))
-
-(fn _G.DisableBuiltin [px]
-  (map #(tset vim.g (.. :loaded_ $) 1) px))
-
-(fn _G.packadd [px]
-  ((all :pa) px))
 
 (fn _G.FnlEval [start stop]
   (if (= vim.bo.filetype :fennel)
-      ;; WIP ... can't get it to detect mode yet...
-      ;(let [comp-fn (if (= (vim.fn.mode) :n) :compile-buffer :compile-selection)
-      ;      (ok code) ((. (require :hotpot.api.compile) comp-fn) 0)]
-      (let [(any) ((. (require :hotpot.api.eval) :eval-range) 0 start stop)]
+      (let [{: eval-range} (require :hotpot.api.eval)
+            (any) (eval-range 0 start stop)]
         (_G.FnlDo true (vim.inspect any) true))))
 
 (fn _G.FnlCompile [start stop]
   (if (= vim.bo.filetype :fennel)
-      ;; WIP ... can't get it to detect mode yet...
-      ;(let [comp-fn (if (= (vim.fn.mode) :n) :compile-buffer :compile-selection)
-      ;      (ok code) ((. (require :hotpot.api.compile) comp-fn) 0)]
-      (let [(ok code) ((. (require :hotpot.api.compile) :compile-range) 0 start
-                                                                        stop)]
+      (let [{: compile-range} (require :hotpot.api.compile)
+            (ok code) (compile-range 0 start stop)]
         (_G.FnlDo ok code))))
 
 ;; https://github.com/neovim/neovim/pull/13896
@@ -52,7 +24,8 @@
         lines (icollect [v nextLine]
                 v)]
     (vim.api.nvim_buf_set_lines buf 0 -1 false lines)
-    (let [wnum (vim.fn.bufwinnr buf)
+    (let [cmd vim.cmd
+          wnum (vim.fn.bufwinnr buf)
           jump-or-split (if (= -1 wnum) (.. :vs|b buf) (.. wnum "wincmd w"))]
       (cmd jump-or-split)
       (if (and ok (not noformat)) (cmd "%!lua-format"))
@@ -84,9 +57,11 @@
   (let [line (vim.fn.getline ".")
         col (vim.fn.col ".")
         ch (string.sub line (- col 1) col)
+        ch (if (string.match line "/") "/" ch)
         t #(vim.api.nvim_replace_termcodes $ true true true)
         default (if (= vim.bo.omnifunc "") :<C-x><C-n> :<C-x><C-o>)]
     (t (match ch
+         "" :<Tab>
          " " :<Tab>
          "\t" :<Tab>
          "/" :<C-x><C-f>
@@ -94,8 +69,8 @@
 
 (local cfg-files
        (let [c (vim.fn.stdpath :config)]
-         (map #(string.sub $ (+ (length c) 2))
-              (vim.fn.glob (.. c "/" :fnl/**/*.fnl) 0 1))))
+         (vim.tbl_map #(string.sub $ (+ (length c) 2))
+                      (vim.fn.glob (.. c "/" :fnl/**/*.fnl) 0 1))))
 
 (fn _G.CfgComplete [arg-lead]
   (vim.tbl_filter #(or (= arg-lead "") ($:find arg-lead)) cfg-files))
@@ -117,7 +92,7 @@
                                   (if v (values k v))))))))
 
 (fn _G.RunTests []
-  (cmd :echo)
+  (vim.cmd :echo)
   (var curr-fn ((. (require :nvim-treesitter) :statusline)))
   (if (not (vim.startswith curr-fn "func ")) (set curr-fn "*")
       (set curr-fn (curr-fn:sub 6 (- (curr-fn:find "%(") 1))))
@@ -125,39 +100,5 @@
                                              :Tests [curr-fn]}]
                                 :command :gopls.run_tests}))
 
-;; TODO: https://github.com/neovim/neovim/pull/12378
-;;       https://github.com/neovim/neovim/pull/14661
-(fn _G.au [...]
-  (each [name aux (pairs ...)]
-    (cmd (: "aug %s | au!" :format name))
-    ((all :au) aux)
-    (cmd "aug END")))
-
-(fn util.set [...]
-  (each [k v (pairs ...)]
-    (if (and (= (type v) :string) (vim.startswith v "+"))
-        (do
-          (set-forcibly! v (v:sub 2))
-          (: (. vim.opt k) :append v))
-        (and (= (type v) :table) (= (. v 1) :defaults))
-        (: (. vim.opt k) :append (vim.list_slice v 2))
-        (tset vim.opt k v))))
-
-(fn util.kmap [mappings]
-  (each [mode mx (pairs mappings)]
-    (each [_ m (ipairs mx)]
-      (var (lhs rhs opts) (unpack m))
-      (set opts (or opts {}))
-      (set opts.noremap true)
-      (vim.api.nvim_set_keymap mode lhs rhs opts))))
-
-(fn util.let [cfg]
-  (each [group vars (pairs cfg)]
-    (each [k v (pairs vars)]
-      (if (= (type v) :table)
-          (each [kk vv (pairs v)]
-            (tset (. vim group) (.. k "_" kk) vv))
-          (tset (. vim group) k v)))))
-
-util
+nil
 

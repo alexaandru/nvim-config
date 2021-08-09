@@ -21,7 +21,6 @@
                 [:<C-n>
                  "<Cmd>let $CD=expand('%:p:h')<CR><Cmd>Term<CR>cd \"$CD\"<CR>clear<CR>"
                  S]
-                [:<Leader>x :<Cmd>Lexplore<CR>]
                 [:<F3> :<Cmd>only<CR> S]
                 [:<F6> "<Cmd>lua RunTests()<CR>" S]
                 [:<F8> :<Cmd>Gdiff<CR> S]

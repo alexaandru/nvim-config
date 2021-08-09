@@ -40,3 +40,6 @@
 [submodule "pack/plugins/opt/nvim-notify"]
 	path = pack/plugins/opt/nvim-notify
 	url = https://github.com/rcarriga/nvim-notify
+[submodule "pack/plugins/opt/package-info"]
+	path = pack/plugins/opt/package-info
+	url = https://github.com/vuki656/package-info.nvim
