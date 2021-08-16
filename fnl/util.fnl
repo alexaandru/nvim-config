@@ -1,19 +1,7 @@
 (local wait-default 2000)
 
-(fn _G.FnlEval [start stop]
-  (if (= vim.bo.filetype :fennel)
-      (let [{: eval-range} (require :hotpot.api.eval)
-            (any) (eval-range 0 start stop)]
-        (_G.FnlDo true (vim.inspect any) true))))
-
-(fn _G.FnlCompile [start stop]
-  (if (= vim.bo.filetype :fennel)
-      (let [{: compile-range} (require :hotpot.api.compile)
-            (ok code) (compile-range 0 start stop)]
-        (_G.FnlDo ok code))))
-
 ;; https://github.com/neovim/neovim/pull/13896
-(fn _G.FnlDo [ok code noformat]
+(fn fnl-do [ok code noformat]
   (set vim.wo.scrollbind true)
   (var buf vim.g.luascratch)
   (when (not buf)
@@ -31,6 +19,18 @@
       (if (and ok (not noformat)) (cmd "%!lua-format"))
       (cmd "setl nofoldenable")
       (vim.fn.setpos "." [0 0 0 0]))))
+
+(fn _G.FnlEval [start stop]
+  (if (= vim.bo.filetype :fennel)
+      (let [{: eval-range} (require :hotpot.api.eval)
+            (any) (eval-range 0 start stop)]
+        (fnl-do true (vim.inspect any) true))))
+
+(fn _G.FnlCompile [start stop]
+  (if (= vim.bo.filetype :fennel)
+      (let [{: compile-range} (require :hotpot.api.compile)
+            (ok code) (compile-range 0 start stop)]
+        (fnl-do ok code))))
 
 (fn _G.Format [wait-ms]
   (vim.lsp.buf.formatting_sync nil (or wait-ms wait-default)))
@@ -99,6 +99,19 @@
   (vim.lsp.buf.execute_command {:arguments [{:URI (vim.uri_from_bufnr 0)
                                              :Tests [curr-fn]}]
                                 :command :gopls.run_tests}))
+
+(fn _G.GolangCI []
+  (let [out (vim.fn.system "golangci-lint run --out-format github-actions")
+        lines (vim.fn.split out "\n")
+        qf (icollect [_ v (ipairs lines)]
+             (let [matches (v:gmatch "::(%S)%S+%s+file=(.*),line=(.*),col=(.*)::(.*)")
+                   (type filename lnum col text) (matches)
+                   lnum (tonumber lnum)
+                   col (tonumber col)]
+               {: type : filename : lnum : col : text}))]
+    (when (> (length qf) 1)
+      (vim.fn.setqflist qf :r)
+      (vim.cmd :copen))))
 
 nil
 

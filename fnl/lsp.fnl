@@ -4,23 +4,23 @@
                   :cssls {}
                   :dockerls {}
                   :efm (require :config.efm)
-                  :elixirls (require :config.elixirls)
-                  :erlangls (require :config.noformat)
-                  :elmls {}
+                  ;:elixirls (require :config.elixirls)
+                  ;:erlangls (require :config.noformat)
+                  ;:elmls {}
                   :gopls (require :config.gopls)
                   :html {}
                   :jsonls (require :config.noformat)
-                  :nimls {}
-                  :purescriptls {}
-                  :pylsp {}
-                  :r_language_server nil
-                  :rescriptls (require :config.rescript)
-                  :solargraph nil
-                  :sumneko_lua (require :config.sumneko)
+                  ;:nimls {}
+                  ;:purescriptls {}
+                  ;:pylsp {}
+                  ;:r_language_server {}
+                  ;:rescriptls (require :config.rescript)
+                  ;:solargraph {}
+                  ;:sumneko_lua (require :config.sumneko)
                   :terraformls (require :config.tf)
                   :tflint {}
                   :tsserver (require :config.noformat)
-                  :vimls nil
+                  ;:vimls nil
                   :vuels {}
                   :yamlls {}}
             :dia {;gnostics
@@ -31,16 +31,21 @@
                   :severity_sort true}})
 
 (fn set_keys []
-  (let [ns {:noremap true :silent true}]
-    (each [c1 kx (pairs keys)]
-      (each [c2 key (pairs kx)]
-        (let [cmd (string.format "<Cmd>lua vim.lsp.%s.%s()<CR>" c1 c2)]
-          (vim.api.nvim_buf_set_keymap 0 :n key cmd ns))))))
+  (each [c1 kx (pairs keys)]
+    (each [c2 key (pairs kx)]
+      (let [fmt string.format
+            cmd (fmt "<Cmd>lua vim.lsp.%s.%s()<CR>" c1 c2)
+            ns {:noremap true :silent true}
+            key-map #(vim.api.nvim_buf_set_keymap 0 :n $1 $2 ns)]
+        (key-map key cmd)))))
 
 (fn set_highlight []
   (au {:Highlight ["CursorHold <buffer> lua vim.lsp.buf.document_highlight()"
                    "CursorHoldI <buffer> lua vim.lsp.buf.document_highlight()"
                    "CursorMoved <buffer> lua vim.lsp.buf.clear_references()"]}))
+
+(local {:on_attach signature-handler} (require :lsp_signature))
+(local signature-config (require :config.signature))
 
 (fn lsp.on_attach [client bufnr]
   (set_keys)
@@ -48,10 +53,10 @@
     (if rc.document_highlight (set_highlight))
     (if rc.code_lens
         (au {:CodeLens ["BufEnter,CursorHold,InsertLeave <buffer> lua vim.lsp.codelens.refresh()"]}))
+    (if rc.code_action
+        (au {:CodeActions ["CursorHold,CursorHoldI <buffer> lua require'setup'.lightbulb()"]}))
     (if rc.completion (set vim.bo.omnifunc "v:lua.vim.lsp.omnifunc")))
-  ;; TODO: require them at top level, not on EVERY on_attach() call!
-  (let [{:on_attach lsa} (require :lsp_signature)]
-    (lsa (require :config.signature))))
+  (signature-handler signature-config))
 
 (fn lsp.setup []
   (vim.cmd "aug LSP | au!")
@@ -59,8 +64,9 @@
         cfg_default {:on_attach lsp.on_attach
                      :flags {:debounce_text_changes 150}}]
     (each [k cfg (pairs lsp.cfg)]
-      (let [{: setup} (. lspc k)]
-        (setup (vim.tbl_extend :keep cfg cfg_default)))))
+      (let [{: setup} (. lspc k)
+            cfg (vim.tbl_extend :keep cfg cfg_default)]
+        (setup cfg))))
   (vim.cmd "aug END")
   (let [opd vim.lsp.diagnostic.on_publish_diagnostics]
     (tset vim.lsp.handlers :textDocument/publishDiagnostics

@@ -2,43 +2,42 @@
 (require :util)
 
 ;; fnlfmt: skip
-(local {: disable-providers : disable-builtin : packadd : au : le : se : com : kmap : sig : colo} (require :setup))
-(local cfg (require :config))
-(local lsp (require :lsp))
+(local {: !providers : !builtin : packadd : au : let-var : set-opt : com! : key-map : sig : colo}
+       (require :setup))
 
 ;; fnlfmt: skip
-(disable-builtin [:2html_plugin :gzip :man :matchit :netrwPlugin :tarPlugin :tutor_mode_plugin :zipPlugin])
-(disable-providers [:python :python3 :node :ruby :perl])
+(!builtin [:2html_plugin :gzip :man :matchit :!netrwPlugin :tarPlugin :tutor_mode_plugin :zipPlugin])
+(!providers [:python :python3 :node :ruby :perl])
 
 ;; TODO: https://github.com/neovim/neovim/issues/12587 when resolved,
 ;; remove https://github.com/antoinemadec/FixCursorHold.nvim
 ;; (loaded from start not opt, hence not listed below)
 
 ;; fnlfmt: skip
-(packadd [:nvim-lspconfig :nvim-lspupdate
+(packadd [:nvim-lspconfig :nvim-lspupdate :lightbulb
           :nvim-treesitter :nvim-treesitter-textobjects
           :nvim-colorizer :nvim-notify :package-info :lsp_signature])
 
 (set vim.notify (require :notify))
 
-(let [{: setup} (require :package-info)]
-  (setup (require :config.package-info)))
+(local cfg (require :config))
 
-(le cfg.vars)
-
-(lsp.setup)
-(let [{: setup} (require :nvim-treesitter.configs)]
-  (setup cfg.treesitter))
-
-(se cfg.options)
+(let-var cfg.vars)
+(set-opt cfg.options)
 (au cfg.autocmd)
-(com cfg.commands)
-(kmap cfg.keys.global)
+(com! cfg.commands)
+(key-map cfg.keys.global)
 (sig cfg.signs)
-(colo :froggy)
+(colo :popping)
 
-(let [{: setup} (require :colorizer)]
-  (setup))
+(let [{:setup setup-lsp} (require :lsp)
+      {:setup setup-ts} (require :nvim-treesitter.configs)
+      {:setup setup-colo} (require :colorizer)
+      {:setup setup-pi} (require :package-info)]
+  (setup-lsp)
+  (setup-ts cfg.treesitter)
+  (setup-colo)
+  (setup-pi (require :config.package-info)))
 
 ;(vim.lsp.set_log_level :debug)
 
