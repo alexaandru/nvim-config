@@ -56,8 +56,8 @@
 (fn _G.SmartTabComplete []
   (let [line (vim.fn.getline ".")
         col (vim.fn.col ".")
-        ch (string.sub line (- col 1) col)
-        ch (if (string.match line "/") "/" ch)
+        ch (line:sub (- col 1) col)
+        ch (if (line:match "/") "/" ch)
         t #(vim.api.nvim_replace_termcodes $ true true true)
         default (if (= vim.bo.omnifunc "") :<C-x><C-n> :<C-x><C-o>)]
     (t (match ch
@@ -67,9 +67,16 @@
          "/" :<C-x><C-f>
          _ default))))
 
+;; https://www.youtube.com/watch?v=NUr-VvaOEHQ
+(fn _G.Compe []
+  ;(print (vim.inspect (vim.lsp.buf.completion)))
+  (let [words [:hello :world]]
+    (vim.fn.complete (vim.fn.col ".") words))
+  "")
+
 (local cfg-files
        (let [c (vim.fn.stdpath :config)]
-         (vim.tbl_map #(string.sub $ (+ (length c) 2))
+         (vim.tbl_map #($:sub (+ (length c) 2))
                       (vim.fn.glob (.. c "/" :fnl/**/*.fnl) 0 1))))
 
 (fn _G.CfgComplete [arg-lead]

@@ -1,6 +1,11 @@
 (require :trim)
 (require :util)
 
+;; TODO: Watch
+;; https://github.com/neovim/neovim/pull/15504
+;; https://github.com/neovim/neovim/pull/14115
+;; https://github.com/neovim/neovim/issues/14090 ; for breaking changes
+
 ;; fnlfmt: skip
 (local {: !providers : !builtin : packadd : au : let-var : set-opt : com! : key-map : sig : colo}
        (require :setup))
@@ -18,7 +23,7 @@
           :nvim-treesitter :nvim-treesitter-textobjects
           :nvim-colorizer :nvim-notify :package-info :lsp_signature])
 
-(set vim.notify (require :notify))
+;(set vim.notify (require :notify))
 
 (local cfg (require :config))
 

@@ -1,9 +1,33 @@
 (local map vim.tbl_map)
 (local cmd vim.cmd)
 
-(fn all [cmds]
+(fn all [cmds f]
   (fn [...]
-    (map #(cmd (.. cmds " " $)) (vim.tbl_flatten [...]))))
+    (map #(cmd (.. cmds " " (if f (f $) $))) (vim.tbl_flatten [...]))))
+
+(fn ins [t v]
+  (table.insert t v)
+  t)
+
+;; COMmands (as in vim commands) PREprocessor.
+;;
+;; It understand the following, tiny DSL: when c(ommand) is prefixed
+;; with one of the following characters, it will replace them with
+;; the corresponding argument:
+;;
+;; |  -bar
+;; %  -range=%
+;; =n -nargs=n ; where n ∈ {1,2,...,*}
+;;
+;; (or any of their combinations, i.e. |=4% would be replaced with
+;;  -bar -nargs=4 -range=%).
+(fn com-pre [c opts]
+  (set-forcibly! opts (or opts []))
+  (match (c:sub 1 1)
+    "|" (com-pre (c:sub 2) (ins opts :-bar))
+    "%" (com-pre (c:sub 2) (ins opts "-range=%"))
+    "=" (com-pre (c:sub 3) (ins opts (.. :-nargs= (c:sub 2 2))))
+    _ (vim.fn.join (vim.tbl_flatten [opts c]))))
 
 (local setup {:packadd (all :pa)
               :!providers #(map #(tset vim.g (.. :loaded_ $ :_provider) 0) $)
@@ -11,7 +35,7 @@
               ;; TODO: https://github.com/neovim/neovim/issues/9876
               :sig (all "sig define")
               ;; TODO: https://github.com/neovim/neovim/pull/11613
-              :com! (all :com!)
+              :com! (all :com! com-pre)
               :colo #(cmd (.. "colo " $))})
 
 ;; TODO: https://github.com/neovim/neovim/pull/12378

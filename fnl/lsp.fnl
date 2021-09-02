@@ -49,14 +49,14 @@
 
 (fn lsp.on_attach [client bufnr]
   (set_keys)
+  (signature-handler signature-config)
   (let [rc client.resolved_capabilities]
     (if rc.document_highlight (set_highlight))
     (if rc.code_lens
         (au {:CodeLens ["BufEnter,CursorHold,InsertLeave <buffer> lua vim.lsp.codelens.refresh()"]}))
     (if rc.code_action
         (au {:CodeActions ["CursorHold,CursorHoldI <buffer> lua require'setup'.lightbulb()"]}))
-    (if rc.completion (set vim.bo.omnifunc "v:lua.vim.lsp.omnifunc")))
-  (signature-handler signature-config))
+    (if rc.completion (set vim.bo.omnifunc "v:lua.vim.lsp.omnifunc"))))
 
 (fn lsp.setup []
   (vim.cmd "aug LSP | au!")

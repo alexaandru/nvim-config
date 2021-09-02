@@ -17,7 +17,7 @@
  :lazyredraw true
  :mouse :a
  :mousemodel :extend
- ;:omnifunc "v:lua.vim.lsp.omnifunc"
+ :omnifunc "syntaxcomplete#Complete"
  :path "**"
  :shell :bash
  :shortmess :+c
