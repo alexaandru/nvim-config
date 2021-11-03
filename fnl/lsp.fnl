@@ -13,7 +13,7 @@
                   ;:nimls {}
                   ;:purescriptls {}
                   ;:pylsp {}
-                  ;:r_language_server {}
+                  :r_language_server {}
                   ;:rescriptls (require :config.rescript)
                   ;:solargraph {}
                   ;:sumneko_lua (require :config.sumneko)
@@ -33,8 +33,10 @@
 (fn set_keys []
   (each [c1 kx (pairs keys)]
     (each [c2 key (pairs kx)]
-      (let [fmt string.format
-            cmd (fmt "<Cmd>lua vim.lsp.%s.%s()<CR>" c1 c2)
+      (let [fmt string.format ;;
+            ;; https://github.com/neovim/neovim/pull/15585
+            scope (if (= c1 :diagnostic) "" :lsp.)
+            cmd (fmt "<Cmd>lua vim.%s%s.%s()<CR>" scope c1 c2)
             ns {:noremap true :silent true}
             key-map #(vim.api.nvim_buf_set_keymap 0 :n $1 $2 ns)]
         (key-map key cmd)))))

@@ -7,6 +7,8 @@
  :expandtab true
  :foldmethod :expr
  :foldexpr "nvim_treesitter#foldexpr()"
+ :foldnestmax 4
+ :foldminlines 1
  :grepprg "git grep -n"
  :hidden true
  :icon true
@@ -17,7 +19,7 @@
  :lazyredraw true
  :mouse :a
  :mousemodel :extend
- :omnifunc "syntaxcomplete#Complete"
+ ;:omnifunc "syntaxcomplete#Complete"
  :path "**"
  :shell :bash
  :shortmess :+c

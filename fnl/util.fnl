@@ -76,7 +76,7 @@
 
 (local cfg-files
        (let [c (vim.fn.stdpath :config)]
-         (vim.tbl_map #($:sub (+ (length c) 2))
+         (vim.tbl_map #($:sub (+ (length c) 2 (length :fnl/)))
                       (vim.fn.glob (.. c "/" :fnl/**/*.fnl) 0 1))))
 
 (fn _G.CfgComplete [arg-lead]

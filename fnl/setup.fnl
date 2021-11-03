@@ -38,8 +38,7 @@
               :com! (all :com! com-pre)
               :colo #(cmd (.. "colo " $))})
 
-;; TODO: https://github.com/neovim/neovim/pull/12378
-;;       https://github.com/neovim/neovim/pull/14661
+;; TODO: https://github.com/neovim/neovim/pull/14661
 (fn setup.au [...]
   (each [name aux (pairs ...)]
     (cmd (: "aug %s | au!" :format name))

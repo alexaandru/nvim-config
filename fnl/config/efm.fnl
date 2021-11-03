@@ -55,7 +55,7 @@
               :rootMarkers [:mix.exs :mix.lock]})
 
 (local cfg {:go [golangci]
-            :hcl [tfsec terrascan]
+            ;:hcl [tfsec terrascan]
             :lua [(fmt "lua-format -i") luacheck]
             :fennel [(fmt "fnlfmt /dev/stdin" true) fennel]
             :elixir [credo]
@@ -72,7 +72,9 @@
             :css [prettier]
             :markdown [prettier]})
 
-{:settings {:rootMarkers [:go.mod :package.json :.git] :languages cfg}
+{:settings {:rootMarkers [:go.mod :package.json :.git]
+            :languages cfg
+            :lintDebounce :200ms}
  :init_options {:documentFormatting false}
  :filetypes (vim.tbl_keys cfg)
  :on_attach (fn [client bufnr]

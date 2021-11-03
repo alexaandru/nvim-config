@@ -1,7 +1,4 @@
-(local fmt string.format)
-(local conf (vim.fn.stdpath :config))
-
-[(fmt "|=1-complete=customlist,v:lua.CfgComplete Cfg e %s/<args>" conf)
+[(string.format "|=1-complete=customlist,v:lua.CfgComplete Cfg e %s/fnl/<args>" (vim.fn.stdpath :config))
  "=1Grep silent grep <args>"
  "=*Term 12split | term <args>"
  "LoadLocalCfg if filereadable('.nvimrc') | so .nvimrc | endif"

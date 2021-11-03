@@ -2,6 +2,7 @@
 (require :util)
 
 ;; TODO: Watch
+;; https://github.com/neovim/neovim/pull/9496
 ;; https://github.com/neovim/neovim/pull/15504
 ;; https://github.com/neovim/neovim/pull/14115
 ;; https://github.com/neovim/neovim/issues/14090 ; for breaking changes
