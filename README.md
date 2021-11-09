@@ -24,9 +24,9 @@ Features:
 - **git** integration: only a custom visual diff and for the rest, I just `:!git` away;
 - convenient access to terminal (via `:Term` or `<C-n>`);
 - easy access to all config files (`:Cfg <tab>`);
-- minimal (I'd like to think :D) config that's been battle tested on the nightly branch
-  since June 2020; no package manager, using builtin **packadd** + git submodules for managing the plugins;
-  there are only ~8 plugins used, of which 4 are LSP and TS;
+- minimal config that's been battle tested on the nightly branch since June 2020;
+  no package manager, using builtin [packages](https://neovim.io/doc/user/repeat.html#packages) feature +
+  git submodules for managing the plugins;
 - minimal UI (no statusbar/linenumber; git branch, filename and function/method name are in the titlebar),
   using [my own colorscheme](https://github.com/alexaandru/froggy).
 

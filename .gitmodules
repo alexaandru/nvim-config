@@ -2,28 +2,25 @@
 	path = pack/colors/start/froggy
 	url = https://github.com/alexaandru/froggy.git
 [submodule "pack/plugins/opt/lsp_signature"]
-	path = pack/plugins/opt/lsp_signature
+	path = pack/plugins/start/lsp_signature
 	url = https://github.com/ray-x/lsp_signature.nvim.git
-[submodule "pack/plugins/opt/markdown-preview"]
-	path = pack/plugins/opt/markdown-preview
-	url = https://github.com/iamcco/markdown-preview.nvim
 [submodule "pack/plugins/opt/nvim-colorizer"]
-	path = pack/plugins/opt/nvim-colorizer
+	path = pack/plugins/start/nvim-colorizer
 	url = https://github.com/norcalli/nvim-colorizer.lua.git
 [submodule "pack/plugins/opt/nvim-lspconfig"]
-	path = pack/plugins/opt/nvim-lspconfig
+	path = pack/plugins/start/nvim-lspconfig
 	url = https://github.com/neovim/nvim-lspconfig.git
 [submodule "pack/plugins/opt/nvim-lspupdate"]
-	path = pack/plugins/opt/nvim-lspupdate
+	path = pack/plugins/start/nvim-lspupdate
 	url = https://github.com/alexaandru/nvim-lspupdate.git
 [submodule "pack/plugins/opt/nvim-treesitter"]
-	path = pack/plugins/opt/nvim-treesitter
+	path = pack/plugins/start/nvim-treesitter
 	url = https://github.com/nvim-treesitter/nvim-treesitter.git
 [submodule "pack/plugins/opt/nvim-treesitter-context"]
-	path = pack/plugins/opt/nvim-treesitter-context
+	path = pack/plugins/start/nvim-treesitter-context
 	url = https://github.com/romgrk/nvim-treesitter-context.git
 [submodule "pack/plugins/opt/nvim-treesitter-textobjects"]
-	path = pack/plugins/opt/nvim-treesitter-textobjects
+	path = pack/plugins/start/nvim-treesitter-textobjects
 	url = https://github.com/nvim-treesitter/nvim-treesitter-textobjects
 [submodule "pack/plugins/opt/playground"]
 	path = pack/plugins/opt/playground
@@ -35,11 +32,17 @@
 	path = pack/plugins/start/site-util
 	url = https://github.com/alexaandru/site-util.git
 [submodule "pack/plugins/opt/hotpot"]
-	path = pack/plugins/opt/hotpot
+	path = pack/plugins/start/hotpot
 	url = https://github.com/rktjmp/hotpot.nvim
 [submodule "pack/plugins/opt/nvim-notify"]
 	path = pack/plugins/opt/nvim-notify
 	url = https://github.com/rcarriga/nvim-notify
 [submodule "pack/plugins/opt/package-info"]
-	path = pack/plugins/opt/package-info
+	path = pack/plugins/start/package-info
 	url = https://github.com/vuki656/package-info.nvim
+[submodule "pack/plugins/start/lightbulb"]
+	path = pack/plugins/start/lightbulb
+	url = https://github.com/kosayoda/nvim-lightbulb
+[submodule "pack/plugins/start/nui.nvim"]
+	path = pack/plugins/start/nui.nvim
+	url = https://github.com/MunifTanjim/nui.nvim.git

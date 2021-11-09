@@ -1,1 +1,1 @@
-packadd hotpot | lua require "hotstart"
+packloadall | lua require "hotstart"

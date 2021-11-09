@@ -6,6 +6,7 @@
 ;; https://github.com/neovim/neovim/pull/15504
 ;; https://github.com/neovim/neovim/pull/14115
 ;; https://github.com/neovim/neovim/issues/14090 ; for breaking changes
+;; https://github.com/neovim/neovim/issues/12587 when resolved, remove https://github.com/antoinemadec/FixCursorHold.nvim
 
 ;; fnlfmt: skip
 (local {: !providers : !builtin : packadd : au : let-var : set-opt : com! : key-map : sig : colo}
@@ -15,19 +16,10 @@
 (!builtin [:2html_plugin :gzip :man :matchit :!netrwPlugin :tarPlugin :tutor_mode_plugin :zipPlugin])
 (!providers [:python :python3 :node :ruby :perl])
 
-;; TODO: https://github.com/neovim/neovim/issues/12587 when resolved,
-;; remove https://github.com/antoinemadec/FixCursorHold.nvim
-;; (loaded from start not opt, hence not listed below)
-
-;; fnlfmt: skip
-(packadd [:nvim-lspconfig :nvim-lspupdate :lightbulb
-          :nvim-treesitter :nvim-treesitter-textobjects
-          :nvim-colorizer :nvim-notify :package-info :lsp_signature])
-
+;(packadd :nvim-notify)
 ;(set vim.notify (require :notify))
 
 (local cfg (require :config))
-
 (let-var cfg.vars)
 (set-opt cfg.options)
 (au cfg.autocmd)
