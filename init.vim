@@ -1,1 +1,1 @@
-packloadall | lua require "hotstart"
+packloadall | lua require"start"

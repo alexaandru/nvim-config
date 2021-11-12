@@ -35,7 +35,7 @@
 	path = pack/plugins/start/hotpot
 	url = https://github.com/rktjmp/hotpot.nvim
 [submodule "pack/plugins/opt/nvim-notify"]
-	path = pack/plugins/opt/nvim-notify
+	path = pack/plugins/start/nvim-notify
 	url = https://github.com/rcarriga/nvim-notify
 [submodule "pack/plugins/opt/package-info"]
 	path = pack/plugins/start/package-info

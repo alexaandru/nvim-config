@@ -38,8 +38,8 @@
             scope (if (= c1 :diagnostic) "" :lsp.)
             cmd (fmt "<Cmd>lua vim.%s%s.%s()<CR>" scope c1 c2)
             ns {:noremap true :silent true}
-            key-map #(vim.api.nvim_buf_set_keymap 0 :n $1 $2 ns)]
-        (key-map key cmd)))))
+            māp #(vim.api.nvim_buf_set_keymap 0 :n $1 $2 ns)]
+        (māp key cmd)))))
 
 (fn set_highlight []
   (au {:Highlight ["CursorHold <buffer> lua vim.lsp.buf.document_highlight()"

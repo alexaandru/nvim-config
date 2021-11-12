@@ -35,7 +35,7 @@
               ;; TODO: https://github.com/neovim/neovim/issues/9876
               :sig (all "sig define")
               ;; TODO: https://github.com/neovim/neovim/pull/11613
-              :com! (all :com! com-pre)
+              :com (all :com! com-pre)
               :colo #(cmd (.. "colo " $))})
 
 ;; TODO: https://github.com/neovim/neovim/pull/14661
@@ -45,7 +45,7 @@
     ((all :au) aux)
     (cmd "aug END")))
 
-(fn setup.set-opt [...]
+(fn setup.opt [...]
   (each [k v (pairs ...)]
     (if (and (= (type v) :string) (vim.startswith v "+"))
         (do
@@ -55,7 +55,7 @@
         (: (. vim.opt k) :append (vim.list_slice v 2))
         (tset vim.opt k v))))
 
-(fn setup.let-var [cfg]
+(fn setup.lēt [cfg]
   (each [group vars (pairs cfg)]
     (each [k v (pairs vars)]
       (if (= (type v) :table)
@@ -63,7 +63,7 @@
             (tset (. vim group) (.. k "_" kk) vv))
           (tset (. vim group) k v)))))
 
-(fn setup.key-map [mappings]
+(fn setup.māp [mappings]
   (each [mode mx (pairs mappings)]
     (each [_ m (ipairs mx)]
       (var (lhs rhs opts) (unpack m))
