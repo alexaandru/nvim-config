@@ -120,5 +120,10 @@
       (vim.fn.setqflist qf :r)
       (vim.cmd :copen))))
 
+(fn _G.Lightbulb []
+  (let [{: update_lightbulb} (require :nvim-lightbulb)]
+    (update_lightbulb {:sign {:enabled false}
+                       :virtual_text {:enabled true :text "💡"}})))
+
 nil
 

@@ -7,16 +7,20 @@
 
 ;; http://bitop.luajit.org
 (local bit (require :bit))
-(local ⧔ bit.lshift)
-(local ⧕ bit.rshift)
-(local ∫ :ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/)
 
-(fn ⋏ [byte mask]
-  (bit.band (byte:byte) (tonumber mask 2)))
+(macro ⧔ [byte shift]
+  `(bit.lshift ,byte ,shift))
+
+(macro ⧕ [byte shift]
+  `(bit.rshift ,byte ,shift))
+
+(macro ⋏ [byte mask]
+  (let [mask (tonumber mask 2)]
+    `(bit.band (: ,byte :byte) ,mask)))
 
 (fn ch [n]
-  (let [n (+ n 1)]
-    (∫:sub n n)))
+  (set-forcibly! n (+ n 1))
+  (: :ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/ :sub n n))
 
 (fn c1 [b1]
   (ch (⧕ (⋏ b1 :11111100) 2)))
@@ -32,8 +36,8 @@
 (fn c4 [b3]
   (ch (⋏ b3 :00111111)))
 
-(fn join [a b]
-  (vim.fn.join (vim.tbl_flatten [a b]) ""))
+(macro join [a b]
+  `(vim.fn.join (vim.tbl_flatten [,a ,b]) ""))
 
 (fn base64 [val]
   (let [out (icollect [b1 b2 b3 (val:gmatch "(.)(.)(.)")]

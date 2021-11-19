@@ -1,9 +1,6 @@
 [submodule "pack/colors/start/froggy"]
 	path = pack/colors/start/froggy
 	url = https://github.com/alexaandru/froggy.git
-[submodule "pack/plugins/opt/lsp_signature"]
-	path = pack/plugins/start/lsp_signature
-	url = https://github.com/ray-x/lsp_signature.nvim.git
 [submodule "pack/plugins/opt/nvim-colorizer"]
 	path = pack/plugins/start/nvim-colorizer
 	url = https://github.com/norcalli/nvim-colorizer.lua.git

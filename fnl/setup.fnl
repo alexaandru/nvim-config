@@ -29,8 +29,7 @@
     "=" (com-pre (c:sub 3) (ins opts (.. :-nargs= (c:sub 2 2))))
     _ (vim.fn.join (vim.tbl_flatten [opts c]))))
 
-(local setup {:packadd (all :pa)
-              :!providers #(map #(tset vim.g (.. :loaded_ $ :_provider) 0) $)
+(local setup {:!providers #(map #(tset vim.g (.. :loaded_ $ :_provider) 0) $)
               :!builtin #(map #(tset vim.g (.. :loaded_ $) 1) $)
               ;; TODO: https://github.com/neovim/neovim/issues/9876
               :sig (all "sig define")
@@ -70,11 +69,6 @@
       (set opts (or opts {}))
       (set opts.noremap true)
       (vim.api.nvim_set_keymap mode lhs rhs opts))))
-
-(fn setup.lightbulb []
-  (let [{: update_lightbulb} (require :nvim-lightbulb)]
-    (update_lightbulb {:sign {:enabled false}
-                       :virtual_text {:enabled true :text "💡"}})))
 
 setup
 
