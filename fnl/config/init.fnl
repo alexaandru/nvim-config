@@ -1,3 +1,3 @@
 (collect [_ v (ipairs [:autocmd :commands :keys :options :signs :treesitter :vars])]
-  (values v (require (.. :config. v))))
+  (values (if (= v :treesitter) :nvim-treesitter.configs v) (require (.. :config. v))))
 

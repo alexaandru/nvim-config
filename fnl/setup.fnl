@@ -70,5 +70,11 @@
       (set opts.noremap true)
       (vim.api.nvim_set_keymap mode lhs rhs opts))))
 
+(fn setup.setup [package args]
+  (let [config (require :config)]
+    (if (and (not args) (. config package)) (set-forcibly! args package))
+    (if args ((. (require package) :setup) (. config args))
+        ((. (require package) :setup)))))
+
 setup
 

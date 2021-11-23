@@ -10,7 +10,7 @@
             :jsonls (require :config.noformat)
             ;:nimls {}
             ;:purescriptls {}
-            ;:pylsp {}
+            :pylsp {}
             :r_language_server {}
             ;:rescriptls (require :config.rescript)
             ;:solargraph {}
@@ -22,11 +22,12 @@
             :vuels {}
             :yamlls {}})
 
-(local diagnostics {:underline true
-                    :virtual_text {:spacing 1 :prefix "🚩"}
-                    :signs true
-                    :update_in_insert true
-                    :severity_sort true})
+(local dia {;gnostics
+            :underline true
+            :virtual_text {:spacing 1 :prefix "🚩"}
+            :signs true
+            :update_in_insert true
+            :severity_sort true})
 
 (local {:lsp keys} (require :config.keys))
 
@@ -58,7 +59,7 @@
         (au {:CodeActions ["CursorHold,CursorHoldI <buffer> lua Lightbulb()"]}))
     (if rc.completion (set vim.bo.omnifunc "v:lua.vim.lsp.omnifunc"))))
 
-(fn setup-lsp []
+(fn setup []
   (vim.cmd "aug LSP | au!")
   (let [lspc (require :lspconfig)
         cfg-default {: on_attach :flags {:debounce_text_changes 150}}]
@@ -69,10 +70,10 @@
   (vim.cmd "aug END")
   (let [opd vim.lsp.diagnostic.on_publish_diagnostics]
     (tset vim.lsp.handlers :textDocument/publishDiagnostics
-          (vim.lsp.with opd diagnostics)))
+          (vim.lsp.with opd dia)))
   (au {:Format ["BufWritePre *.go lua OrgImports()"
                 "BufWritePre *.js,*.jsx lua OrgJSImports()"
                 "BufWritePre * lua Format()"]}))
 
-{: on_attach : setup-lsp}
+{: on_attach : setup}
 
