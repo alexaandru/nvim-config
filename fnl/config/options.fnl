@@ -10,11 +10,9 @@
  :foldnestmax 4
  :foldminlines 1
  :grepprg "git grep -n"
- :hidden true
  :icon true
  :iconstring :nvim
  :ignorecase true
- :inccommand :nosplit
  :laststatus 0
  :lazyredraw true
  :mouse :a

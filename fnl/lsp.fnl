@@ -11,7 +11,7 @@
             ;:nimls {}
             ;:purescriptls {}
             :pylsp {}
-            :r_language_server {}
+            ;:r_language_server {}
             ;:rescriptls (require :config.rescript)
             ;:solargraph {}
             ;:sumneko_lua (require :config.sumneko)

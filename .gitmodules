@@ -43,3 +43,6 @@
 [submodule "pack/plugins/start/nui.nvim"]
 	path = pack/plugins/start/nui.nvim
 	url = https://github.com/MunifTanjim/nui.nvim.git
+[submodule "pack/plugins/start/dressing"]
+	path = pack/plugins/start/dressing
+	url = https://github.com/stevearc/dressing.nvim.git

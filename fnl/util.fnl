@@ -74,10 +74,12 @@
     (vim.fn.complete (vim.fn.col ".") words))
   "")
 
-(local cfg-files
-       (let [c (vim.fn.stdpath :config)]
-         (vim.tbl_map #($:sub (+ (length c) 2 (length :fnl/)))
-                      (vim.fn.glob (.. c "/" :fnl/**/*.fnl) 0 1))))
+(local cfg-files ;;
+       (let [c (vim.fn.stdpath :config)
+             glob #(vim.fn.glob (.. c "/" $) 0 1)
+             files (glob :fnl/**/*.fnl)
+             rm-prefix #($:sub (+ 6 (length c)))]
+         (vim.tbl_map rm-prefix files)))
 
 (fn _G.CfgComplete [arg-lead]
   (vim.tbl_filter #(or (= arg-lead "") ($:find arg-lead)) cfg-files))

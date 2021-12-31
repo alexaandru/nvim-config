@@ -9,32 +9,10 @@
   (table.insert t v)
   t)
 
-;; COMmands (as in vim commands) PREprocessor.
-;;
-;; It understand the following, tiny DSL: when c(ommand) is prefixed
-;; with one of the following characters, it will replace them with
-;; the corresponding argument:
-;;
-;; |  -bar
-;; %  -range=%
-;; =n -nargs=n ; where n ∈ {1,2,...,*}
-;;
-;; (or any of their combinations, i.e. |=4% would be replaced with
-;;  -bar -nargs=4 -range=%).
-(fn com-pre [c opts]
-  (set-forcibly! opts (or opts []))
-  (match (c:sub 1 1)
-    "|" (com-pre (c:sub 2) (ins opts :-bar))
-    "%" (com-pre (c:sub 2) (ins opts "-range=%"))
-    "=" (com-pre (c:sub 3) (ins opts (.. :-nargs= (c:sub 2 2))))
-    _ (vim.fn.join (vim.tbl_flatten [opts c]))))
-
 (local setup {:!providers #(map #(tset vim.g (.. :loaded_ $ :_provider) 0) $)
               :!builtin #(map #(tset vim.g (.. :loaded_ $) 1) $)
               ;; TODO: https://github.com/neovim/neovim/issues/9876
               :sig (all "sig define")
-              ;; TODO: https://github.com/neovim/neovim/pull/11613
-              :com (all :com! com-pre)
               :colo #(cmd (.. "colo " $))})
 
 ;; TODO: https://github.com/neovim/neovim/pull/14661
@@ -43,6 +21,22 @@
     (cmd (: "aug %s | au!" :format name))
     ((all :au) aux)
     (cmd "aug END")))
+
+(fn setup.com [...]
+  (each [name cmd-or-args (pairs ...)]
+    (var cmd cmd-or-args)
+    (var args {})
+    (when (= :table (type cmd))
+      (set cmd cmd-or-args.cmd)
+      (set cmd-or-args.cmd nil)
+      (set args cmd-or-args))
+    (if (= :string (type cmd))
+        (set args.bar (= (vim.fn.match cmd "[^|]|[^|]") -1))
+        (set args.bar true))
+    (if (= :string (type cmd))
+        (if (> (vim.fn.match cmd :<line1>) -1)
+            (if (= nil args.range) (set args.range "%"))))
+    (vim.api.nvim_add_user_command name cmd args)))
 
 (fn setup.opt [...]
   (each [k v (pairs ...)]
