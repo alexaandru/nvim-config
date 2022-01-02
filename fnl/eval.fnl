@@ -1,0 +1,43 @@
+;; https://github.com/neovim/neovim/pull/13896
+(fn fnl-do [ok code noformat]
+  (set vim.wo.scrollbind true)
+  (var buf vim.g.luascratch)
+  (when (not buf)
+    (set buf (vim.api.nvim_create_buf false true))
+    (set vim.g.luascratch buf)
+    (vim.api.nvim_buf_set_option buf :filetype :lua))
+  (let [nextLine (vim.gsplit code "\n" true)
+        lines (icollect [v nextLine]
+                v)]
+    (vim.api.nvim_buf_set_lines buf 0 -1 false lines)
+    (let [cmd vim.cmd
+          wnum (vim.fn.bufwinnr buf)
+          jump-or-split (if (= -1 wnum) (.. :vs|b buf) (.. wnum "wincmd w"))]
+      (cmd jump-or-split)
+      (if (and ok (not noformat)) (cmd "%!lua-format"))
+      (cmd "setl nofoldenable")
+      (vim.fn.setpos "." [0 0 0 0]))))
+
+(fn get-range [args]
+  (let [r1 args.line1
+        r2 args.line2
+        [_ v1] (vim.fn.getpos :v)
+        [_ v2] (vim.fn.getcurpos)]
+    (if (> v2 v1) (values v1 v2) (values r1 r2))))
+
+(fn FnlEval [args]
+  (if (= vim.bo.filetype :fennel)
+      (let [(start stop) (get-range args)
+            {: eval-range} (require :hotpot.api.eval)
+            (any) (eval-range 0 start stop)]
+        (fnl-do true (vim.inspect any) true))))
+
+(fn FnlCompile [args]
+  (if (= vim.bo.filetype :fennel)
+      (let [(start stop) (get-range args)
+            {: compile-range} (require :hotpot.api.compile)
+            (ok code) (compile-range 0 start stop)]
+        (fnl-do ok code))))
+
+{: FnlEval : FnlCompile}
+

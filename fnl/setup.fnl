@@ -5,17 +5,11 @@
   (fn [...]
     (map #(cmd (.. cmds " " (if f (f $) $))) (vim.tbl_flatten [...]))))
 
-(fn ins [t v]
-  (table.insert t v)
-  t)
-
 (local setup {:!providers #(map #(tset vim.g (.. :loaded_ $ :_provider) 0) $)
               :!builtin #(map #(tset vim.g (.. :loaded_ $) 1) $)
-              ;; TODO: https://github.com/neovim/neovim/issues/9876
               :sig (all "sig define")
               :colo #(cmd (.. "colo " $))})
 
-;; TODO: https://github.com/neovim/neovim/pull/14661
 (fn setup.au [...]
   (each [name aux (pairs ...)]
     (cmd (: "aug %s | au!" :format name))
@@ -30,12 +24,17 @@
       (set cmd cmd-or-args.cmd)
       (set cmd-or-args.cmd nil)
       (set args cmd-or-args))
-    (if (= :string (type cmd))
-        (set args.bar (= (vim.fn.match cmd "[^|]|[^|]") -1))
-        (set args.bar true))
-    (if (= :string (type cmd))
-        (if (> (vim.fn.match cmd :<line1>) -1)
-            (if (= nil args.range) (set args.range "%"))))
+    (match (type cmd)
+      :string (let [cond-set (fn [pat arg val]
+                               (if (> (vim.fn.match cmd pat) -1)
+                                   (if (= nil (. args arg)) (tset args arg val))))]
+                (cond-set :<line1> :range "%")
+                (cond-set :args> :nargs 1)
+                (if (= nil args.bar)
+                    (set args.bar (= (vim.fn.match cmd "[^|]|[^|]") -1))))
+      :function (do
+                  (set args.bar true)
+                  (set args.range "%")))
     (vim.api.nvim_add_user_command name cmd args)))
 
 (fn setup.opt [...]

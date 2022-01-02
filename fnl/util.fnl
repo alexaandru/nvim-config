@@ -1,37 +1,5 @@
 (local wait-default 2000)
 
-;; https://github.com/neovim/neovim/pull/13896
-(fn fnl-do [ok code noformat]
-  (set vim.wo.scrollbind true)
-  (var buf vim.g.luascratch)
-  (when (not buf)
-    (set buf (vim.api.nvim_create_buf false true))
-    (set vim.g.luascratch buf)
-    (vim.api.nvim_buf_set_option buf :filetype :lua))
-  (let [nextLine (vim.gsplit code "\n" true)
-        lines (icollect [v nextLine]
-                v)]
-    (vim.api.nvim_buf_set_lines buf 0 -1 false lines)
-    (let [cmd vim.cmd
-          wnum (vim.fn.bufwinnr buf)
-          jump-or-split (if (= -1 wnum) (.. :vs|b buf) (.. wnum "wincmd w"))]
-      (cmd jump-or-split)
-      (if (and ok (not noformat)) (cmd "%!lua-format"))
-      (cmd "setl nofoldenable")
-      (vim.fn.setpos "." [0 0 0 0]))))
-
-(fn _G.FnlEval [start stop]
-  (if (= vim.bo.filetype :fennel)
-      (let [{: eval-range} (require :hotpot.api.eval)
-            (any) (eval-range 0 start stop)]
-        (fnl-do true (vim.inspect any) true))))
-
-(fn _G.FnlCompile [start stop]
-  (if (= vim.bo.filetype :fennel)
-      (let [{: compile-range} (require :hotpot.api.compile)
-            (ok code) (compile-range 0 start stop)]
-        (fnl-do ok code))))
-
 (fn _G.Format [wait-ms]
   (vim.lsp.buf.formatting_sync nil (or wait-ms wait-default)))
 
@@ -74,16 +42,6 @@
     (vim.fn.complete (vim.fn.col ".") words))
   "")
 
-(local cfg-files ;;
-       (let [c (vim.fn.stdpath :config)
-             glob #(vim.fn.glob (.. c "/" $) 0 1)
-             files (glob :fnl/**/*.fnl)
-             rm-prefix #($:sub (+ 6 (length c)))]
-         (vim.tbl_map rm-prefix files)))
-
-(fn _G.CfgComplete [arg-lead]
-  (vim.tbl_filter #(or (= arg-lead "") ($:find arg-lead)) cfg-files))
-
 (fn _G.GitStatus []
   (let [branch (vim.trim (vim.fn.system "git rev-parse --abbrev-ref HEAD 2> /dev/null"))]
     (if (not= branch "")
@@ -93,12 +51,6 @@
 
 (fn _G.ProjRelativePath []
   (string.sub (vim.fn.expand "%:p") (+ (length vim.w.proj_root) 1)))
-
-(fn _G.LspCapabilities []
-  (print (vim.inspect (collect [_ c (pairs (vim.lsp.buf_get_clients))]
-                        (values c.name
-                                (collect [k v (pairs c.resolved_capabilities)]
-                                  (if v (values k v))))))))
 
 (fn _G.RunTests []
   (vim.cmd :echo)

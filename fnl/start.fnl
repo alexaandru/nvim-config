@@ -18,9 +18,11 @@
 (māp cfg.keys.global)
 (sig cfg.signs)
 
-;; fnlfmt: skip
-(each [_ v (ipairs [:lsp :nvim-treesitter.configs :colorizer :package-info :dressing])]
-  (setup v))
+(setup :lsp)
+(setup :nvim-treesitter.configs)
+(setup :colorizer)
+(setup :package-info)
+(setup :dressing)
 
 (colo :froggy)
 

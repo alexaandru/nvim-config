@@ -30,6 +30,8 @@
                 [:Q :<Nop> S]
                 [:<Esc> :<Cmd>noh<CR>]
                 [:<F10> "<Cmd>echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, \"name\")')<CR>" S]]
+            :v [[:<Leader>c :<Cmd>FnlCompile<CR> S]
+                [:<Leader>e :<Cmd>FnlEval<CR> S]]
             :c [[:<Up> (T "wildmenumode() ? \"<Left>\" : \"<Up>\"") E]
                 [:<Down> (T "wildmenumode() ? \"<Right>\" : \"<Down>\"") E]
                 [:<Left> (T "wildmenumode() ? \"<Up>\" : \"<Left>\"") E]
