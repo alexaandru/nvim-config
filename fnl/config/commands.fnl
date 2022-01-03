@@ -28,6 +28,17 @@
      (vim.fn.winrestview save)
      (vim.fn.setreg "@/" last-search)))
 
+(fn is-quittable []
+  (let [{:buftype bt :filetype ft} (vim.fn.getbufvar "%" "&")]
+    (or (vim.tbl_contains [:quickfix :terminal :nofile] bt) (= ft :netrw))))
+
+(fn last-window []
+  (= -1 (vim.fn.winbufnr 2)))
+
+(fn LastWindow []
+  (if (and (is-quittable) (last-window))
+      (vim.cmd "norm ZQ")))
+
 (local {: FnlEval : FnlCompile} (require :eval))
 
 ;; Format is: {CommandName CommandSpec, ...}
@@ -55,7 +66,7 @@
  :SquashBlankLines (kee "/\\(\\n\\)\\{3,}/\\1\\1/")
  :TrimBlankLines (kee "/\\(\\n\\)\\{2,}/\\1/")
  :SaveAndClose "up | bdel"
- :LastWindow "if (&buftype ==# 'quickfix' || &buftype ==# 'terminal' || &buftype ==# 'nofile' || &filetype ==# 'netrw') && winbufnr(2) ==# -1 | q | endif"
+ : LastWindow
  :Scratchify "setl nobl bt=nofile bh=delete noswf"
  :Scratch "<mods> new +Scratchify"
  :AutoWinHeight "silent exe max([min([line('$'), 12]), 1]).'wincmd _'"

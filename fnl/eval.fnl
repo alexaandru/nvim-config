@@ -1,4 +1,3 @@
-;; https://github.com/neovim/neovim/pull/13896
 (fn fnl-do [ok code noformat]
   (set vim.wo.scrollbind true)
   (var buf vim.g.luascratch)
@@ -18,9 +17,11 @@
       (cmd "setl nofoldenable")
       (vim.fn.setpos "." [0 0 0 0]))))
 
+;; https://github.com/neovim/neovim/pull/13896
 (fn get-range [args]
   (let [r1 args.line1
         r2 args.line2
+        ;; https://github.com/neovim/neovim/pull/13896#issuecomment-774680224
         [_ v1] (vim.fn.getpos :v)
         [_ v2] (vim.fn.getcurpos)]
     (if (> v2 v1) (values v1 v2) (values r1 r2))))
