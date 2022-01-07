@@ -17,17 +17,6 @@
 (fn complete [arg-lead]
   (vim.tbl_filter #(or (= arg-lead "") ($:find arg-lead)) cfg-files))
 
-(fn kee [cmd]
-  #(let [last-search (vim.fn.getreg "@/")
-         start (or $.line1 :1)
-         stop (or $.line2 "$")
-         save (vim.fn.winsaveview)
-         fmt string.format
-         cmd (fmt "kee keepj keepp %s,%ss%se" start stop cmd)]
-     (vim.cmd cmd)
-     (vim.fn.winrestview save)
-     (vim.fn.setreg "@/" last-search)))
-
 (fn is-quittable []
   (let [{:buftype bt :filetype ft} (vim.fn.getbufvar "%" "&")]
     (or (vim.tbl_contains [:quickfix :terminal :nofile] bt) (= ft :netrw))))
@@ -39,6 +28,21 @@
   (if (and (is-quittable) (last-window))
       (vim.cmd "norm ZQ")))
 
+(fn kee [cmd]
+  #(let [last-search (vim.fn.getreg "@/")
+         start (or $.line1 :1)
+         stop (or $.line2 "$")
+         save (vim.fn.winsaveview)
+         fmt string.format
+         cmd (fmt "kee keepj keepp %s,%ss%se" start stop cmd)]
+     (vim.cmd cmd)
+     (vim.fn.winrestview save)
+     (vim.fn.setreg "@/" last-search)))
+
+(local TrimTrailingSpace (kee "/\\s\\+$//"))
+(local TrimTrailingBlankLines (kee "/\\($\\n\\s*\\)\\+\\%$//"))
+(local SquashBlankLines (kee "/\\(\\n\\)\\{3,}/\\1\\1/"))
+(local TrimBlankLines (kee "/\\(\\n\\)\\{2,}/\\1/"))
 (local {: FnlEval : FnlCompile} (require :eval))
 
 ;; Format is: {CommandName CommandSpec, ...}
@@ -61,10 +65,10 @@
  :CdProjRoot "SetProjRoot | cd `=w:proj_root`"
  :Gdiff "SetProjRoot | exe 'silent !cd '.w:proj_root.' && git show HEAD^:'.luaeval('ProjRelativePath()').' > /tmp/gdiff' | diffs /tmp/gdiff"
  :JumpToLastLocation "let b:pos = line('''\"') | if b:pos && b:pos <= line('$') | exe b:pos | endif"
- :TrimTrailingSpace (kee "/\\s\\+$//")
- :TrimTrailingBlankLines (kee "/\\($\\n\\s*\\)\\+\\%$//")
- :SquashBlankLines (kee "/\\(\\n\\)\\{3,}/\\1\\1/")
- :TrimBlankLines (kee "/\\(\\n\\)\\{2,}/\\1/")
+ : TrimTrailingSpace
+ : TrimTrailingBlankLines
+ : SquashBlankLines
+ : TrimBlankLines
  :SaveAndClose "up | bdel"
  : LastWindow
  :Scratchify "setl nobl bt=nofile bh=delete noswf"

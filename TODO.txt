@@ -1,9 +1,8 @@
 Watch:
 
-- https://github.com/neovim/neovim/pull/9496
+- https://github.com/neovim/neovim/pull/9496 // anticonceal / horizontal virtual text
 - https://github.com/neovim/neovim/issues/9876 // syntax API
 - https://github.com/neovim/neovim/pull/14661 // autogroups
-- https://github.com/neovim/neovim/pull/15504
-- https://github.com/neovim/neovim/pull/14115
+- https://github.com/neovim/neovim/pull/14115 // vim.lsp.commands ! MERGED !
 - https://github.com/neovim/neovim/issues/14090 ; for breaking changes
 - https://github.com/neovim/neovim/issues/12587 when resolved, remove https://github.com/antoinemadec/FixCursorHold.nvim

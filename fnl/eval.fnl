@@ -24,7 +24,9 @@
         ;; https://github.com/neovim/neovim/pull/13896#issuecomment-774680224
         [_ v1] (vim.fn.getpos :v)
         [_ v2] (vim.fn.getcurpos)]
-    (if (> v2 v1) (values v1 v2) (values r1 r2))))
+    (if (not= v2 v1)
+        (values (math.min v1 v2) (math.max v1 v2))
+        (values r1 r2))))
 
 (fn FnlEval [args]
   (if (= vim.bo.filetype :fennel)

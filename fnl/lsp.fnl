@@ -36,10 +36,11 @@
     (each [c2 key (pairs kx)]
       (let [fmt string.format ;;
             ;; https://github.com/neovim/neovim/pull/15585
-            scope (if (= c1 :diagnostic) "" :lsp.)
-            cmd (fmt "<Cmd>lua vim.%s%s.%s()<CR>" scope c1 c2)
-            ns {:noremap true :silent true}
-            māp #(vim.api.nvim_buf_set_keymap 0 :n $1 $2 ns)]
+            scope (if (= c1 :diagnostic) vim.diagnostic (. vim.lsp c1))
+            cmd (. scope c2)
+            desc (fmt "vim%s.%s.%s()" (if (= c1 :diagnostic) "" :.lsp) c1 c2)
+            ns {:silent true :buffer true : desc}
+            māp #(vim.keymap.set :n $1 $2 ns)]
         (māp key cmd)))))
 
 (local {: au} (require :setup))

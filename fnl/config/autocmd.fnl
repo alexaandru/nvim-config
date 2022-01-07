@@ -11,7 +11,6 @@
          "FileType go setl ts=4 sw=4 noet cole=1"
          "BufEnter * exe 'ColorizerAttachToBuffer' | LastWindow"
          "BufEnter nginx/* setl ft=nginx"
-         "BufEnter *.tf,*.tfvars setl ft=terraform"
          "BufReadPost * JumpToLastLocation"
          "BufWritePre *.txt TrimTrailingSpace | TrimTrailingBlankLines"
          "BufWritePre *.vim AutoIndent"

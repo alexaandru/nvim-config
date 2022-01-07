@@ -60,8 +60,7 @@
     (each [_ m (ipairs mx)]
       (var (lhs rhs opts) (unpack m))
       (set opts (or opts {}))
-      (set opts.noremap true)
-      (vim.api.nvim_set_keymap mode lhs rhs opts))))
+      (vim.keymap.set mode lhs rhs opts))))
 
 (fn setup.setup [package args]
   (let [config (require :config)]

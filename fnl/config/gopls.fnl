@@ -11,6 +11,5 @@
                     :gofumpt true
                     :hoverKind :SynopsisDocumentation
                     :experimentalWorkspaceModule true
-                    :experimentalTemplateSupport true
                     :semanticTokens true}}}
 
