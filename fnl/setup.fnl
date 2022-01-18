@@ -34,6 +34,7 @@
                     (set args.bar (= (vim.fn.match cmd "[^|]|[^|]") -1))))
       :function (do
                   (set args.bar true)
+                  (set args.nargs "*")
                   (set args.range "%")))
     (vim.api.nvim_add_user_command name cmd args)))
 

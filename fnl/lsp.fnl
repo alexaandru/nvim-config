@@ -51,6 +51,7 @@
                    "CursorMoved <buffer> lua vim.lsp.buf.clear_references()"]}))
 
 (fn on_attach [client bufnr]
+  (set vim.b.offset_encoding client.offset_encoding)
   (set-keys)
   (let [rc client.resolved_capabilities]
     (if rc.document_highlight (set-highlight))

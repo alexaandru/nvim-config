@@ -1,49 +1,13 @@
-(fn LspCapabilities []
-  (print (vim.inspect (collect [_ c (pairs (vim.lsp.buf_get_clients))]
-                        (values c.name
-                                (collect [k v (pairs c.resolved_capabilities)]
-                                  (if v (values k v))))))))
+(local {: LspCapabilities : LastWindow : complete} (require :misc))
+(local {: FnlEval : FnlCompile} (require :eval))
+(local {: GolangCI : RunTests} (require :go))
+(local {: TrimTrailingSpace
+        : TrimTrailingBlankLines
+        : SquashBlankLines
+        : TrimBlankLines} (require :trim))
 
 (fn with-config [s]
   (string.format s (vim.fn.stdpath :config)))
-
-(local cfg-files ;;
-       (let [c (vim.fn.stdpath :config)
-             glob #(vim.fn.glob (.. c "/" $) 0 1)
-             files (glob :fnl/**/*.fnl)
-             rm-prefix #($:sub (+ 6 (length c)))]
-         (vim.tbl_map rm-prefix files)))
-
-(fn complete [arg-lead]
-  (vim.tbl_filter #(or (= arg-lead "") ($:find arg-lead)) cfg-files))
-
-(fn is-quittable []
-  (let [{:buftype bt :filetype ft} (vim.fn.getbufvar "%" "&")]
-    (or (vim.tbl_contains [:quickfix :terminal :nofile] bt) (= ft :netrw))))
-
-(fn last-window []
-  (= -1 (vim.fn.winbufnr 2)))
-
-(fn LastWindow []
-  (if (and (is-quittable) (last-window))
-      (vim.cmd "norm ZQ")))
-
-(fn kee [cmd]
-  #(let [last-search (vim.fn.getreg "@/")
-         start (or $.line1 :1)
-         stop (or $.line2 "$")
-         save (vim.fn.winsaveview)
-         fmt string.format
-         cmd (fmt "kee keepj keepp %s,%ss%se" start stop cmd)]
-     (vim.cmd cmd)
-     (vim.fn.winrestview save)
-     (vim.fn.setreg "@/" last-search)))
-
-(local TrimTrailingSpace (kee "/\\s\\+$//"))
-(local TrimTrailingBlankLines (kee "/\\($\\n\\s*\\)\\+\\%$//"))
-(local SquashBlankLines (kee "/\\(\\n\\)\\{3,}/\\1\\1/"))
-(local TrimBlankLines (kee "/\\(\\n\\)\\{2,}/\\1/"))
-(local {: FnlEval : FnlCompile} (require :eval))
 
 ;; Format is: {CommandName CommandSpec, ...}
 ;; where CommandSpec is either String, Table or Lua function.
@@ -55,7 +19,8 @@
 ;;          always ON for functions, unless already set;
 ;;   :range - if <line1> is present in command string (or command
 ;;            is a function), then range is set automaticall to %;
-;;   :nargs - if args> is present in command string, then is set to 1.
+;;   :nargs - if args> is present in command string, then is set to 1,
+;;            for functions it is always set to "*".
 
 {:Cfg {:cmd (with-config "e %s/fnl/<args>") : complete}
  :Grep "silent grep <args>"
@@ -76,6 +41,8 @@
  :AutoWinHeight "silent exe max([min([line('$'), 12]), 1]).'wincmd _'"
  :AutoIndent "silent norm gg=G`."
  : LspCapabilities
+ : GolangCI
+ : RunTests
  :PlugUpdate "silent exe '! cd' stdpath('config').' && git submodule foreach git pull'"
  : FnlCompile
  : FnlEval

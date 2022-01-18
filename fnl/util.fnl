@@ -52,28 +52,6 @@
 (fn _G.ProjRelativePath []
   (string.sub (vim.fn.expand "%:p") (+ (length vim.w.proj_root) 1)))
 
-(fn _G.RunTests []
-  (vim.cmd :echo)
-  (var curr-fn ((. (require :nvim-treesitter) :statusline)))
-  (if (not (vim.startswith curr-fn "func ")) (set curr-fn "*")
-      (set curr-fn (curr-fn:sub 6 (- (curr-fn:find "%(") 1))))
-  (vim.lsp.buf.execute_command {:arguments [{:URI (vim.uri_from_bufnr 0)
-                                             :Tests [curr-fn]}]
-                                :command :gopls.run_tests}))
-
-(fn _G.GolangCI []
-  (let [out (vim.fn.system "golangci-lint run --out-format github-actions")
-        lines (vim.fn.split out "\n")
-        qf (icollect [_ v (ipairs lines)]
-             (let [matches (v:gmatch "::(%S)%S+%s+file=(.*),line=(.*),col=(.*)::(.*)")
-                   (type filename lnum col text) (matches)
-                   lnum (tonumber lnum)
-                   col (tonumber col)]
-               {: type : filename : lnum : col : text}))]
-    (when (> (length qf) 1)
-      (vim.fn.setqflist qf :r)
-      (vim.cmd :copen))))
-
 (fn _G.Lightbulb []
   (let [{: update_lightbulb} (require :nvim-lightbulb)]
     (update_lightbulb {:sign {:enabled false}
