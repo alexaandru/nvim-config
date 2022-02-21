@@ -46,3 +46,9 @@
 [submodule "pack/plugins/start/dressing"]
 	path = pack/plugins/start/dressing
 	url = https://github.com/stevearc/dressing.nvim.git
+[submodule "pack/plugins/start/autotag"]
+	path = pack/plugins/start/autotag
+	url = https://github.com/windwp/nvim-ts-autotag
+[submodule "pack/plugins/opt/markdown-preview"]
+	path = pack/plugins/opt/markdown-preview
+	url = https://github.com/iamcco/markdown-preview.nvim

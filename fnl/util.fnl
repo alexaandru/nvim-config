@@ -13,7 +13,8 @@
                                            (or wait-ms wait-default))]
       (each [_ res (pairs (or result {}))]
         (each [_ r (pairs (or res.result {}))]
-          (if r.edit (vim.lsp.util.apply_workspace_edit r.edit)
+          (if r.edit
+              (vim.lsp.util.apply_workspace_edit r.edit vim.b.offset_encoding)
               (vim.lsp.buf.execute_command r.command)))))))
 
 (fn _G.OrgJSImports []

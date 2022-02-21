@@ -1,22 +1,15 @@
-(local map vim.tbl_map)
-(local cmd vim.cmd)
-
 (fn all [cmds f]
   (fn [...]
-    (map #(cmd (.. cmds " " (if f (f $) $))) (vim.tbl_flatten [...]))))
+    (vim.tbl_map #(vim.cmd (.. cmds " " (if f (f $) $)))
+                 (vim.tbl_flatten [...]))))
 
-(local setup {:!providers #(map #(tset vim.g (.. :loaded_ $ :_provider) 0) $)
-              :!builtin #(map #(tset vim.g (.. :loaded_ $) 1) $)
-              :sig (all "sig define")
-              :colo #(cmd (.. "colo " $))})
-
-(fn setup.au [...]
+(fn au [...]
   (each [name aux (pairs ...)]
-    (cmd (: "aug %s | au!" :format name))
+    (vim.cmd (: "aug %s | au!" :format name))
     ((all :au) aux)
-    (cmd "aug END")))
+    (vim.cmd "aug END")))
 
-(fn setup.com [...]
+(fn com [...]
   (each [name cmd-or-args (pairs ...)]
     (var cmd cmd-or-args)
     (var args {})
@@ -38,7 +31,7 @@
                   (set args.range "%")))
     (vim.api.nvim_add_user_command name cmd args)))
 
-(fn setup.opt [...]
+(fn opt [...]
   (each [k v (pairs ...)]
     (if (and (= (type v) :string) (vim.startswith v "+"))
         (do
@@ -48,7 +41,7 @@
         (: (. vim.opt k) :append (vim.list_slice v 2))
         (tset vim.opt k v))))
 
-(fn setup.lēt [cfg]
+(fn lēt [cfg]
   (each [group vars (pairs cfg)]
     (each [k v (pairs vars)]
       (if (= (type v) :table)
@@ -56,18 +49,27 @@
             (tset (. vim group) (.. k "_" kk) vv))
           (tset (. vim group) k v)))))
 
-(fn setup.māp [mappings]
+(fn map [mappings]
   (each [mode mx (pairs mappings)]
     (each [_ m (ipairs mx)]
       (var (lhs rhs opts) (unpack m))
       (set opts (or opts {}))
       (vim.keymap.set mode lhs rhs opts))))
 
-(fn setup.setup [package args]
+(fn setup [package args]
   (let [config (require :config)]
     (if (and (not args) (. config package)) (set-forcibly! args package))
     (if args ((. (require package) :setup) (. config args))
         ((. (require package) :setup)))))
 
-setup
+{:!providers #(vim.tbl_map #(tset vim.g (.. :loaded_ $ :_provider) 0) $)
+ :!builtin #(vim.tbl_map #(tset vim.g (.. :loaded_ $) 1) $)
+ : setup
+ :sig (all "sig define")
+ :colo #(vim.cmd (.. "colo " $))
+ : au
+ : com
+ : opt
+ : lēt
+ : map}
 

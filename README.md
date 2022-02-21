@@ -1,6 +1,6 @@
 # Neovim config
 
-Requires v0.5+
+Requires v0.7+
 
 Features:
 

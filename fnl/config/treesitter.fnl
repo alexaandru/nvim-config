@@ -1,5 +1,6 @@
 {:ensure_installed :all
  :highlight {:enable true}
+ :autotag {:enable true}
  :indent {:enable true}
  :incremental_selection {:enable true
                          :keymaps {:init_selection :<Return>
