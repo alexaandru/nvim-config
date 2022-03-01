@@ -1,13 +1,22 @@
-(fn all [cmds f]
-  (fn [...]
-    (vim.tbl_map #(vim.cmd (.. cmds " " (if f (f $) $)))
-                 (vim.tbl_flatten [...]))))
+(fn aug [name clear]
+  (let [clear (if (= nil clear) true clear)]
+    (vim.api.nvim_create_augroup name {: clear})))
+
+(fn auc [group event cmd pb]
+  (let [pattern (if (= (type pb) :string) pb)
+        buffer (if (= (type pb) :number) pb)
+        pattern (if (not (or pattern buffer)) "*" pattern)
+        command (if (= (type cmd) :string) cmd)
+        callback (if (= (type cmd) :function) cmd)
+        opts {: group : callback : command : pattern : buffer}]
+    (assert (or command callback) "Either command or callback must be passed")
+    (vim.api.nvim_create_autocmd event opts)))
 
 (fn au [...]
   (each [name aux (pairs ...)]
-    (vim.cmd (: "aug %s | au!" :format name))
-    ((all :au) aux)
-    (vim.cmd "aug END")))
+    (aug name)
+    (each [x params (ipairs aux)]
+      (auc name (unpack params)))))
 
 (fn com [...]
   (each [name cmd-or-args (pairs ...)]
@@ -65,7 +74,7 @@
 {:!providers #(vim.tbl_map #(tset vim.g (.. :loaded_ $ :_provider) 0) $)
  :!builtin #(vim.tbl_map #(tset vim.g (.. :loaded_ $) 1) $)
  : setup
- :sig (all "sig define")
+ :sig #(vim.tbl_map #(vim.cmd (.. "sig define " $)) $)
  :colo #(vim.cmd (.. "colo " $))
  : au
  : com

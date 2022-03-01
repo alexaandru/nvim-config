@@ -31,6 +31,34 @@
 
 (local {:lsp keys} (require :config.keys))
 
+(local wait-default 2000)
+
+(fn Format [wait-ms]
+  (vim.lsp.buf.formatting_sync nil (or wait-ms wait-default)))
+
+(fn Lightbulb []
+  (let [{: update_lightbulb} (require :nvim-lightbulb)]
+    (update_lightbulb {:sign {:enabled false}
+                       :virtual_text {:enabled true :text "💡"}})))
+
+;; Synchronously organise imports, courtesy of
+;; https://github.com/neovim/nvim-lspconfig/issues/115#issuecomment-656372575 and
+;; https://github.com/lucax88x/configs/blob/master/dotfiles/.config/nvim/lua/lt/lsp/functions.lua
+(fn OrgImports [wait-ms]
+  (let [params (vim.lsp.util.make_range_params)]
+    (set params.context {:only [:source.organizeImports]})
+    (let [result (vim.lsp.buf_request_sync 0 :textDocument/codeAction params
+                                           (or wait-ms wait-default))]
+      (each [_ res (pairs (or result {}))]
+        (each [_ r (pairs (or res.result {}))]
+          (if r.edit
+              (vim.lsp.util.apply_workspace_edit r.edit vim.b.offset_encoding)
+              (vim.lsp.buf.execute_command r.command)))))))
+
+(fn OrgJSImports []
+  (vim.lsp.buf.execute_command {:arguments [(vim.fn.expand "%:p")]
+                                :command :_typescript.organizeImports}))
+
 (fn set-keys []
   (each [c1 kx (pairs keys)]
     (each [c2 key (pairs kx)]
@@ -46,9 +74,9 @@
 (local {: au} (require :setup))
 
 (fn set-highlight []
-  (au {:Highlight ["CursorHold <buffer> lua vim.lsp.buf.document_highlight()"
-                   "CursorHoldI <buffer> lua vim.lsp.buf.document_highlight()"
-                   "CursorMoved <buffer> lua vim.lsp.buf.clear_references()"]}))
+  (au {:Highlight [[:CursorHold vim.lsp.buf.document_highlight 0]
+                   [:CursorHoldI vim.lsp.buf.document_highlight 0]
+                   [:CursorMoved vim.lsp.buf.clear_references 0]]}))
 
 (fn on_attach [client bufnr]
   (set vim.b.offset_encoding client.offset_encoding)
@@ -56,9 +84,11 @@
   (let [rc client.resolved_capabilities]
     (if rc.document_highlight (set-highlight))
     (if rc.code_lens
-        (au {:CodeLens ["BufEnter,CursorHold,InsertLeave <buffer> lua vim.lsp.codelens.refresh()"]}))
+        (au {:CodeLens [[[:BufEnter :CursorHold :InsertLeave]
+                         vim.lsp.codelens.refresh
+                         0]]}))
     (if rc.code_action
-        (au {:CodeActions ["CursorHold,CursorHoldI <buffer> lua Lightbulb()"]}))
+        (au {:CodeActions [[[:CursorHold :CursorHoldI] Lightbulb 0]]}))
     (if rc.completion (set vim.bo.omnifunc "v:lua.vim.lsp.omnifunc"))))
 
 (fn setup []
@@ -73,9 +103,9 @@
   (let [opd vim.lsp.diagnostic.on_publish_diagnostics]
     (tset vim.lsp.handlers :textDocument/publishDiagnostics
           (vim.lsp.with opd dia)))
-  (au {:Format ["BufWritePre *.go lua OrgImports()"
-                "BufWritePre *.js,*.jsx lua OrgJSImports()"
-                "BufWritePre * lua Format()"]}))
+  (au {:Format [[:BufWritePre OrgImports :*.go]
+                [:BufWritePre OrgJSImports "*.js,*.jsx"]
+                [:BufWritePre Format]]}))
 
 {: on_attach : setup}
 
