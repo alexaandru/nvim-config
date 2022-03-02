@@ -6,6 +6,10 @@
         : SquashBlankLines
         : TrimBlankLines} (require :trim))
 
+; FIXME: this is the last global Lua function. Refactor it out as well!
+(fn _G.ProjRelativePath []
+  (string.sub (vim.fn.expand "%:p") (+ (length vim.w.proj_root) 1)))
+
 (fn with-config [s]
   (string.format s (vim.fn.stdpath :config)))
 
@@ -25,7 +29,6 @@
 {:Cfg {:cmd (with-config "e %s/fnl/<args>") : complete}
  :Grep "silent grep <args>"
  :Term {:cmd "12split | term <args>" :nargs "*"}
- :LoadLocalCfg "if filereadable('.nvimrc') | so .nvimrc | endif"
  :SetProjRoot "let w:proj_root = fnamemodify(finddir('.git/..', expand('%:p:h').';'), ':p')"
  :CdProjRoot "SetProjRoot | cd `=w:proj_root`"
  :Gdiff "SetProjRoot | exe 'silent !cd '.w:proj_root.' && git show HEAD^:'.luaeval('ProjRelativePath()').' > /tmp/gdiff' | diffs /tmp/gdiff"

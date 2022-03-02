@@ -2,20 +2,20 @@
   (let [clear (if (= nil clear) true clear)]
     (vim.api.nvim_create_augroup name {: clear})))
 
-(fn auc [group event cmd pb]
+(fn auc [group event cmd pb desc]
   (let [pattern (if (= (type pb) :string) pb)
         buffer (if (= (type pb) :number) pb)
         pattern (if (not (or pattern buffer)) "*" pattern)
         command (if (= (type cmd) :string) cmd)
         callback (if (= (type cmd) :function) cmd)
-        opts {: group : callback : command : pattern : buffer}]
+        opts {: group : callback : command : pattern : buffer : desc}]
     (assert (or command callback) "Either command or callback must be passed")
     (vim.api.nvim_create_autocmd event opts)))
 
 (fn au [...]
   (each [name aux (pairs ...)]
     (aug name)
-    (each [x params (ipairs aux)]
+    (each [_ params (ipairs aux)]
       (auc name (unpack params)))))
 
 (fn com [...]

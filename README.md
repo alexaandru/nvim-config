@@ -1,6 +1,6 @@
 # Neovim config
 
-Requires v0.7+
+Requires `nightly`.
 
 Features:
 
@@ -14,10 +14,6 @@ Features:
   i.e.: I use `tsserver` for **JS**, but prefer `prettier` for formatting; I use `gopls` for **Go**, but I also
   want warnings from `golangci-lint`, etc.; I use `sumneko` for **Lua**, but also `efm` to run `lua-format` and
   `luacheck`;
-- completion borrowed from [Supertab](https://vim.fandom.com/wiki/Smart_mapping_for_tab_completion)
-  (hitting `<tab>` will do omnicomplete, file complete or insert actual tab, depending on where you are);
-  no autocompletion, you actually have to hit `<tab>` (or any other of
-  [insert mode completions](https://neovim.io/doc/user/insert.html#ins-completion));
 - autoformat wherever possible; organize imports for **Go** and **JS**;
 - builtin "fuzzy" searching (`set path=**` and just use `:find *whatever*` for filenames or `:Grep *whatever*`
   (set to `git grep`) for content);
@@ -28,6 +24,8 @@ Features:
   no package manager, using builtin [packages](https://neovim.io/doc/user/repeat.html#packages) feature +
   git submodules for managing the plugins;
 - minimal UI (no statusbar/linenumber; git branch, filename and function/method name are in the titlebar),
-  using [my own colorscheme](https://github.com/alexaandru/froggy).
+  using [my own colorscheme](https://github.com/alexaandru/froggy);
+- no auto-completions for now, got used to [insert mode completions](https://neovim.io/doc/user/insert.html#ins-completion)
+  and omnicomplete is set to `v:lua.vim.lsp.omnifunc` when available.
 
 ![Nvim](nvim.png)

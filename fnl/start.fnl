@@ -13,7 +13,7 @@
 
 (lēt cfg.vars)
 (opt cfg.options)
-(au cfg.autocmd)
+(au {:Setup cfg.autocmd})
 (com cfg.commands)
 (map cfg.keys.global)
 (sig cfg.signs)

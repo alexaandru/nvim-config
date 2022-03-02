@@ -1,21 +1,41 @@
-{:Setup [; Pattern is <event>,
-         ; <command_or_callback>,  // command if string, callback if function
-         ; [, <buffer_or_pattern>] // buffer if numeric, pattern if string, defaults to "*"
-         [[:VimEnter :DirChanged] "exe 'LoadLocalCfg' | lua GitStatus()"]
-         [[:WinNew :WinEnter] "lua GitStatus()"]
-         [:TextYankPost "sil! lua vim.highlight.on_yank()"]
-         [:QuickFixCmdPost :cw "[^l]*"]
-         [:QuickFixCmdPost :lw :l*]
-         [:TermOpen :star]
-         [:TermClose :q]
-         [:FileType :AutoWinHeight :qf]
-         [:FileType "setl spell spl=en_us" "gitcommit,asciidoc,markdown"]
-         [:FileType "setl ts=2 sw=2 sts=2 fdls=0" "lua,vim"]
-         [:FileType "setl ts=4 sw=4 noet cole=1" :go]
-         [:BufEnter "exe 'ColorizerAttachToBuffer' | LastWindow"]
-         [:BufEnter "setl ft=nginx" :nginx/*]
-         [:BufEnter "setl ft=gomod" :go.mod]
-         [:BufReadPost :JumpToLastLocation]
-         [:BufWritePre "TrimTrailingSpace | TrimTrailingBlankLines" :*.txt]
-         [:BufWritePre :AutoIndent :*.vim]]}
+(local aux {:VimHighlightOnYank #(vim.highlight.on_yank)
+            :LoadLocalCfg #(if (= 1 (vim.fn.filereadable :.nvimrc))
+                               (vim.cmd "so .nvimrc"))})
+
+(fn cb [events name pat]
+  (let [cb (. aux name)
+        desc (.. name "()")]
+    [events cb pat desc]))
+
+(fn aux.GitStatus []
+  (let [branch (vim.trim (vim.fn.system "git rev-parse --abbrev-ref HEAD 2> /dev/null"))]
+    (if (not= branch "")
+        (let [dirty (.. (vim.fn.system "git diff --quiet || echo -n \\*")
+                        (vim.fn.system "git diff --cached --quiet || echo -n \\+"))]
+          (set vim.w.git_status (.. branch dirty))))))
+
+;; Format is: [<item>], where each <item> is itself a list of:
+;;
+;; <event>,                // event type (string or list)
+;; <command_or_callback>,  // command (string) or callback (function)
+;; [, <buffer_or_pattern>  // buffer (number) or pattern (string), default is "*"
+;;  [, <desc>]]            // callback description
+
+[(cb [:VimEnter :DirChanged] :LoadLocalCfg)
+ (cb [:VimEnter :DirChanged :WinNew :WinEnter] :GitStatus)
+ (cb :TextYankPost :VimHighlightOnYank)
+ [:QuickFixCmdPost :cw "[^l]*"]
+ [:QuickFixCmdPost :lw :l*]
+ [:TermOpen :star]
+ [:TermClose :q]
+ [:FileType :AutoWinHeight :qf]
+ [:FileType "setl spell spl=en_us" "gitcommit,asciidoc,markdown"]
+ [:FileType "setl ts=2 sw=2 sts=2 fdls=0" "lua,vim"]
+ [:FileType "setl ts=4 sw=4 noet cole=1" :go]
+ [:BufEnter "exe 'ColorizerAttachToBuffer' | LastWindow"]
+ [:BufEnter "setl ft=nginx" :nginx/*]
+ [:BufEnter "setl ft=gomod" :go.mod]
+ [:BufReadPost :JumpToLastLocation]
+ [:BufWritePre "TrimTrailingSpace | TrimTrailingBlankLines" :*.txt]
+ [:BufWritePre :AutoIndent :*.vim]]
 
