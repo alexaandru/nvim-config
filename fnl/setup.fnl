@@ -14,9 +14,9 @@
 
 (fn au [...]
   (each [name aux (pairs ...)]
-    (aug name)
-    (each [_ params (ipairs aux)]
-      (auc name (unpack params)))))
+    (let [group (aug name)]
+      (each [_ params (ipairs aux)]
+        (auc group (unpack params))))))
 
 (fn com [...]
   (each [name cmd-or-args (pairs ...)]
@@ -38,7 +38,7 @@
                   (set args.bar true)
                   (set args.nargs "*")
                   (set args.range "%")))
-    (vim.api.nvim_add_user_command name cmd args)))
+    (vim.api.nvim_create_user_command name cmd args)))
 
 (fn opt [...]
   (each [k v (pairs ...)]

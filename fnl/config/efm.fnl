@@ -80,9 +80,9 @@
  :on_attach (fn [client bufnr]
               (let [{: on_attach} (require :lsp)
                     opts (. cfg (vim.fn.getbufvar bufnr :&ft))
-                    rc client.resolved_capabilities]
-                (set rc.document_formatting false)
+                    rc client.server_capabilities]
+                (set rc.documentFormattingProvider false)
                 (each [_ v (ipairs opts)]
-                  (if v.formatCommand (set rc.document_formatting true)))
+                  (if v.formatCommand (set rc.documentFormattingProvider true)))
                 (on_attach client bufnr)))}
 

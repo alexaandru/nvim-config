@@ -31,7 +31,7 @@
  :startofline false
  :termguicolors true
  :title true
- :titlestring "🐙 %{get(w:,'git_status','~git')} 📚 %<%f%=%M  📦 %{nvim_treesitter#statusline(150)}"
+ :titlestring "🐙 %{get(w:,'git_status','~git')} 📚 %<%f%=%M  📦 %{nvim_treesitter#statusline()}"
  :updatetime 2000
  :virtualedit [:block :onemore]
  ;;<C-Z> == 26

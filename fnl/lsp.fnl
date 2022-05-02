@@ -6,7 +6,7 @@
             ;:erlangls (require :config.noformat)
             ;:elmls {}
             :gopls (require :config.gopls)
-            :html {}
+            :html (require :config.noformat)
             :jsonls (require :config.noformat)
             ;:nimls {}
             ;:purescriptls {}
@@ -89,14 +89,14 @@
 (fn on_attach [client bufnr]
   (set vim.b.offset_encoding client.offset_encoding)
   (set-keys)
-  (let [rc client.resolved_capabilities]
-    (if rc.document_highlight (set-highlight))
-    (if rc.code_lens
+  (let [rc client.server_capabilities]
+    (if rc.documentHighlightProvider (set-highlight))
+    (if rc.codeLensProvider
         (au {:CodeLens [(cb [:BufEnter :CursorHold :InsertLeave]
                             :LspCodeLensRefresh 0)]}))
-    (if rc.code_action
+    (if rc.codeActionProvider
         (au {:CodeActions [(cb [:CursorHold :CursorHoldI] :Lightbulb 0)]}))
-    (if rc.completion (set vim.bo.omnifunc "v:lua.vim.lsp.omnifunc"))))
+    (if rc.completionProvider (set vim.bo.omnifunc "v:lua.vim.lsp.omnifunc"))))
 
 (fn setup []
   (vim.cmd "aug LSP | au!")

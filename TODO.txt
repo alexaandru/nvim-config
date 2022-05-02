@@ -4,3 +4,5 @@ Watch:
 - https://github.com/neovim/neovim/issues/9876 // syntax API
 - https://github.com/neovim/neovim/issues/14090 ; for breaking changes
 - https://github.com/neovim/neovim/issues/12587 when resolved, remove https://github.com/antoinemadec/FixCursorHold.nvim
+- https://github.com/neovim/neovim/pull/15723 // semantic tokens
+- https://github.com/neovim/neovim/pull/9496 // anti-conceal aka Concealn't aka The Unconcealable - stolen from https://www.reddit.com/r/neovim/comments/tg7qpf/virtual_text_inside_buffer_content_related_issues/

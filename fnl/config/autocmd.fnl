@@ -8,10 +8,11 @@
     [events cb pat desc]))
 
 (fn aux.GitStatus []
-  (let [branch (vim.trim (vim.fn.system "git rev-parse --abbrev-ref HEAD 2> /dev/null"))]
+  (let [git #(vim.fn.system (.. "git " $))
+        branch (vim.trim (git "rev-parse --abbrev-ref HEAD 2> /dev/null"))]
     (if (not= branch "")
-        (let [dirty (.. (vim.fn.system "git diff --quiet || echo -n \\*")
-                        (vim.fn.system "git diff --cached --quiet || echo -n \\+"))]
+        (let [dirty (.. (git "diff --quiet || echo -n \\*")
+                        (git "diff --cached --quiet || echo -n \\+"))]
           (set vim.w.git_status (.. branch dirty))))))
 
 ;; Format is: [<item>], where each <item> is itself a list of:

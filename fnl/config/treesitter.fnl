@@ -1,4 +1,6 @@
 {:ensure_installed :all
+ :sync_install false
+ :ignore_install {}
  :highlight {:enable true}
  :autotag {:enable true}
  :indent {:enable true}

@@ -1,5 +1,5 @@
 {:settings {:documentFormatting false}
  :on_attach (fn [client bufnr]
-              (set client.resolved_capabilities.document_formatting false)
+              (set client.server_capabilities.documentFormattingProvider false)
               ((. (require :lsp) :on_attach) client bufnr))}
 
