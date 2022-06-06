@@ -42,7 +42,7 @@
     [events cb pat desc]))
 
 (fn aux.Format []
-  (vim.lsp.buf.formatting_sync nil aux.wait-ms))
+  (vim.lsp.buf.format {:timeout-ms aux.wait-ms}))
 
 (fn aux.Lightbulb []
   (let [{: update_lightbulb} (require :nvim-lightbulb)]
