@@ -26,3 +26,6 @@
 
 (colo :froggy)
 
+;;Levels by name: "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF"
+(vim.lsp.set_log_level :WARN)
+
