@@ -52,3 +52,6 @@
 [submodule "pack/plugins/opt/markdown-preview"]
 	path = pack/plugins/opt/markdown-preview
 	url = https://github.com/iamcco/markdown-preview.nvim
+[submodule "pack/plugins/start/pqf"]
+	path = pack/plugins/start/pqf
+	url = https://gitlab.com/yorickpeterse/nvim-pqf.git

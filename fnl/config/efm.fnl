@@ -12,7 +12,7 @@
 ;; of the codes in :errorformat : E W I N
 
 ;; consider using https://github.com/fsouza/prettierd
-(local prettier (fmt "prettier -w --stdin-filepath ${INPUT}"))
+(local prettier (fmt "prettier -w --no-semi --stdin-filepath ${INPUT}"))
 
 (local eslint (vim.tbl_extend :keep
                               (fmt "eslint_d --fix-to-stdout --stdin --stdin-filename=${INPUT}")

@@ -30,6 +30,7 @@
  [:TermOpen :star]
  [:TermClose :q]
  [:FileType :AutoWinHeight :qf]
+ [:FileType "setl cul" :qf]
  [:FileType "setl spell spl=en_us" "gitcommit,asciidoc,markdown"]
  [:FileType "setl ts=2 sw=2 sts=2 fdls=0" "lua,vim"]
  [:FileType "setl ts=4 sw=4 noet cole=1" :go]

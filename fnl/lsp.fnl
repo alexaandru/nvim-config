@@ -17,7 +17,7 @@
             ;:sumneko_lua (require :config.sumneko)
             :terraformls (require :config.tf)
             :tflint {}
-            :tsserver (require :config.noformat)
+            :tsserver (require :config.tsserver)
             ;:vimls nil
             :vuels {}
             :yamlls {}})
@@ -96,7 +96,8 @@
                             :LspCodeLensRefresh 0)]}))
     (if rc.codeActionProvider
         (au {:CodeActions [(cb [:CursorHold :CursorHoldI] :Lightbulb 0)]}))
-    (if rc.completionProvider (set vim.bo.omnifunc "v:lua.vim.lsp.omnifunc"))))
+    (if rc.completionProvider (set vim.bo.omnifunc "v:lua.vim.lsp.omnifunc"))
+    (if rc.definitionProvider (set vim.bo.tagfunc "v:lua.vim.lsp.tagfunc"))))
 
 (fn setup []
   (vim.cmd "aug LSP | au!")

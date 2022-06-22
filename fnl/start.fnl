@@ -23,6 +23,7 @@
 (setup :colorizer)
 (setup :package-info)
 (setup :dressing)
+(setup :pqf)
 
 (colo :froggy)
 
