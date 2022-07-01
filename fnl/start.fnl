@@ -24,6 +24,9 @@
 (setup :package-info)
 (setup :dressing)
 (setup :pqf)
+(setup :dap-go)
+(setup :nvim-dap-virtual-text)
+(setup :dapui)
 
 (colo :froggy)
 

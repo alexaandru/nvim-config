@@ -26,18 +26,18 @@
       (set cmd cmd-or-args.cmd)
       (set cmd-or-args.cmd nil)
       (set args cmd-or-args))
-    (match (type cmd)
-      :string (let [cond-set (fn [pat arg val]
-                               (if (> (vim.fn.match cmd pat) -1)
-                                   (if (= nil (. args arg)) (tset args arg val))))]
-                (cond-set :<line1> :range "%")
-                (cond-set :args> :nargs 1)
-                (if (= nil args.bar)
-                    (set args.bar (= (vim.fn.match cmd "[^|]|[^|]") -1))))
-      :function (do
-                  (set args.bar true)
-                  (set args.nargs "*")
-                  (set args.range "%")))
+    (if (= :string (type cmd))
+        (let [cond-set (fn [pat arg val]
+                         (if (> (vim.fn.match cmd pat) -1)
+                             (if (= nil (. args arg)) (tset args arg val))))]
+          (cond-set :<line1> :range "%")
+          (cond-set :args> :nargs 1)
+          (if (= nil args.bar)
+              (set args.bar (= (vim.fn.match cmd "[^|]|[^|]") -1))))
+        (when (= :function (type cmd))
+          (set args.bar true)
+          (set args.nargs "*")
+          (set args.range "%")))
     (vim.api.nvim_create_user_command name cmd args)))
 
 (fn opt [...]

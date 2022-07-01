@@ -37,6 +37,7 @@
  [:BufEnter "exe 'ColorizerAttachToBuffer' | LastWindow"]
  [:BufEnter "setl ft=nginx" :nginx/*]
  [:BufEnter "setl ft=gomod" :go.mod]
+ [:BufEnter :startinsert :dap-repl]
  [:BufReadPost :JumpToLastLocation]
  [:BufWritePre "TrimTrailingSpace | TrimTrailingBlankLines" :*.txt]
  [:BufWritePre :AutoIndent :*.vim]]

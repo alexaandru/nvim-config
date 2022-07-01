@@ -24,12 +24,10 @@
 
 (local dia {;gnostics
             :underline true
-            :virtual_text {:spacing 1 :prefix "🚩"}
+            :virtual_text {:spacing 1 :prefix "⏹"}
             :signs true
-            :update_in_insert true
+            :update_in_insert false
             :severity_sort true})
-
-(local {:lsp keys} (require :config.keys))
 
 (local aux {:wait-ms 1200
             :LspBufDocumentHighlight #(vim.lsp.buf.document_highlight)
@@ -67,18 +65,6 @@
   (vim.lsp.buf.execute_command {:arguments [(vim.fn.expand "%:p")]
                                 :command :_typescript.organizeImports}))
 
-(fn set-keys []
-  (each [c1 kx (pairs keys)]
-    (each [c2 key (pairs kx)]
-      (let [fmt string.format ;;
-            ;; https://github.com/neovim/neovim/pull/15585
-            scope (if (= c1 :diagnostic) vim.diagnostic (. vim.lsp c1))
-            cmd (. scope c2)
-            desc (fmt "vim%s.%s.%s()" (if (= c1 :diagnostic) "" :.lsp) c1 c2)
-            ns {:silent true :buffer true : desc}
-            map #(vim.keymap.set :n $1 $2 ns)]
-        (map key cmd)))))
-
 (local {: au} (require :setup))
 
 (fn set-highlight []
@@ -86,9 +72,12 @@
                    (cb :CursorHoldI :LspBufDocumentHighlight 0)
                    (cb :CursorMoved :LspBufClearReferences 0)]}))
 
+(local {:lsp lsp-keys} (require :config.keys))
+(local {: map} (require :setup))
+
 (fn on_attach [client bufnr]
   (set vim.b.offset_encoding client.offset_encoding)
-  (set-keys)
+  (map lsp-keys)
   (let [rc client.server_capabilities]
     (if rc.documentHighlightProvider (set-highlight))
     (if rc.codeLensProvider
@@ -96,7 +85,9 @@
                             :LspCodeLensRefresh 0)]}))
     (if rc.codeActionProvider
         (au {:CodeActions [(cb [:CursorHold :CursorHoldI] :Lightbulb 0)]}))
-    (if rc.completionProvider (set vim.bo.omnifunc "v:lua.vim.lsp.omnifunc"))
+    (when rc.completionProvider
+      (set vim.bo.omnifunc "v:lua.vim.lsp.omnifunc")
+      ((. (require :lsp_compl) :attach) client bufnr))
     (if rc.definitionProvider (set vim.bo.tagfunc "v:lua.vim.lsp.tagfunc"))))
 
 (fn setup []

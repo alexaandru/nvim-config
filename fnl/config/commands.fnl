@@ -1,5 +1,4 @@
 (local {: LspCapabilities : LastWindow : complete} (require :misc))
-(local {: FnlEval : FnlCompile} (require :eval))
 (local {: GolangCI : RunTests} (require :go))
 (local {: TrimTrailingSpace
         : TrimTrailingBlankLines
@@ -47,7 +46,5 @@
  : GolangCI
  : RunTests
  :PlugUpdate "silent exe '! cd' stdpath('config').' && git submodule foreach git pull'"
- : FnlCompile
- : FnlEval
  :JQ {:cmd "<line1>,<line2>!jq ." :range true}}
 

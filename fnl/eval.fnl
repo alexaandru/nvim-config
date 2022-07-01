@@ -18,26 +18,24 @@
       (vim.fn.setpos "." [0 0 0 0]))))
 
 ;; https://github.com/neovim/neovim/pull/13896
-(fn get-range [args]
-  (let [r1 args.line1
-        r2 args.line2
-        ;; https://github.com/neovim/neovim/pull/13896#issuecomment-774680224
+(fn get-range []
+  (let [;; https://github.com/neovim/neovim/pull/13896#issuecomment-774680224
         [_ v1] (vim.fn.getpos :v)
         [_ v2] (vim.fn.getcurpos)]
     (if (not= v2 v1)
         (values (math.min v1 v2) (math.max v1 v2))
-        (values r1 r2))))
+        (values 1 (vim.fn.line "$")))))
 
-(fn FnlEval [args]
+(fn FnlEval []
   (if (= vim.bo.filetype :fennel)
-      (let [(start stop) (get-range args)
+      (let [(start stop) (get-range)
             {: eval-range} (require :hotpot.api.eval)
             (any) (eval-range 0 start stop)]
         (fnl-do true (vim.inspect any) true))))
 
-(fn FnlCompile [args]
+(fn FnlCompile []
   (if (= vim.bo.filetype :fennel)
-      (let [(start stop) (get-range args)
+      (let [(start stop) (get-range)
             {: compile-range} (require :hotpot.api.compile)
             (ok code) (compile-range 0 start stop)]
         (fnl-do ok code))))

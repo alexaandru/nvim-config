@@ -55,3 +55,18 @@
 [submodule "pack/plugins/start/pqf"]
 	path = pack/plugins/start/pqf
 	url = https://gitlab.com/yorickpeterse/nvim-pqf.git
+[submodule "pack/plugins/start/lsp-compl"]
+	path = pack/plugins/start/lsp-compl
+	url = git@github.com:alexaandru/nvim-lsp-compl-fnl.git
+[submodule "pack/plugins/start/nvim-dap"]
+	path = pack/plugins/start/nvim-dap
+	url = https://github.com/mfussenegger/nvim-dap
+[submodule "pack/plugins/start/nvim-dap-go"]
+	path = pack/plugins/start/nvim-dap-go
+	url = https://github.com/leoluz/nvim-dap-go
+[submodule "pack/plugins/start/nvim-dap-virtual-text"]
+	path = pack/plugins/start/nvim-dap-virtual-text
+	url = https://github.com/theHamsta/nvim-dap-virtual-text
+[submodule "pack/plugins/start/nvim-dap-ui"]
+	path = pack/plugins/start/nvim-dap-ui
+	url = https://github.com/rcarriga/nvim-dap-ui
