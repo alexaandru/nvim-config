@@ -1,13 +1,8 @@
-(local aux {:VimHighlightOnYank #(vim.highlight.on_yank)
-            :LoadLocalCfg #(if (= 1 (vim.fn.filereadable :.nvimrc))
-                               (vim.cmd "so .nvimrc"))})
+(fn LoadLocalCfg []
+  (if (= 1 (vim.fn.filereadable :.nvimrc))
+      (vim.cmd "so .nvimrc")))
 
-(fn cb [events name pat]
-  (let [cb (. aux name)
-        desc (.. name "()")]
-    [events cb pat desc]))
-
-(fn aux.GitStatus []
+(fn GitStatus []
   (let [git #(vim.fn.system (.. "git " $))
         branch (vim.trim (git "rev-parse --abbrev-ref HEAD 2> /dev/null"))]
     (if (not= branch "")
@@ -22,9 +17,11 @@
 ;; [, <buffer_or_pattern>  // buffer (number) or pattern (string), default is "*"
 ;;  [, <desc>]]            // callback description
 
-[(cb [:VimEnter :DirChanged] :LoadLocalCfg)
- (cb [:VimEnter :DirChanged :WinNew :WinEnter] :GitStatus)
- (cb :TextYankPost :VimHighlightOnYank)
+[[[:VimEnter :DirChanged] LoadLocalCfg]
+ [[:VimEnter :DirChanged :WinNew :WinEnter] GitStatus]
+ ;; FIXME: for some reason, unwrapped it won't work 🤷,
+ ;; probably gets some args it doesn't like that way?
+ [:TextYankPost #(vim.highlight.on_yank)]
  [:QuickFixCmdPost :cw "[^l]*"]
  [:QuickFixCmdPost :lw :l*]
  [:TermOpen :star]
