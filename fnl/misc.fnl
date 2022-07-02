@@ -1,8 +1,8 @@
 (fn LspCapabilities []
   (vim.notify (vim.inspect (collect [_ c (pairs (vim.lsp.buf_get_clients))]
-                             (values c.name
-                                     (collect [k v (pairs c.server_capabilities)]
-                                       (if v (values k v))))))))
+                             c.name
+                             (collect [k v (pairs c.server_capabilities)]
+                               (if v (values k v)))))))
 
 (local cfg-files ;;
        (let [c (vim.fn.stdpath :config)

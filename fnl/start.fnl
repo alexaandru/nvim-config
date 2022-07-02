@@ -28,7 +28,7 @@
 (setup :nvim-dap-virtual-text)
 (setup :dapui)
 
-(colo :froggy)
+(colo :smurfs)
 
 ;;Levels by name: "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF"
 (vim.lsp.set_log_level :WARN)
