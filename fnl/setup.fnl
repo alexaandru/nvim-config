@@ -71,11 +71,18 @@
     (if args ((. (require package) :setup) (. config args))
         ((. (require package) :setup)))))
 
+(fn colo [name]
+  (let [froggy #((require :froggy) $)
+        color (require (.. "froggy.colors." name))]
+    (if (= :table (type color))
+    (froggy color) (vim.cmd (.. "colo " name))
+    )))
+
 {:!providers #(vim.tbl_map #(tset vim.g (.. :loaded_ $ :_provider) 0) $)
  :!builtin #(vim.tbl_map #(tset vim.g (.. :loaded_ $) 1) $)
  : setup
  :sig #(vim.tbl_map #(vim.cmd (.. "sig define " $)) $)
- :colo #(vim.cmd (.. "colo " $))
+ : colo
  : au
  : com
  : opt

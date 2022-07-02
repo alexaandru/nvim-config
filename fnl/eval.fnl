@@ -1,4 +1,6 @@
-(fn fnl-do [ok code noformat]
+(local fennel (require :fennel))
+
+(fn fnl-do [code noformat]
   (set vim.wo.scrollbind true)
   (var buf vim.g.luascratch)
   (when (not buf)
@@ -13,32 +15,37 @@
           wnum (vim.fn.bufwinnr buf)
           jump-or-split (if (= -1 wnum) (.. :vs|b buf) (.. wnum "wincmd w"))]
       (cmd jump-or-split)
-      (if (and ok (not noformat)) (cmd "%!lua-format"))
+      (if (not noformat) (cmd "%!lua-format"))
       (cmd "setl nofoldenable")
       (vim.fn.setpos "." [0 0 0 0]))))
 
 ;; https://github.com/neovim/neovim/pull/13896
 (fn get-range []
-  (let [;; https://github.com/neovim/neovim/pull/13896#issuecomment-774680224
-        [_ v1] (vim.fn.getpos :v)
-        [_ v2] (vim.fn.getcurpos)]
-    (if (not= v2 v1)
-        (values (math.min v1 v2) (math.max v1 v2))
-        (values 1 (vim.fn.line "$")))))
+  ;; https://github.com/neovim/neovim/pull/13896#issuecomment-774680224
+  (var [_ l1] (vim.fn.getpos :v))
+  (var [_ l2] (vim.fn.getcurpos))
+  (when (= l1 l2)
+    (set l1 1)
+    (set l2 (vim.fn.line "$")))
+  (when (> l1 l2)
+    (local tmp l1)
+    (set l1 l2)
+    (set l2 tmp))
+  (let [lines (vim.fn.getline l1 l2)
+        text (table.concat lines "\n")]
+    text))
 
 (fn FnlEval []
   (if (= vim.bo.filetype :fennel)
-      (let [(start stop) (get-range)
-            {: eval-range} (require :hotpot.api.eval)
-            (any) (eval-range 0 start stop)]
-        (fnl-do true (vim.inspect any) true))))
+      (let [text (get-range)
+            out (fennel.eval text)]
+        (fnl-do (vim.inspect out) true))))
 
 (fn FnlCompile []
   (if (= vim.bo.filetype :fennel)
-      (let [(start stop) (get-range)
-            {: compile-range} (require :hotpot.api.compile)
-            (ok code) (compile-range 0 start stop)]
-        (fnl-do ok code))))
+      (let [text (get-range)
+            out (fennel.compileString text)]
+        (fnl-do out))))
 
 {: FnlEval : FnlCompile}
 

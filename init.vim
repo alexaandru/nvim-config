@@ -1,1 +1,1 @@
-packloadall | lua require"start"
+packadd fennel | lua require"start"

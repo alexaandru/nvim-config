@@ -5,7 +5,7 @@ Requires `nightly`.
 Features:
 
 - 100% ~~Lua~~ [Fennel](https://fennel-lang.org) based (well, technically, it's still Lua ;-))
-  thanks to [Hotpot](https://github.com/rktjmp/hotpot.nvim);
+  thanks to my own, "micro" [Fennel shim](https://github.com/alexaandru/fennel-nvim);
 - **syntax highlighting** (as well as **code folding**, **incremental selection**, **text objects** & more)
   powered by [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter);
 - [builtin LSP](https://neovim.io/doc/user/lsp.html) setup for a dozen languages, of which I mostly use Go,
