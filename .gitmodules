@@ -1,6 +1,6 @@
 [submodule "pack/colors/start/froggy"]
 	path = pack/colors/start/froggy
-	url = https://github.com/alexaandru/froggy.git
+	url = https://github.com/alexaandru/froggy
 [submodule "pack/plugins/opt/nvim-colorizer"]
 	path = pack/plugins/start/nvim-colorizer
 	url = https://github.com/norcalli/nvim-colorizer.lua.git
@@ -28,9 +28,6 @@
 [submodule "pack/plugins/start/site-util"]
 	path = pack/plugins/start/site-util
 	url = https://github.com/alexaandru/site-util.git
-[submodule "pack/plugins/opt/hotpot"]
-	path = pack/plugins/start/hotpot
-	url = https://github.com/rktjmp/hotpot.nvim
 [submodule "pack/plugins/opt/nvim-notify"]
 	path = pack/plugins/start/nvim-notify
 	url = https://github.com/rcarriga/nvim-notify
@@ -55,9 +52,6 @@
 [submodule "pack/plugins/start/pqf"]
 	path = pack/plugins/start/pqf
 	url = https://gitlab.com/yorickpeterse/nvim-pqf.git
-[submodule "pack/plugins/start/lsp-compl"]
-	path = pack/plugins/start/lsp-compl
-	url = git@github.com:alexaandru/nvim-lsp-compl-fnl.git
 [submodule "pack/plugins/start/nvim-dap"]
 	path = pack/plugins/start/nvim-dap
 	url = https://github.com/mfussenegger/nvim-dap
@@ -70,3 +64,9 @@
 [submodule "pack/plugins/start/nvim-dap-ui"]
 	path = pack/plugins/start/nvim-dap-ui
 	url = https://github.com/rcarriga/nvim-dap-ui
+[submodule "pack/plugins/start/lsp-compl"]
+	path = pack/plugins/start/lsp-compl
+	url = git@github.com:alexaandru/nvim-lsp-compl-fnl.git
+[submodule "pack/plugins/opt/fennel"]
+	path = pack/plugins/opt/fennel
+	url = git@github.com:alexaandru/fennel-nvim.git

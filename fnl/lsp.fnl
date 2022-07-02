@@ -26,7 +26,7 @@
             :underline true
             :virtual_text {:spacing 1 :prefix "⏹"}
             :signs true
-            :update_in_insert false
+            :update_in_insert true
             :severity_sort true})
 
 (local wait-ms 1200)
@@ -77,6 +77,7 @@
         (au {:CodeLens [[[:BufEnter :CursorHold :InsertLeave] vim.lsp.codelens.refresh 0]]}))
     (if rc.codeActionProvider
         (au {:CodeActions [[[:CursorHold :CursorHoldI] Lightbulb 0]]}))
+    ;; watch https://github.com/neovim/neovim/pull/19003
     (when rc.completionProvider
       (set vim.bo.omnifunc "v:lua.vim.lsp.omnifunc")
       ((. (require :lsp_compl) :attach) client bufnr))

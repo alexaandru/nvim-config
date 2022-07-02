@@ -10,6 +10,12 @@
                         (git "diff --cached --quiet || echo -n \\+"))]
           (set vim.w.git_status (.. branch dirty))))))
 
+(fn ReColor []
+  (let [name (.. :froggy.colors. vim.g.colors_name)]
+    (tset package.loaded name nil)
+    ((require :froggy) (require name)))
+  (vim.cmd :redr!))
+
 ;; Format is: [<item>], where each <item> is itself a list of:
 ;;
 ;; <event>,                // event type (string or list)
@@ -36,6 +42,7 @@
  [:BufEnter "setl ft=gomod" :go.mod]
  [:BufEnter :startinsert :dap-repl]
  [:BufReadPost :JumpToLastLocation]
+ [:BufWritePost ReColor :*froggy/*]
  [:BufWritePre "TrimTrailingSpace | TrimTrailingBlankLines" :*.txt]
  [:BufWritePre :AutoIndent :*.vim]]
 
