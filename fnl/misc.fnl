@@ -25,5 +25,25 @@
   (if (and (is-quittable) (last-window))
       (vim.cmd "norm ZQ")))
 
-{: LspCapabilities : LastWindow : complete}
+;; https://github.com/neovim/neovim/pull/13896
+(fn get-range []
+  ;; https://github.com/neovim/neovim/pull/13896#issuecomment-774680224
+  (var [_ l1] (vim.fn.getpos :v))
+  (var [_ l2] (vim.fn.getcurpos))
+  (when (= l1 l2)
+    (set l1 1)
+    (set l2 (vim.fn.line "$")))
+  (when (> l1 l2)
+    (local tmp l1)
+    (set l1 l2)
+    (set l2 tmp))
+  [l1 l2])
+
+(fn get-selection []
+  (let [[l1 l2] (get-range)
+        lines (vim.fn.getline l1 l2)
+        text (table.concat lines "\n")]
+    text))
+
+{: LspCapabilities : LastWindow : complete : get-range : get-selection}
 

@@ -52,9 +52,9 @@
 (each [exp v (pairs {:SGVsbG8gV29ybGQ= "Hello World"
                      :SGVsbG8gV29ybGQh "Hello World!"
                      :RWhsbG8gV29ybGQ/Pw== "Ehllo World??"})]
-  (let [act (base64 v)]
-    (assert (= act exp) ;;
-            (string.format "expected base64(%s) == %s got %s " v exp act))))
+  (let [act (base64 v)
+        msg "expected base64('%s') == '%s' got '%s'"]
+    (assert (= act exp) (msg:format v exp act))))
 
 base64
 

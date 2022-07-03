@@ -1,4 +1,5 @@
 (local fennel (require :fennel))
+(local {: get-selection} (require :misc))
 
 (fn fnl-do [code noformat]
   (set vim.wo.scrollbind true)
@@ -19,33 +20,8 @@
       (cmd "setl nofoldenable")
       (vim.fn.setpos "." [0 0 0 0]))))
 
-;; https://github.com/neovim/neovim/pull/13896
-(fn get-range []
-  ;; https://github.com/neovim/neovim/pull/13896#issuecomment-774680224
-  (var [_ l1] (vim.fn.getpos :v))
-  (var [_ l2] (vim.fn.getcurpos))
-  (when (= l1 l2)
-    (set l1 1)
-    (set l2 (vim.fn.line "$")))
-  (when (> l1 l2)
-    (local tmp l1)
-    (set l1 l2)
-    (set l2 tmp))
-  (let [lines (vim.fn.getline l1 l2)
-        text (table.concat lines "\n")]
-    text))
-
-(fn FnlEval []
-  (if (= vim.bo.filetype :fennel)
-      (let [text (get-range)
-            out (fennel.eval text)]
-        (fnl-do (vim.inspect out) true))))
-
-(fn FnlCompile []
-  (if (= vim.bo.filetype :fennel)
-      (let [text (get-range)
-            out (fennel.compileString text)]
-        (fnl-do out))))
-
-{: FnlEval : FnlCompile}
+{:FnlEval #(if (= vim.bo.filetype :fennel)
+               (fnl-do (vim.inspect (fennel.eval (get-selection))) true))
+ :FnlCompile #(if (= vim.bo.filetype :fennel)
+                  (fnl-do (fennel.compileString (get-selection))))}
 
