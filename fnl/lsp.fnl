@@ -77,6 +77,7 @@
         (au {:CodeLens [[[:BufEnter :CursorHold :InsertLeave] vim.lsp.codelens.refresh 0]]}))
     (if rc.codeActionProvider
         (au {:CodeActions [[[:CursorHold :CursorHoldI] Lightbulb 0]]}))
+    ;; watch https://github.com/neovim/neovim/pull/19003
     (when rc.completionProvider
       (set vim.bo.omnifunc "v:lua.vim.lsp.omnifunc")
       ((. (require :lsp_compl) :attach) client bufnr))

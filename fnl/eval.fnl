@@ -1,7 +1,8 @@
 (local fennel (require :fennel))
 (local {: get-selection} (require :misc))
+(local is-fnl #(= vim.bo.filetype :fennel))
 
-(fn fnl-do [code noformat]
+(fn show [code noformat]
   (set vim.wo.scrollbind true)
   (var buf vim.g.luascratch)
   (when (not buf)
@@ -20,8 +21,6 @@
       (cmd "setl nofoldenable")
       (vim.fn.setpos "." [0 0 0 0]))))
 
-{:FnlEval #(if (= vim.bo.filetype :fennel)
-               (fnl-do (vim.inspect (fennel.eval (get-selection))) true))
- :FnlCompile #(if (= vim.bo.filetype :fennel)
-                  (fnl-do (fennel.compileString (get-selection))))}
+{:FnlEval #(if (is-fnl) (show (vim.inspect (fennel.eval (get-selection))) true))
+ :FnlCompile #(if (is-fnl) (show (fennel.compileString (get-selection))))}
 
