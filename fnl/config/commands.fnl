@@ -1,16 +1,9 @@
-(local {: LspCapabilities : LastWindow : complete} (require :misc))
+(local {: LspCapabilities : LastWindow : Gdiff} (require :misc))
 (local {: GolangCI : RunTests} (require :go))
 (local {: TrimTrailingSpace
         : TrimTrailingBlankLines
         : SquashBlankLines
         : TrimBlankLines} (require :trim))
-
-; FIXME: this is the last global Lua function. Refactor it out as well!
-(fn _G.ProjRelativePath []
-  (string.sub (vim.fn.expand "%:p") (+ (length vim.w.proj_root) 1)))
-
-(fn with-config [s]
-  (string.format s (vim.fn.stdpath :config)))
 
 ;; Format is: {CommandName CommandSpec, ...}
 ;; where CommandSpec is either String, Table or Lua function.
@@ -25,12 +18,11 @@
 ;;   :nargs - if args> is present in command string, then is set to 1,
 ;;            for functions it is always set to "*".
 
-{:Cfg {:cmd (with-config "e %s/fnl/<args>") : complete}
- :Grep "silent grep <args>"
+{:Grep "silent grep <args>"
  :Term {:cmd "12split | term <args>" :nargs "*"}
  :SetProjRoot "let w:proj_root = fnamemodify(finddir('.git/..', expand('%:p:h').';'), ':p')"
  :CdProjRoot "SetProjRoot | cd `=w:proj_root`"
- :Gdiff "SetProjRoot | exe 'silent !cd '.w:proj_root.' && git show HEAD^:'.luaeval('ProjRelativePath()').' > /tmp/gdiff' | diffs /tmp/gdiff"
+ : Gdiff
  :JumpToLastLocation "let b:pos = line('''\"') | if b:pos && b:pos <= line('$') | exe b:pos | endif"
  : TrimTrailingSpace
  : TrimTrailingBlankLines

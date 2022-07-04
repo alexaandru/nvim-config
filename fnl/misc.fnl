@@ -4,16 +4,6 @@
                              (collect [k v (pairs c.server_capabilities)]
                                (if v (values k v)))))))
 
-(local cfg-files ;;
-       (let [c (vim.fn.stdpath :config)
-             glob #(vim.fn.glob (.. c "/" $) 0 1)
-             files (glob :fnl/**/*.fnl)
-             rm-prefix #($:sub (+ 6 (length c)))]
-         (vim.tbl_map rm-prefix files)))
-
-(fn complete [arg-lead]
-  (vim.tbl_filter #(or (= arg-lead "") ($:find arg-lead)) cfg-files))
-
 (fn is-quittable []
   (let [{:buftype bt :filetype ft} (vim.fn.getbufvar "%" "&")]
     (or (vim.tbl_contains [:quickfix :terminal :nofile] bt) (= ft :netrw))))
@@ -45,5 +35,14 @@
         text (table.concat lines "\n")]
     text))
 
-{: LspCapabilities : LastWindow : complete : get-range : get-selection}
+(fn Gdiff []
+  (print (vim.fn.getcwd))
+  (vim.cmd :SetProjRoot)
+  (let [path (vim.fn.expand "%:p")
+        proj-rel-path (path:sub (+ (length vim.w.proj_root) 1))
+        cmd "exe 'sil !lcd %s && git show HEAD^:%s > /tmp/gdiff' | diffs /tmp/gdiff"
+        cmd (cmd:format vim.w.proj_root proj-rel-path)]
+    (vim.cmd cmd)))
+
+{: LspCapabilities : LastWindow : Gdiff : get-range : get-selection}
 

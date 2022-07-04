@@ -16,8 +16,7 @@ Requires `nightly`. Features:
 - builtin "fuzzy" searching (`set path=**` and just use `:find *whatever*` for filenames or `:Grep *whatever*`
   (set to `git grep`) for content);
 - **git** integration: only a custom visual diff and for the rest, I just `:!git` away;
-- convenient access to terminal (via `:Term` or `<C-Enter>`);
-- easy access to all config files (`:Cfg <tab>`);
+- terminal started via `:Term` or `<C-Enter>` will start in the folder of the current file;
 - minimal config that's been battle tested on the nightly branch since June 2020;
   no package manager, using builtin [packages](https://neovim.io/doc/user/repeat.html#packages) feature +
   git submodules for managing the plugins;
