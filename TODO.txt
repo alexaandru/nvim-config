@@ -11,3 +11,5 @@ Watch:
 - https://github.com/neovim/neovim/issues/18393
 - https://github.com/neovim/neovim/issues/17820
 - https://github.com/neovim/neovim/issues/17712
+- https://github.com/neovim/neovim/pull/15436
+- https://github.com/neovim/neovim/pull/19267

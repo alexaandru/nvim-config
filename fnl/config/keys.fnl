@@ -1,3 +1,4 @@
+; NOTE: at ~20ms, this is one of the slowest parts of config. Why?
 (let [S {:silent true}
       SB {:silent true :buffer true}
       E {:expr true}
@@ -8,8 +9,7 @@
       dap (require :dap)
       dapui (require :dapui)
       widgets (require :dap.ui.widgets)
-      sidebar (widgets.sidebar widgets.scopes)
-      {: FnlEval : FnlCompile} (require :eval)]
+      sidebar (widgets.sidebar widgets.scopes)]
   {:lsp {:n [[:gd lsp.declaration SB]
              ["<c-]>" lsp.definition SB]
              [:<F1> lsp.hover SB]
@@ -21,16 +21,14 @@
              [:gW lsp.workspace_symbol SB]
              [:<F2> lsp.rename SB]
              [:<F16> lsp.code_action SB]
-             [:<M-Right> vim.lsp.diagnostic.goto_next SB]
-             [:<M-Left> vim.lsp.diagnostic.goto_prev SB]
+             [:<M-Right> vim.diagnostic.goto_next SB]
+             [:<M-Left> vim.diagnostic.goto_prev SB]
              [:<F7> vim.diagnostic.setloclist SB]
              [:<Leader>k vim.lsp.codelens.run SB]]}
    :global {:n [[:gb "<Cmd>ls<CR>:b<Space>" S]
                 [:db "<Cmd>%bd<bar>e#<CR>" S]
                 [:<C-Enter> "<Cmd>lcd %:p:h<Bar>Term<CR>" S]
                 [:<F3> #(vim.cmd :only) S]
-                [:<F5> "<Cmd>GolangCI %<CR>" S]
-                [:<F6> :<Cmd>RunTests<CR> S]
                 [:<Leader>z dap.continue S]
                 [:<Leader>b dap.toggle_breakpoint S]
                 [:<Leader>o dap.step_over S]
@@ -41,13 +39,11 @@
                 [:<Leader>t sidebar.toggle S]
                 [:<F8> :<Cmd>Gdiff<CR> S]
                 [:<Leader>w :<Cmd>SaveAndClose<CR> S]
-                [:<Leader>c FnlCompile S]
-                [:<Leader>e FnlEval S]
                 [:<Space> toggle-fold S]
                 [:Q :<Nop> S]
                 [:<Esc> :<Cmd>noh<CR>]
+                ["," ":find "]
                 [:<F10> syn-stack S]]
-            :v [[:<Leader>c FnlCompile S] [:<Leader>e FnlEval S]]
             :c [[:<Up> (T "wildmenumode() ? \"<Left>\" : \"<Up>\"") E]
                 [:<Down> (T "wildmenumode() ? \"<Right>\" : \"<Down>\"") E]
                 [:<Left> (T "wildmenumode() ? \"<Up>\" : \"<Left>\"") E]

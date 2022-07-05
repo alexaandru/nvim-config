@@ -65,15 +65,27 @@
       (set opts (or opts {}))
       (vim.keymap.set mode lhs rhs opts))))
 
-(fn setup [package args]
-  (let [config (require :config)]
+(local config (collect [_ v (ipairs [:treesitter])]
+                v (require (.. :config. v))))
+
+;; when package name to require .setup() from is different then our config
+(local pack-setups {:treesitter :nvim-treesitter.configs})
+
+(fn _setup [package args]
+  (let [package-for-setup (or (. pack-setups package) package)]
     (if (and (not args) (. config package)) (set-forcibly! args package))
-    (if args ((. (require package) :setup) (. config args))
+    (if args ((. (require package-for-setup) :setup) (. config args))
         ((. (require package) :setup)))))
+
+(fn setup [...]
+  (each [_ p (ipairs [...])]
+    (_setup p)))
 
 {:!providers #(vim.tbl_map #(tset vim.g (.. :loaded_ $ :_provider) 0) $)
  :!builtin #(vim.tbl_map #(tset vim.g (.. :loaded_ $) 1) $)
  : setup
+ :r #(let [x (require (.. :config. $))]
+       (if $2 (. x $2) x))
  :sig #(vim.tbl_map #(vim.cmd (.. "sig define " $)) $)
  :colo #(vim.cmd (.. "colo " $))
  : au

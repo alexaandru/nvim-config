@@ -1,50 +1,16 @@
-(local cfg {:bashls {}
-            :cssls {}
-            :dockerls {}
-            :efm (require :config.efm)
-            ;:elixirls (require :config.elixirls)
-            ;:erlangls (require :config.noformat)
-            ;:elmls {}
-            :gopls (require :config.gopls)
-            :html (require :config.noformat)
-            :jsonls (require :config.noformat)
-            ;:nimls {}
-            ;:purescriptls {}
-            :pylsp {}
-            ;:r_language_server {}
-            ;:rescriptls (require :config.rescript)
-            ;:solargraph {}
-            ;:sumneko_lua (require :config.sumneko)
-            :terraformls (require :config.tf)
-            :tflint {}
-            :tsserver (require :config.tsserver)
-            ;:vimls nil
-            :vuels {}
-            :yamlls {}})
+(local cfg (require :config.lsp-cfg))
+(local cfg-diag cfg.__diag)
+(set cfg.__diag nil)
+(local ms 1000)
 
-(local dia {;gnostics
-            :underline true
-            :virtual_text {:spacing 1 :prefix "⏹"}
-            :signs true
-            :update_in_insert true
-            :severity_sort true})
-
-(local wait-ms 1200)
+;;"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF"
+(vim.lsp.set_log_level :WARN)
 
 (fn Format []
-  (vim.lsp.buf.format {:timeout-ms wait-ms}))
+  (vim.lsp.buf.format {:timeout-ms ms}))
 
-(fn Lightbulb []
-  (let [{: update_lightbulb} (require :nvim-lightbulb)]
-    (update_lightbulb {:sign {:enabled false}
-                       :virtual_text {:enabled true :text "💡"}})))
-
-;; Synchronously organise imports, courtesy of
-;; https://github.com/neovim/nvim-lspconfig/issues/115#issuecomment-656372575 and
-;; https://github.com/lucax88x/configs/blob/master/dotfiles/.config/nvim/lua/lt/lsp/functions.lua
 (fn OrgImports []
-  (let [ms wait-ms
-        params (vim.lsp.util.make_range_params)]
+  (let [params (vim.lsp.util.make_range_params)]
     (set params.context {:only [:source.organizeImports]})
     (let [result (vim.lsp.buf_request_sync 0 :textDocument/codeAction params ms)]
       (each [_ res (pairs (or result {}))]
@@ -75,18 +41,13 @@
     (if rc.documentHighlightProvider (set-highlight))
     (if rc.codeLensProvider
         (au {:CodeLens [[[:BufEnter :CursorHold :InsertLeave] vim.lsp.codelens.refresh 0]]}))
-    (if rc.codeActionProvider
-        (au {:CodeActions [[[:CursorHold :CursorHoldI] Lightbulb 0]]}))
-    ;; watch https://github.com/neovim/neovim/pull/19003
-    (when rc.completionProvider
-      (set vim.bo.omnifunc "v:lua.vim.lsp.omnifunc")
-      ((. (require :lsp_compl) :attach) client bufnr))
-    (if rc.definitionProvider (set vim.bo.tagfunc "v:lua.vim.lsp.tagfunc"))))
+    (if rc.completionProvider
+      ((. (require :lsp_compl) :attach) client bufnr))))
 
 (fn setup []
   (vim.cmd "aug LSP | au!")
   (let [lspc (require :lspconfig)
-        cfg-default {: on_attach :flags {:debounce_text_changes 150}}]
+        cfg-default {: on_attach :flags {:debounce_text_changes 500}}]
     (each [k cfg (pairs cfg)]
       (let [{: setup} (. lspc k)
             cfg (vim.tbl_extend :keep cfg cfg-default)]
@@ -94,7 +55,7 @@
   (vim.cmd "aug END")
   (let [opd vim.lsp.diagnostic.on_publish_diagnostics]
     (tset vim.lsp.handlers :textDocument/publishDiagnostics
-          (vim.lsp.with opd dia)))
+          (vim.lsp.with opd cfg-diag)))
   (au {:Format [[:BufWritePre OrgImports :*.go]
                 [:BufWritePre OrgJSImports "*.js,*.jsx"]
                 [:BufWritePre Format]]}))

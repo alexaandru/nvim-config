@@ -13,8 +13,9 @@
                         :lookahead true
                         :keymaps {:af "@function.outer"
                                   :if "@function.inner"
-                                  :ac "@class.outer"
-                                  :ic "@class.inner"}}
+                                  :ac "@conditional.outer"
+                                  :al "@loop.outer"
+                                  :as "@statement.outer"}}
                :lsp_interop {:enable true
                              :peek_definition_code {:df "@function.outer"
                                                     :dF "@class.outer"}}}}

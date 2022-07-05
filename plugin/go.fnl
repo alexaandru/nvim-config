@@ -38,5 +38,11 @@
                                              :Tests [curr-fn]}]
                                 :command :gopls.run_tests}))
 
-{: GolangCI : RunTests}
+(let [opts {:range "%" :nargs "*" :bar true}
+      com vim.api.nvim_create_user_command]
+  (each [name func (pairs {: GolangCI : RunTests})]
+    (com name func opts)))
+
+(each [lhs rhs (pairs {:<F5> "<Cmd>GolangCI %<CR>" :<F6> :<Cmd>RunTests<CR>})]
+  (vim.keymap.set :n lhs rhs {:silent true}))
 

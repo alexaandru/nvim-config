@@ -28,21 +28,6 @@
 [submodule "pack/plugins/start/site-util"]
 	path = pack/plugins/start/site-util
 	url = https://github.com/alexaandru/site-util.git
-[submodule "pack/plugins/opt/nvim-notify"]
-	path = pack/plugins/start/nvim-notify
-	url = https://github.com/rcarriga/nvim-notify
-[submodule "pack/plugins/opt/package-info"]
-	path = pack/plugins/start/package-info
-	url = https://github.com/vuki656/package-info.nvim
-[submodule "pack/plugins/start/lightbulb"]
-	path = pack/plugins/start/lightbulb
-	url = https://github.com/kosayoda/nvim-lightbulb
-[submodule "pack/plugins/start/nui.nvim"]
-	path = pack/plugins/start/nui.nvim
-	url = https://github.com/MunifTanjim/nui.nvim.git
-[submodule "pack/plugins/start/dressing"]
-	path = pack/plugins/start/dressing
-	url = https://github.com/stevearc/dressing.nvim.git
 [submodule "pack/plugins/start/autotag"]
 	path = pack/plugins/start/autotag
 	url = https://github.com/windwp/nvim-ts-autotag

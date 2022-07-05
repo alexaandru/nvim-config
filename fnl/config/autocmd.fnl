@@ -2,6 +2,7 @@
   (if (= 1 (vim.fn.filereadable :.nvimrc))
       (vim.cmd "so .nvimrc")))
 
+; FIXME: kind of broken atm, works on and off...
 (fn GitStatus []
   (let [git #(vim.fn.system (.. "git " $))
         branch (vim.trim (git "rev-parse --abbrev-ref HEAD 2> /dev/null"))]
@@ -17,17 +18,13 @@
   (vim.cmd :redr!))
 
 ;; Format is: [<item>], where each <item> is itself a list of:
-;;
 ;; <event>,                // event type (string or list)
 ;; <command_or_callback>,  // command (string) or callback (function)
 ;; [, <buffer_or_pattern>  // buffer (number) or pattern (string), default is "*"
 ;;  [, <desc>]]            // callback description
-
 [[[:VimEnter :DirChanged] LoadLocalCfg]
  [[:VimEnter :DirChanged :WinNew :WinEnter] GitStatus]
- ;; FIXME: for some reason, unwrapped it won't work 🤷,
- ;; probably gets some args it doesn't like that way?
- [:TextYankPost #(vim.highlight.on_yank)]
+ [:TextYankPost #(vim.highlight.on_yank {:timeout 450})]
  [:QuickFixCmdPost :cw "[^l]*"]
  [:QuickFixCmdPost :lw :l*]
  [:TermOpen :star]
@@ -39,10 +36,8 @@
  [:FileType "setl ts=4 sw=4 noet cole=1" :go]
  [:BufEnter "exe 'ColorizerAttachToBuffer' | LastWindow"]
  [:BufEnter "setl ft=nginx" :nginx/*]
- [:BufEnter "setl ft=gomod" :go.mod]
  [:BufEnter :startinsert :dap-repl]
  [:BufReadPost :JumpToLastLocation]
  [:BufWritePost ReColor :*froggy/*]
- [:BufWritePre "TrimTrailingSpace | TrimTrailingBlankLines" :*.txt]
- [:BufWritePre :AutoIndent :*.vim]]
+ [:BufWritePre "TrimTrailingSpace | TrimTrailingBlankLines" :*.txt]]
 
