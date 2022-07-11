@@ -8,7 +8,7 @@
 (opt (r :options))
 (au {:Setup (r :autocmd)})
 (com (r :commands))
-(map (r :keys :global))
+(map (r :keys))
 
 (setup :lsp :treesitter :colorizer :pqf
        :dap-go :nvim-dap-virtual-text :dapui) ; TODO: lazy load these

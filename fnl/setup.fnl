@@ -84,8 +84,7 @@
 {:!providers #(vim.tbl_map #(tset vim.g (.. :loaded_ $ :_provider) 0) $)
  :!builtin #(vim.tbl_map #(tset vim.g (.. :loaded_ $) 1) $)
  : setup
- :r #(let [x (require (.. :config. $))]
-       (if $2 (. x $2) x))
+ :r #(require (.. :config. $))
  :sig #(vim.tbl_map #(vim.cmd (.. "sig define " $)) $)
  :colo #(vim.cmd (.. "colo " $))
  : au

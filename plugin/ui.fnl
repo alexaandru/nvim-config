@@ -15,9 +15,10 @@
     (buf-opts {: modifiable})
 
     (let [oTitlestring vim.opt.titlestring
+          border ["┏" "━" "┓" "┃" "┛" "━" "┗" "┃"]
           win-open-opts {: width : height :row 1 :col 0
                          :relative :cursor :anchor :NW
-                         :style :minimal :border :single}
+                         :style :minimal : border}
           win-set-opts {:winblend 90 :winhighlight "CursorLine:PmenuSel,NormalFloat:Pmenu"
                         :cursorline (not modifiable) :cursorlineopt :both}
           w (vim.api.nvim_open_win b true win-open-opts)]

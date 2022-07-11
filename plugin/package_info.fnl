@@ -7,12 +7,10 @@
   (if (not opts.virt_text_pos) (set opts.virt_text_pos :eol))
   (vim.api.nvim_buf_set_extmark 0 ns line col opts))
 
-(fn get-info []
-  (vim.json.decode (vim.fn.system "npm out --json")))
-
 (fn virt-text [info]
-  (let [text {:virt_text [[(.. " 🚩 " info.current ",") :DiagnosticInfo]]}
-        vt #(table.insert text.virt_text [(.. " " $2 (or $3 "")) $1])]
+  (let [text {:virt_text []}
+        vt #(table.insert text.virt_text [(.. " " (or $2 :n/a) (or $3 "")) $1])]
+    (vt :DiagnosticInfo info.current ",")
     (if (= info.wanted info.current) (vt :DiagnosticError info.latest)
         (not= info.wanted info.latest)
         (do
@@ -26,18 +24,24 @@
 
 (fn display-info [info]
   (each [k v (pairs info)]
-    (vim.schedule #(display-info-item k v))))
+    (display-info-item k v)))
 
 (fn update-info []
-  (let [info (get-info)]
-    (display-info info)))
+  (var json "")
 
-(fn PackageInfo []
-  (when (not vim.b.package_info)
-    (vim.schedule update-info)
-    (set vim.b.package_info true)))
+  (fn on_stdout [_ data]
+    (set json (.. json (table.concat data))))
+
+  (fn on_exit [_ code]
+    (set vim.b.package_info true)
+    (display-info (vim.json.decode json)))
+
+  (let [cmd "npm out --json"
+        opts {: on_exit : on_stdout :on_stderr on_stdout}]
+    (vim.fn.jobstart cmd opts)))
 
 (let [group (vim.api.nvim_create_augroup :PackageInfo {:clear true})
-      opts {:callback PackageInfo :pattern :package.json : group}]
-  (vim.api.nvim_create_autocmd :BufEnter opts))
+      callback #(if (not vim.b.package_info) (update-info))
+      pattern :package.json]
+  (vim.api.nvim_create_autocmd :BufEnter {: group : callback : pattern}))
 

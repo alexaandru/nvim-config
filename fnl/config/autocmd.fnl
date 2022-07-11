@@ -2,7 +2,6 @@
   (if (= 1 (vim.fn.filereadable :.nvimrc))
       (vim.cmd "so .nvimrc")))
 
-; FIXME: kind of broken atm, works on and off...
 (fn GitStatus []
   (let [git #(vim.fn.system (.. "git " $))
         branch (vim.trim (git "rev-parse --abbrev-ref HEAD 2> /dev/null"))]

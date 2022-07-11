@@ -20,6 +20,7 @@
         opts {: on_exit : on_stdout :on_stderr on_stdout}]
     (vim.fn.jobstart cmd opts)))
 
+; FIXME: kind of broken atm, works on and off...
 (fn Gdiff []
   (vim.cmd :SetProjRoot)
   (let [path (vim.fn.expand "%:p")

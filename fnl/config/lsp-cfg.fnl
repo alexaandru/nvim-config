@@ -28,6 +28,8 @@
 (local tsserver (vim.tbl_extend :error noformat
        {:handlers {:textDocument/publishDiagnostics err-filter}}))
 
+(local lsp vim.lsp.buf)
+
 {:bashls {}
  :cssls {}
  :dockerls {}
@@ -45,5 +47,20 @@
           :virtual_text {:spacing 1 :prefix "⏹"}
           :signs true
           :update_in_insert true
-          :severity_sort true}}
+          :severity_sort true}
+ :__keys {:gd lsp.declaration
+          "<c-]>" lsp.definition
+          :<F1> lsp.hover
+          :gD lsp.implementation
+          :<c-k> lsp.signature_help
+          :1gD lsp.type_definition
+          :gr lsp.references
+          :g0 lsp.document_symbol
+          :gW lsp.workspace_symbol
+          :<F2> lsp.rename
+          :<F16> lsp.code_action
+          :<M-Right> vim.diagnostic.goto_next
+          :<M-Left> vim.diagnostic.goto_prev
+          :<F7> vim.diagnostic.setloclist
+          :<Leader>k vim.lsp.codelens.run}}
 

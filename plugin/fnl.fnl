@@ -1,8 +1,8 @@
 (local fennel (require :fennel))
 
 ;; https://github.com/neovim/neovim/pull/13896
+;; https://github.com/neovim/neovim/pull/13896#issuecomment-774680224
 (fn get-range []
-  ;; https://github.com/neovim/neovim/pull/13896#issuecomment-774680224
   (var [_ l1] (vim.fn.getpos :v))
   (var [_ l2] (vim.fn.getcurpos))
   (when (= l1 l2)

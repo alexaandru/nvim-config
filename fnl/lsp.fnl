@@ -1,6 +1,7 @@
 (local cfg (require :config.lsp-cfg))
-(local cfg-diag cfg.__diag)
+(local {:__diag cfg-diag :__keys lsp-keys} cfg)
 (set cfg.__diag nil)
+(set cfg.__keys nil)
 (local ms 1000)
 
 ;;"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF"
@@ -23,26 +24,29 @@
   (vim.lsp.buf.execute_command {:arguments [(vim.fn.expand "%:p")]
                                 :command :_typescript.organizeImports}))
 
-(local {: au} (require :setup))
+(fn au [group-name commands]
+  (let [group (vim.api.nvim_create_augroup group-name {:clear true})
+        c #(vim.api.nvim_create_autocmd $1 {:callback $2 : group :buffer 0})]
+    (each [ev cmd (pairs commands)] (c ev cmd))
+    group))
 
 (fn set-highlight []
-  (au {:Highlight [[:CursorHold vim.lsp.buf.document_highlight 0]
-                   [:CursorHoldI vim.lsp.buf.document_highlight 0]
-                   [:CursorMoved vim.lsp.buf.clear_references 0]]}))
+  (au :Highlight {:CursorHold vim.lsp.buf.document_highlight
+                  :CursorHoldI vim.lsp.buf.document_highlight
+                  :CursorMoved vim.lsp.buf.clear_references}))
 
-(local {:lsp lsp-keys} (require :config.keys))
-(local {: map} (require :setup))
+(local lsp-compl-attach (. (require :lsp_compl) :attach))
 
 ;; fnlfmt: skip
 (fn on_attach [client bufnr]
   (set vim.b.offset_encoding client.offset_encoding)
-  (map lsp-keys)
+  (let [opts {:silent true :buffer true}]
+    (each [lhs rhs (pairs lsp-keys)] (vim.keymap.set :n lhs rhs opts)))
   (let [rc client.server_capabilities]
     (if rc.documentHighlightProvider (set-highlight))
     (if rc.codeLensProvider
-        (au {:CodeLens [[[:BufEnter :CursorHold :InsertLeave] vim.lsp.codelens.refresh 0]]}))
-    (if rc.completionProvider
-      ((. (require :lsp_compl) :attach) client bufnr))))
+        (au :CodeLens {[:BufEnter :CursorHold :InsertLeave] vim.lsp.codelens.refresh}))
+    (if rc.completionProvider (lsp-compl-attach client bufnr))))
 
 (fn setup []
   (vim.cmd "aug LSP | au!")
@@ -56,9 +60,9 @@
   (let [opd vim.lsp.diagnostic.on_publish_diagnostics]
     (tset vim.lsp.handlers :textDocument/publishDiagnostics
           (vim.lsp.with opd cfg-diag)))
-  (au {:Format [[:BufWritePre OrgImports :*.go]
-                [:BufWritePre OrgJSImports "*.js,*.jsx"]
-                [:BufWritePre Format]]}))
+  (let [group (vim.api.nvim_create_augroup :Format {:clear true})
+        c #(vim.api.nvim_create_autocmd :BufWritePre {: group :callback $1 :pattern $2})]
+    (c Format "*") (c OrgImports :*.go) (c OrgJSImports "*.js,*.jsx")))
 
 {: on_attach : setup}
 
