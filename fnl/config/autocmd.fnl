@@ -33,7 +33,7 @@
  [:FileType "setl spell spl=en_us" "gitcommit,asciidoc,markdown"]
  [:FileType "setl ts=2 sw=2 sts=2 fdls=0" "lua,vim"]
  [:FileType "setl ts=4 sw=4 noet cole=1" :go]
- [:BufEnter "exe 'ColorizerAttachToBuffer' | LastWindow"]
+ [:BufEnter :LastWindow]
  [:BufEnter "setl ft=nginx" :nginx/*]
  [:BufEnter :startinsert :dap-repl]
  [:BufReadPost :JumpToLastLocation]

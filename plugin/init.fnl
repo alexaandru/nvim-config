@@ -10,7 +10,7 @@
 (com (r :commands))
 (map (r :keys))
 
-(setup :lsp :treesitter :colorizer :pqf
+(setup :lsp :treesitter :pqf
        :dap-go :nvim-dap-virtual-text :dapui) ; TODO: lazy load these
 
 (colo :smurfs)
