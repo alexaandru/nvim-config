@@ -14,3 +14,4 @@ Watch:
 - https://github.com/neovim/neovim/pull/15436
 - https://github.com/neovim/neovim/pull/19267
 - https://github.com/neovim/neovim/issues/9534
+- https://github.com/neovim/neovim/issues/12544

@@ -3,33 +3,41 @@
 (fn fg-color [word]
   (let [sum (accumulate [sum 0 _ n (ipairs [1 3 5])]
               (+ sum (tonumber (word:sub n (+ n 1)) 16)))]
-    (if (< (/ sum 3) 128) "#ffffff" "#000000")))
+    (if (< (/ sum 3) 78) "#ffffff" "#000000")))
 
-(fn remember [word]
-  ;; FIXME: why is this needed??
-  ;; Setting directly via tset() does not work...
+(fn remember [word] ; https://github.com/neovim/neovim/issues/12544
   (let [tmp (or vim.w.colorized {})]
     (tset tmp word true)
     (set vim.w.colorized tmp)))
 
-(fn colorize-word [word]
+(fn colorize-word [word matchstr]
+  (set-forcibly! matchstr (or matchstr word))
   (let [group (.. :Colorize_ word)
         fg (fg-color word)]
     (when (not (. colorized word))
       (vim.api.nvim_set_hl 0 group {:bg (.. "#" word) : fg})
       (tset colorized word true))
-    (when (not (?. vim.w.colorized word))
-      (vim.fn.matchadd group (.. "\\c#" word))
-      (remember word))))
+    (when (not (?. vim.w.colorized matchstr))
+      (vim.fn.matchadd group (.. "\\c#" matchstr))
+      (remember matchstr))))
+
+(fn hex3-to-hex6 [word]
+  (accumulate [out "" i (ipairs [1 1 1])]
+    (let [s (word:sub i i)] (.. out s s))))
+
+(fn normalize [word]
+  (let [word (word:upper)]
+    (if (= 3 (length word)) (hex3-to-hex6 word) word)))
 
 (fn colorize-iter [iter]
   (let [word (iter)]
     (when word
-      (colorize-word (word:upper))
+      (colorize-word (normalize word) (word:upper))
       (colorize-iter iter))))
 
 (fn colorize-line [line]
-  (colorize-iter (line:gmatch "#(%x%x%x%x%x%x)")))
+  (colorize-iter (line:gmatch "#(%x%x%x%x%x%x)"))
+  (colorize-iter (line:gmatch "#(%x%x%x)[%X\\n]")))
 
 (fn colorize-buf [buf line]
   (set-forcibly! line (or line 0))
