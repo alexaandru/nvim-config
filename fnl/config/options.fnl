@@ -1,14 +1,16 @@
 {:autowriteall true
  :clipboard :unnamedplus
+ :cmdheight 1
  :complete [:defaults :kspell]
  :completeopt [:menu :noselect :noinsert]
  :conceallevel 3
  :diffopt [:defaults "algorithm:patience" :indent-heuristic :vertical]
  :expandtab true
- :foldmethod :expr
  :foldexpr "nvim_treesitter#foldexpr()"
- :foldnestmax 4
+ :foldlevel 99
+ :foldmethod :expr
  :foldminlines 1
+ :foldnestmax 4
  :grepprg "git grep -In"
  :icon true
  :iconstring :nvim
@@ -31,13 +33,15 @@
  :startofline false
  :termguicolors true
  :title true
- :titlestring "🐙 %{get(w:,'git_status','~git')} 📚 %<%f%=%M  📦 %{nvim_treesitter#statusline()}"
+ :titlestring :Neovim
  :updatetime 2000
  :virtualedit [:block :onemore]
- :wildcharm 26 ; <C-Z> == 26
+ ; <C-Z> == 26
+ :wildcharm 26
  :wildignore [:*/.git/* :*/node_modules/*]
  :wildignorecase true
  :wildmode "longest:full,full"
  :wildoptions :pum
+ :winbar "🐙 %{get(w:,'git_status','~git')} 📚 %<%f%M  📦 %{nvim_treesitter#statusline()}"
  :wrap false}
 

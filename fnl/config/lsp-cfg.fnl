@@ -44,7 +44,7 @@
  :vuels {}
  :yamlls {}
  :__diag {:underline true
-          :virtual_text {:spacing 1 :prefix "⏹"}
+          :virtual_text {:spacing 1 :prefix "📌"}
           :signs true
           :update_in_insert true
           :severity_sort true}

@@ -62,7 +62,9 @@
           (vim.lsp.with opd cfg-diag)))
   (let [group (vim.api.nvim_create_augroup :Format {:clear true})
         c #(vim.api.nvim_create_autocmd :BufWritePre {: group :callback $1 :pattern $2})]
-    (c Format "*") (c OrgImports :*.go) (c OrgJSImports "*.js,*.jsx")))
+    (c Format "*")
+    (c OrgImports :*.go)
+    (c OrgJSImports "*.js,*.jsx")))
 
 {: on_attach : setup}
 

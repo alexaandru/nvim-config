@@ -26,8 +26,9 @@
               "::%tnfo file=%f,line=%l,col=%c::%m"] false))
 
 (local fennel ;;
-       (lint "fennel --globals vim,jit,unpack --raw-errors $(realpath --relative-to . ${INPUT}) 2>&1"
-             ["%f:%l: %m"] false))
+       (lint "fennel --globals vim,jit,unpack --raw-errors ${INPUT} 2>&1"
+             ["%f:%l:%c Parse error: %m" "%f:%l:%c Compile error in '%s': %m"]
+             false))
 
 (local luacheck ;;
        (lint (.. "bash -c 'luacheck --globals vim --formatter plain -- ${INPUT}|"

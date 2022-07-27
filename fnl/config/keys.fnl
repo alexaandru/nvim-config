@@ -1,7 +1,5 @@
 ; NOTE: at ~20ms, this is one of the slowest parts of config. Why?
 (let [S {:silent true}
-      E {:expr true}
-      T #(vim.api.nvim_replace_termcodes $ true true true)
       toggle-fold "@=((foldclosed(line('.')) < 0) ? 'zC' : 'zO')<CR>"
       syn-stack "<Cmd>echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, \"name\")')<CR>"
       dap (require :dap)
@@ -26,9 +24,5 @@
        [:<Esc> :<Cmd>noh<CR>]
        ["," ":find "]
        [:<F10> syn-stack S]]
-   :c [[:<Up> (T "wildmenumode() ? \"<Left>\" : \"<Up>\"") E]
-       [:<Down> (T "wildmenumode() ? \"<Right>\" : \"<Down>\"") E]
-       [:<Left> (T "wildmenumode() ? \"<Up>\" : \"<Left>\"") E]
-       [:<Right> (T "wildmenumode() ? \"<BS><C-Z>\" : \"<Right>\"") E]]
    :i [["'" "''<Left>"] ["(" "()<Left>"] ["[" "[]<Left>"] ["{" "{}<Left>"]]})
 

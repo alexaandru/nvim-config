@@ -19,9 +19,6 @@
 [submodule "pack/plugins/opt/playground"]
 	path = pack/plugins/opt/playground
 	url = https://github.com/nvim-treesitter/playground.git
-[submodule "pack/plugins/start/FixCursorHold"]
-	path = pack/plugins/start/FixCursorHold
-	url = https://github.com/antoinemadec/FixCursorHold.nvim
 [submodule "pack/plugins/start/site-util"]
 	path = pack/plugins/start/site-util
 	url = https://github.com/alexaandru/site-util.git

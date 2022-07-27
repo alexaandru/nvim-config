@@ -1,24 +1,5 @@
 (local fennel (require :fennel))
-
-;; https://github.com/neovim/neovim/pull/13896
-;; https://github.com/neovim/neovim/pull/13896#issuecomment-774680224
-(fn get-range []
-  (var [_ l1] (vim.fn.getpos :v))
-  (var [_ l2] (vim.fn.getcurpos))
-  (when (= l1 l2)
-    (set l1 1)
-    (set l2 (vim.fn.line "$")))
-  (when (> l1 l2)
-    (local tmp l1)
-    (set l1 l2)
-    (set l2 tmp))
-  (values l1 l2))
-
-(fn get-selection []
-  (let [(l1 l2) (get-range)
-        lines (vim.fn.getline l1 l2)
-        text (table.concat lines "\n")]
-    text))
+(local {: get-selection} (require :util))
 
 (fn show [func noformat]
   (if (= vim.bo.filetype :fennel)

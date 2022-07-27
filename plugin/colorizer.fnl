@@ -36,8 +36,8 @@
       (colorize-iter iter))))
 
 (fn colorize-line [line]
-  (colorize-iter (line:gmatch "#(%x%x%x%x%x%x)"))
-  (colorize-iter (line:gmatch "#(%x%x%x)[%X\\n]")))
+  (each [_ pat (ipairs ["#(%x%x%x%x%x%x)" "#(%x%x%x)[%X\\n]"])]
+    (colorize-iter (line:gmatch pat))))
 
 (fn colorize-buf [buf line]
   (set-forcibly! line (or line 0))
