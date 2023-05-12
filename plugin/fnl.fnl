@@ -9,7 +9,7 @@
         (set vim.wo.scrollbind true)
         (when (not vim.g.fnl)
           (set vim.g.fnl (vim.api.nvim_create_buf false true))
-          (vim.api.nvim_buf_set_option vim.g.fnl :filetype :lua))
+          (vim.api.nvim_set_option_value :filetype :lua {:buf vim.g.fnl}))
         (let [nextLine (vim.gsplit code "\n" true)
               lines (icollect [v nextLine] v)]
           (vim.api.nvim_buf_set_lines vim.g.fnl 0 -1 false lines)

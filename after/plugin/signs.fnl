@@ -1,4 +1,4 @@
-(local cmd "sign define %s %s")
+(local args "define %s %s")
 (local signs {:DiagnosticSignError "text=🅴 texthl=DiagnosticSignError"
               :DiagnosticSignWarn "text=🆆 texthl=DiagnosticSignWarn"
               :DiagnosticSignInfo "text=🅸 texthl=DiagnosticSignInfo"
@@ -7,5 +7,5 @@
               :DapStopped "text=⭕"})
 
 (each [sign hl (pairs signs)]
-  (vim.cmd (cmd:format sign hl)))
+  (vim.cmd.sign (args:format sign hl)))
 

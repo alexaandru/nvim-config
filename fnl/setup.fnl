@@ -1,3 +1,15 @@
+(fn patch-pack [pack]
+  (if (= (type pack) :string)
+      (if (vim.startswith pack "https://") pack (.. "https://github.com/" pack))
+      (do
+        (set pack.src (patch-pack (. pack :src)))
+        pack)))
+
+(fn packadd [packs]
+  (vim.pack.add (icollect [_ pack (ipairs packs)] (patch-pack pack))
+                {:confirm false}))
+
+;; fnlfmt: skip
 (fn aug [name clear]
   (let [clear (if (= nil clear) true clear)]
     (vim.api.nvim_create_augroup name {: clear})))
@@ -61,35 +73,19 @@
 (fn map [mappings]
   (each [mode mx (pairs mappings)]
     (each [_ m (ipairs mx)]
-      (var (lhs rhs opts) (unpack m))
-      (set opts (or opts {}))
-      (vim.keymap.set mode lhs rhs opts))))
-
-(local config (collect [_ v (ipairs [:treesitter])]
-                v (require (.. :config. v))))
-
-;; when package name to require .setup() from is different then our config
-(local pack-setups {:treesitter :nvim-treesitter.configs})
-
-(fn _setup [package args]
-  (let [package-for-setup (or (. pack-setups package) package)]
-    (if (and (not args) (. config package)) (set-forcibly! args package))
-    (if args ((. (require package-for-setup) :setup) (. config args))
-        ((. (require package) :setup)))))
+      (local (lhs rhs opts) (unpack m))
+      (vim.keymap.set mode lhs rhs (or opts {})))))
 
 (fn setup [...]
   (each [_ p (ipairs [...])]
-    (_setup p)))
+    (let [setup (. (require p) :setup)
+          (ok conf) (pcall require (.. :config. p))]
+      (if ok (setup conf) (setup)))))
 
 {:!providers #(vim.tbl_map #(tset vim.g (.. :loaded_ $ :_provider) 0) $)
  :!builtin #(vim.tbl_map #(tset vim.g (.. :loaded_ $) 1) $)
- : setup
+ : packadd : setup
  :r #(require (.. :config. $))
- :sig #(vim.tbl_map #(vim.cmd (.. "sig define " $)) $)
- :colo #(vim.cmd (.. "colo " $))
- : au
- : com
- : opt
- : lēt
- : map}
-
+ :sig #(vim.tbl_map #(vim.cmd.sign (.. "define " $)) $)
+ :colo #(vim.cmd.colorscheme $)
+ : au : com : opt : lēt : map}

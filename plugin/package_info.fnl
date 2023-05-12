@@ -32,16 +32,15 @@
   (fn on_stdout [_ data]
     (set json (.. json (table.concat data))))
 
-  (fn on_exit [_ code]
+  (fn on_exit [] ;; job code
     (set vim.b.package_info true)
     (display-info (vim.json.decode json)))
 
-  (let [cmd "npm out --json"
-        opts {: on_exit : on_stdout :on_stderr on_stdout}]
+  (let [cmd "npm out --json --include=dev"
+        opts {: on_exit : on_stdout}]
     (vim.fn.jobstart cmd opts)))
 
 (let [group (vim.api.nvim_create_augroup :PackageInfo {:clear true})
       callback #(if (not vim.b.package_info) (update-info))
       pattern :package.json]
   (vim.api.nvim_create_autocmd :BufEnter {: group : callback : pattern}))
-

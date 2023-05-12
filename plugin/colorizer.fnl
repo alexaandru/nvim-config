@@ -1,3 +1,5 @@
+;; Quick check: #ff0000 #00ff00 #0000ff
+;; #f00 #0f0 #00f #00f00f #f00f00 #0f00f0
 (local colorized {})
 
 (fn fg-color [word]
@@ -36,7 +38,9 @@
       (colorize-iter iter))))
 
 (fn colorize-line [line]
-  (each [_ pat (ipairs ["#(%x%x%x%x%x%x)" "#(%x%x%x)[%X\\n]"])]
+  ;; TODO: either find a way to NOT colorize groups of 3 inside groups of 6
+  ;; or drop it permanently.
+  (each [_ pat (ipairs ["#(%x%x%x%x%x%x)" "#(__%x%x%x)[%X\\n]"])]
     (colorize-iter (line:gmatch pat))))
 
 (fn colorize-buf [buf line]
@@ -52,8 +56,6 @@
 (let [group (vim.api.nvim_create_augroup :Colorizer {:clear true})
       callback #(colorize-buf $.buf)
       pattern "*"]
-  (vim.api.nvim_create_autocmd [:WinNew :BufEnter]
-                               {: group : callback : pattern})
-  (vim.api.nvim_create_autocmd [:TextChanged :TextChangedI]
-                               {: group :callback text-changed : pattern}))
+  (vim.api.nvim_create_autocmd [:WinNew :BufEnter] {: group : callback : pattern})
+  (vim.api.nvim_create_autocmd [:TextChanged :TextChangedI] {: group :callback text-changed : pattern}))
 

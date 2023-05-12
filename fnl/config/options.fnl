@@ -1,27 +1,36 @@
+
+;; fnlfmt: skip
+(local diffopt [:defaults "algorithm:patience" :indent-heuristic :vertical "linematch:60"])
+
 {:autowriteall true
  :clipboard :unnamedplus
  :cmdheight 1
  :complete [:defaults :kspell]
  :completeopt [:menu :noselect :noinsert]
  :conceallevel 3
- :diffopt [:defaults "algorithm:patience" :indent-heuristic :vertical]
+ : diffopt
  :expandtab true
- :foldexpr "nvim_treesitter#foldexpr()"
- :foldlevel 99
+ :fillchars "fold:─"
+ :foldexpr "v:lua.vim.treesitter.foldexpr()"
+ ;:foldtext "v:lua.vim.treesitter.foldtext()"
+ :foldtext ""
+ ;:foldlevel 99
  :foldmethod :expr
- :foldminlines 1
- :foldnestmax 4
- :grepprg "git grep -In"
+ ;:foldminlines 1
+ ;:foldnestmax 4
+ :grepprg "git grep -EIn"
+ :grepformat "%f:%l:%m"
  :icon true
  :iconstring :nvim
  :ignorecase true
  :laststatus 0
  :lazyredraw true
+ :modelineexpr true
  :mouse :a
  :mousemodel :extend
- :path "**"
+ :path ".,**"
  :pumblend 10
- :shell :bash
+ :shell :zsh
  :shortmess :+c
  :showcmd false
  :showmode false
@@ -33,15 +42,12 @@
  :startofline false
  :termguicolors true
  :title true
- :titlestring :Neovim
+ :titlestring "🐙 %{get(w:,'git_status','~git')} %{get(b:,'gitsigns_status','')} 📚 %<%f%M  📦 <func_name|TODO>"
  :updatetime 2000
  :virtualedit [:block :onemore]
- ; <C-Z> == 26
- :wildcharm 26
+ :wildcharm (tonumber (vim.keycode :<C-Z>))
  :wildignore [:*/.git/* :*/node_modules/*]
  :wildignorecase true
  :wildmode "longest:full,full"
  :wildoptions :pum
- :winbar "🐙 %{get(w:,'git_status','~git')} 📚 %<%f%M  📦 %{nvim_treesitter#statusline()}"
  :wrap false}
-

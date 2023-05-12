@@ -1,33 +1,26 @@
+(local fzf (require :fzf-lua))
+
+(fn FzFiles [opts]
+  (set-forcibly! opts (or opts {}))
+  (let [cmd (icollect [_ p (ipairs (vim.opt.wildignore:get))]
+              (string.format "--glob '!%s'" (p:gsub "^*/" "/")))
+        cmd (vim.fn.join cmd)
+        cmd (string.format "rg --files -i %s" cmd)
+        cwd (or (?. opts :args) nil)
+        cwd (if (= cwd "") nil cwd)]
+    (fzf.files {: cmd : cwd})))
+
 (fn LspCapabilities []
-  (vim.notify (vim.inspect (collect [_ c (pairs (vim.lsp.buf_get_clients))]
+  (vim.notify (vim.inspect (collect [_ c (pairs (vim.lsp.get_clients {:buffer 0}))]
                              c.name
                              (collect [k v (pairs c.server_capabilities)]
                                (if v (values k v)))))))
 
-(fn PlugUpdate []
-  (local autd "Already up to date.")
-
-  (fn on_stdout [_ data]
-    (if (not= (?. data 1) autd)
-        (print (table.concat data "\n"))))
-
-  (fn on_exit [_ code]
-    (if (> code 0) (print :Error code) (print "Plugins update completed!")))
-
-  (let [cfg (vim.fn.stdpath :config)
-        cmd "cd '%s' && git submodule --quiet foreach git pull"
-        cmd (cmd:format cfg)
-        opts {: on_exit : on_stdout :on_stderr on_stdout}]
-    (vim.fn.jobstart cmd opts)))
-
-; FIXME: kind of broken atm, works on and off...
-(fn Gdiff []
-  (vim.cmd :SetProjRoot)
-  (let [path (vim.fn.expand "%:p")
-        proj-rel-path (path:sub (+ (length vim.w.proj_root) 1))
-        cmd "exe 'sil !lcd %s && git show HEAD^:%s > /tmp/gdiff' | diffs /tmp/gdiff"
-        cmd (cmd:format vim.w.proj_root proj-rel-path)]
-    (vim.cmd cmd)))
+(fn SetProjMaster []
+  (let [cmd "git branch -a|grep \\*|cut -f2 -d \" \""
+        b (vim.fn.system cmd)
+        master (string.gsub b "\n" "")]
+    (set vim.w.proj_master master)))
 
 (fn LastWindow []
   (fn is-quittable []
@@ -39,6 +32,12 @@
 
   (if (and (is-quittable) (last-window))
       (vim.cmd "norm ZQ")))
+
+(fn LspHintsToggle []
+  (when vim.b.hints_on
+    (if (not vim.b.hints) (set vim.b.hints (vim.lsp.inlay_hint.is_enabled)))
+    (set vim.b.hints (not vim.b.hints))
+    (vim.lsp.inlay_hint.enable vim.b.hints {:bufnr 0})))
 
 ;; Format is: {CommandName CommandSpec, ...}
 ;; where CommandSpec is either String, Table or Lua function.
@@ -52,18 +51,20 @@
 ;;            is a function), then range is set automaticall to %;
 ;;   :nargs - if <args> is present in command string, then is set to 1,
 ;;            for functions it is always set to "*".
-{:Grep "sil grep <args>"
+
+{:Grep {:cmd "sil grep <args>" :bar false}
+ :PackUpdate "lua vim.pack.update()"
+ :FzFiles {:cmd FzFiles :complete :file}
  :Term {:cmd "12split | term <args>" :nargs "*"}
  :SetProjRoot "let w:proj_root = fnamemodify(finddir('.git/..', expand('%:p:h').';'), ':p')"
+ : SetProjMaster
  :CdProjRoot "SetProjRoot | cd `=w:proj_root`"
- : Gdiff
  :JumpToLastLocation "let b:pos = line('''\"') | if b:pos && b:pos <= line('$') | exe b:pos | endif"
  :SaveAndClose "up | bdel"
  : LastWindow
  :Scratchify "setl nobl bt=nofile bh=delete noswf"
  :Scratch "<mods> new +Scratchify"
- :AutoWinHeight "sil exe max([min([line('$'), 12]), 1]).'wincmd _'"
+ :AutoWinHeight "sil exe max([min([line('$')+1, 16]), 1]).'wincmd _'"
  : LspCapabilities
- : PlugUpdate
- :JQ {:cmd "<line1>,<line2>!jq ." :range true}}
-
+ : LspHintsToggle
+ :JQ {:cmd "<line1>,<line2>!jq -S ." :range true}}

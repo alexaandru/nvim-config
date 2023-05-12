@@ -2,7 +2,7 @@
 
 (fn vim.ui.input [opts on-confirm]
   (vim.validate {:on_confirm [on-confirm :function false]})
-  (set-forcibly! opts (or (and (and opts (not (vim.tbl_isempty opts))) opts)
+  (set-forcibly! opts (or (and opts (not (vim.tbl_isempty opts)) opts)
                           (vim.empty_dict)))
   (let [on-confirm #(if (> (length $) 0) (on-confirm $) (on-confirm))]
     (let [def opts.default
@@ -16,7 +16,7 @@
       (vim.keymap.set :i :<CR> choose {:buffer b :silent true})
       (vim.keymap.set :i :<Esc> close {:buffer b :silent true})
       (vim.fn.cursor 0 (+ 1 (length opts.default)))
-      (vim.cmd :startinsert))))
+      (vim.cmd.startinsert))))
 
 (fn vim.ui.select [items opts on-choice]
   (vim.validate {:on_choice [on-choice :function false]
@@ -40,4 +40,3 @@
                               [:<Right> :<ScrollWheelDown>] :<Down>})]
         (each [_ lhs (ipairs lhsx)]
           (vim.keymap.set :n lhs rhs {:buffer b :silent true}))))))
-
