@@ -5,9 +5,9 @@
         (set pack.src (patch-pack (. pack :src)))
         pack)))
 
-(fn packadd [packs]
-  (vim.pack.add (icollect [_ pack (ipairs packs)] (patch-pack pack))
-                {:confirm false}))
+(fn packadd [packs opts]
+  (set-forcibly! opts {:confirm false})
+  (vim.pack.add (icollect [_ pack (ipairs packs)] (patch-pack pack)) opts))
 
 ;; fnlfmt: skip
 (fn aug [name clear]
