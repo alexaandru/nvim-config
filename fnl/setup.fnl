@@ -5,9 +5,24 @@
         (set pack.src (patch-pack (. pack :src)))
         pack)))
 
+; Setup attempts to locate a setup function in each package.
+; If it exists, it will be called (with an optional config table).
+(fn _setup [packs]
+  (each [_ p (ipairs packs)]
+    (let [name (if (= (type p) :string) p (. p :src))
+          name (vim.fn.fnamemodify name ":t")
+          name (vim.fn.substitute name "\\.nvim$" "" "")
+          (ok pack) (pcall require name)]
+      (if ok (let [setup (if (= (type pack) :table) (. pack :setup))
+                   setup (if (= (type setup) :function) setup)
+                   (ok conf) (pcall require (.. :config. name))]
+               (if setup (if ok (setup conf) (setup))))))))
+
+; Loads plugins and attempts to call setup() for each.
 (fn packadd [packs opts]
   (set-forcibly! opts {:confirm false})
-  (vim.pack.add (icollect [_ pack (ipairs packs)] (patch-pack pack)) opts))
+  (vim.pack.add (icollect [_ pack (ipairs packs)] (patch-pack pack)) opts)
+  (_setup packs))
 
 ;; fnlfmt: skip
 (fn aug [name clear]
@@ -76,16 +91,8 @@
       (local (lhs rhs opts) (unpack m))
       (vim.keymap.set mode lhs rhs (or opts {})))))
 
-(fn setup [...]
-  (each [_ p (ipairs [...])]
-    (let [setup (. (require p) :setup)
-          (ok conf) (pcall require (.. :config. p))]
-      (if ok (setup conf) (setup)))))
-
 {:!providers #(vim.tbl_map #(tset vim.g (.. :loaded_ $ :_provider) 0) $)
  :!builtin #(vim.tbl_map #(tset vim.g (.. :loaded_ $) 1) $)
- : packadd : setup
- :r #(require (.. :config. $))
+ : packadd
  :sig #(vim.tbl_map #(vim.cmd.sign (.. "define " $)) $)
- :colo #(vim.cmd.colorscheme $)
  : au : com : opt : lēt : map}
