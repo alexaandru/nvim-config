@@ -36,9 +36,15 @@
                                            (.. diagnostic.message " in " (parent:type))))
                                     (table.insert diagnostics diagnostic)))))))))
 
+; Blacklist filetypes that have a LSP configured.
+; We only want Tree-sitter diagnostics if there is no LSP.
+(local blacklist (icollect [_ v (pairs vim.lsp.config._configs)]
+                   (if v.filetypes (unpack v.filetypes))))
+
 (fn diagnose [args]
   (when (and (vim.diagnostic.is_enabled {:bufnr args.buf})
-             (= (. vim.bo args.buf :buftype) ""))
+             (= (. vim.bo args.buf :buftype) "")
+             (not (vim.tbl_contains blacklist (. vim.bo args.buf :filetype))))
     (let [diagnostics {}
           parser (vim.treesitter.get_parser args.buf nil {:error false})]
       (when parser

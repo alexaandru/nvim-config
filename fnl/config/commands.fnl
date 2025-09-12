@@ -1,18 +1,8 @@
-(local fzf (require :fzf-lua))
-
-(fn FzFiles [opts]
-  (set-forcibly! opts (or opts {}))
-  (let [cmd (icollect [_ p (ipairs (vim.opt.wildignore:get))]
-              (string.format "--glob '!%s'" (p:gsub "^*/" "/")))
-        cmd (vim.fn.join cmd)
-        cmd (string.format "rg --files -i %s" cmd)
-        cwd (or (?. opts :args) nil)
-        cwd (if (= cwd "") nil cwd)]
-    (fzf.files {: cmd : cwd})))
-
 (fn LspCapabilities []
-  (vim.notify (vim.inspect (collect [_ c (pairs (vim.lsp.get_clients {:buffer 0}))] c.name
-                             (collect [k v (pairs c.server_capabilities)] (if v (values k v)))))))
+  (vim.notify (vim.inspect (collect [_ c (pairs (vim.lsp.get_clients {:buffer 0}))]
+                             c.name (collect [k v (pairs c.server_capabilities)]
+                               (if v (values k v)))))))
+
 (fn LastWindow []
   (fn is-quittable []
     (let [{:buftype bt :filetype ft} (vim.fn.getbufvar "%" "&")]
@@ -30,4 +20,19 @@
     (set vim.b.hints (not vim.b.hints))
     (vim.lsp.inlay_hint.enable vim.b.hints {:bufnr 0})))
 
-{: FzFiles : LspCapabilities : LastWindow : LspHintsToggle}
+(fn SetProjRoot []
+  (let [pat (vim.fn.expand "%:p:h")
+        pat (.. pat ";")
+        dir (vim.fn.finddir ".git/.." pat)
+        root (vim.fn.fnamemodify dir ":p")]
+    (set vim.w.proj_root root)))
+
+(fn BuiltinPacks []
+  (let [result []
+        all (vim.fn.globpath vim.o.packpath "pack/*/opt/*" true true)]
+    (each [_ path (ipairs all)]
+      (when (path:match "^/tmp/%.mount_nvim")
+        (table.insert result (vim.fs.basename path))))
+    (print (vim.inspect result))))
+
+{: LspCapabilities : LastWindow : LspHintsToggle : SetProjRoot : BuiltinPacks}

@@ -23,24 +23,23 @@
 
 {:cmd [:typescript-language-server :--stdio]
  :commands {:editor.action.showReferences (fn [command ctx]
-                                            (local client
-                                                   (assert (vim.lsp.get_client_by_id ctx.client_id)))
-                                            (local (file-uri position
-                                                             references)
-                                                   (unpack command.arguments))
-                                            (local quickfix-items
-                                                   (vim.lsp.util.locations_to_items references
-                                                                                    client.offset_encoding))
-                                            (vim.fn.setqflist {} " "
-                                                              {:context {:bufnr ctx.bufnr
-                                                                         : command}
-                                                               :items quickfix-items
-                                                               :title command.title})
-                                            (vim.lsp.util.show_document {:range {:end position
-                                                                                 :start position}
-                                                                         :uri file-uri}
-                                                                        client.offset_encoding)
-                                            (vim.cmd "botright copen"))}
+                                            (let [bufnr ctx.bufnr
+                                                  title command.title
+                                                  client (assert (vim.lsp.get_client_by_id ctx.client_id))
+                                                  ofs client.offset_encoding
+                                                  (uri start references) (unpack command.arguments)
+                                                  items (vim.lsp.util.locations_to_items references
+                                                                                         ofs)]
+                                              (vim.fn.setqflist {} " "
+                                                                {:context {: bufnr
+                                                                           : command}
+                                                                 : items
+                                                                 : title})
+                                              (vim.lsp.util.show_document {:range {:end start
+                                                                                   : start}
+                                                                           : uri}
+                                                                          ofs)
+                                              (vim.cmd "botright copen")))}
  :filetypes [:javascript
              :javascriptreact
              :javascript.jsx
@@ -49,13 +48,12 @@
              :typescript.tsx
              :vue]
  :handlers {:_typescript.rename (fn [_ result ctx]
-                                  (local client
-                                         (assert (vim.lsp.get_client_by_id ctx.client_id)))
-                                  (vim.lsp.util.show_document {:range {:end result.position
-                                                                       :start result.position}
-                                                               :uri result.textDocument.uri}
-                                                              client.offset_encoding)
-                                  (vim.lsp.buf.rename)
+                                  (let [client (assert (vim.lsp.get_client_by_id ctx.client_id))]
+                                    (vim.lsp.util.show_document {:range {:end result.position
+                                                                         :start result.position}
+                                                                 :uri result.textDocument.uri}
+                                                                client.offset_encoding)
+                                    (vim.lsp.buf.rename))
                                   vim.NIL)
             :textDocument/publishDiagnostics err-filter}
  :init_options {:hostInfo :neovim
@@ -65,28 +63,23 @@
  :on_attach (fn [client bufnr]
               (vim.api.nvim_buf_create_user_command bufnr
                                                     :LspTypescriptSourceAction
-                                                    (fn []
-                                                      (local source-actions
-                                                             (vim.tbl_filter (fn [action]
-                                                                               (vim.startswith action
-                                                                                               :source.))
-                                                                             client.server_capabilities.codeActionProvider.codeActionKinds))
-                                                      (vim.lsp.buf.code_action {:context {:only source-actions}}))
+                                                    #(let [action-kinds client.server_capabilities.codeActionProvider.codeActionKinds
+                                                           only-source (vim.tbl_filter #(vim.startswith $
+                                                                                                        :source.)
+                                                                                       action-kinds)]
+                                                       (each [_ only (ipairs only-source)]
+                                                         (vim.lsp.buf.code_action {:apply true
+                                                                                   :context {: only}})))
                                                     {}))
  :root_dir (fn [bufnr on-dir]
-             (var root-markers [:package-lock.json
-                                :yarn.lock
-                                :pnpm-lock.yaml
-                                :bun.lockb
-                                :bun.lock
-                                :deno.lock])
-             (set root-markers (or (and (= (vim.fn.has :nvim-0.11.3) 1)
-                                        [root-markers])
-                                   root-markers))
-             (local project-root (vim.fs.root bufnr root-markers))
-             (when (not project-root) (lua "return "))
-             (on-dir project-root))
- :settings {:documentFormatting false
-            :implicitProjectConfiguration {:checkJs true}
+             (let [root-markers [[:package-lock.json
+                                  :yarn.lock
+                                  :pnpm-lock.yaml
+                                  :bun.lockb
+                                  :bun.lock
+                                  :deno.lock]]
+                   root (vim.fs.root bufnr root-markers)]
+               (if root (on-dir root))))
+ :settings {:implicitProjectConfiguration {:checkJs true}
             :typescript {: inlayHints}
             :javascript {: inlayHints}}}

@@ -59,13 +59,16 @@
                (on-dir (get-root-dir fname))))
  :single_file_support true
  :settings {:gopls {:vulncheck :Imports
-                    :analyses {:shadow true :useany true :unusedvariable true}
+                    :analyses {;; https://github.com/golang/tools/blob/master/gopls/doc/analyzers.md
+                               :appendclipped true
+                               :shadow true
+                               :slicesdelete true}
                     :buildFlags [:-tags=test]
                     :directoryFilters [:-**/node_modules :-**/testdata]
                     :templateExtensions [:tmpl]
                     :codelenses {:gc_details true :test true :vulncheck true}
                     :staticcheck true
-                    :gofumpt true
+                    :gofumpt false
                     :hoverKind :FullDocumentation
                     ;; :SynopsisDocumentation
                     ; https://github.com/golang/tools/blob/master/gopls/doc/inlayHints.md

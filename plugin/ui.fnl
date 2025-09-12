@@ -1,4 +1,5 @@
 (local {: max : float-win} (require :util))
+(local highlight "CursorLine:PmenuSel,NormalFloat:PMenu,Cursor:CursorLine")
 
 (fn vim.ui.input [opts on-confirm]
   (vim.validate {:on_confirm [on-confirm :function false]})
@@ -7,7 +8,7 @@
   (let [on-confirm #(if (> (length $) 0) (on-confirm $) (on-confirm))]
     (let [def opts.default
           w (if (and def (> (length def) 0)) (+ (length def) 10) 25)
-          (b close) (float-win [(or opts.default "")] w 1 true opts.prompt)]
+          (b close) (float-win [(or opts.default "")] w 1 true opts.prompt nil highlight)]
       (fn choose []
         (let [line (vim.api.nvim_get_current_line)]
           (on-confirm line)
@@ -28,7 +29,7 @@
         on-choice #(if (or (< $ 1) (> $ (length items))) (on-choice)
                        (on-choice (. items $) $))]
     (let [(b close) (float-win choices (max choices) (length choices) false
-                               opts.prompt)]
+                               opts.prompt nil highlight)]
       (fn choose []
         (let [row (vim.fn.line ".")]
           (on-choice row)

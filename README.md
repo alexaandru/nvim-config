@@ -26,10 +26,3 @@ Features:
 - autocompletion via `Copilot` (inline) and `blink.cmp`.
 
 ![Nvim](nvim.png)
-
----
-
-**KNOWN LIMITATIONS:** Currently it has an chicken-and-egg problem: in order to install the fennel-nvim
-plugin, it must be able to parse the fennel code and in order to parse fennel code, fennel-nvim
-must be installed... That plugin must be manually cloned somewhere on the `rtp` so that `init.vim` can
-pick it up.

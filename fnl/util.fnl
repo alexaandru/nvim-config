@@ -24,8 +24,9 @@
       (if (> x max) x max))))
 
 ;; fnlfmt: skip
-(fn float-win [items width height modifiable title]
+(fn float-win [items width height modifiable title border highlight]
   (set-forcibly! title (.. " " (vim.fn.trim title ": ") " "))
+  (set-forcibly! border (or border :rounded))
   (let [buf (vim.api.nvim_create_buf false true)]
     (fn buf-opts [opts]
       (each [k v (pairs opts)]
@@ -35,11 +36,10 @@
     (vim.api.nvim_buf_set_lines buf 0 -1 true items)
     (buf-opts {: modifiable})
 
-    (let [border :rounded ; ["┏" "━" "┓" "┃" "┛" "━" "┗" "┃"]
-          win-open-opts {: width : height :row 1 :col 0
+    (let [win-open-opts {: width : height :row 1 :col 0
                          :relative :cursor :anchor :NW
                          :style :minimal : border : title :title_pos :center}
-          win-set-opts {:winblend 90 :winhighlight "CursorLine:PmenuSel,NormalFloat:Pmenu"
+          win-set-opts {:winblend 0 :winhighlight highlight
                         :cursorline (not modifiable) :cursorlineopt :both}
           win (vim.api.nvim_open_win buf true win-open-opts)]
       (each [k v (pairs win-set-opts)]
@@ -52,4 +52,3 @@
       (values buf close))))
 
 {: get-range : get-selection : max : float-win}
-

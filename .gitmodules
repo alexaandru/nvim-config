@@ -1,0 +1,3 @@
+[submodule "pack/plugin/opt/fennel-nvim"]
+	path = pack/plugin/opt/fennel-nvim
+	url = https://github.com/alexaandru/fennel-nvim
