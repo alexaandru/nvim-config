@@ -36,9 +36,13 @@
                                            (.. diagnostic.message " in " (parent:type))))
                                     (table.insert diagnostics diagnostic)))))))))
 
+; TODO: disabled for all filetypes that have an LSP configured.
+(local blacklist [:go :c])
+
 (fn diagnose [args]
   (when (and (vim.diagnostic.is_enabled {:bufnr args.buf})
-             (= (. vim.bo args.buf :buftype) ""))
+             (= (. vim.bo args.buf :buftype) "")
+             (not (vim.tbl_contains blacklist (. vim.bo args.buf :filetype))))
     (let [diagnostics {}
           parser (vim.treesitter.get_parser args.buf nil {:error false})]
       (when parser

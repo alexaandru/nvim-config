@@ -1,26 +1,25 @@
 (vim.loader.enable)
 
 ;; fnlfmt: skip
-(local packs [:OXY2DEV/markview.nvim
+(local packs [;:OXY2DEV/markview.nvim
               :Saghen/blink.cmp
               :alexaandru/fennel-nvim
-              :alexaandru/froggy
+              ;:alexaandru/froggy
               :alexaandru/site-util
-              :dstein64/vim-startuptime
-              :folke/snacks.nvim
-              :folke/which-key.nvim
-              :ibhagwan/fzf-lua
+              ;:bassamsdata/namu.nvim
+              ;:dstein64/vim-startuptime
+              ;:ibhagwan/fzf-lua
               :lewis6991/gitsigns.nvim
-              :luukvbaal/statuscol.nvim
-              :nvim-lua/plenary.nvim
+              ;:luukvbaal/statuscol.nvim
               :nvim-tree/nvim-web-devicons
                ;; TODO: implement pack update hooks
               {:src :nvim-treesitter/nvim-treesitter :version :main :data {:after [":TSUpdate"]}}
               :nvim-treesitter/nvim-treesitter-context
               {:src :nvim-treesitter/nvim-treesitter-textobjects :version :main}
-              :olimorris/codecompanion.nvim
-              :ravitemer/mcphub.nvim
-              :terrastruct/d2-vim
+              ;:olimorris/codecompanion.nvim
+              ;:ravitemer/mcphub.nvim
+              :rose-pine/neovim
+              ;:terrastruct/d2-vim
               :windwp/nvim-ts-autotag])
 
 ;; fnlfmt: skip
@@ -48,7 +47,7 @@
       :clipboard :unnamedplus
       :cmdheight 1
       :complete [:defaults :kspell]
-      :completeopt [:menu :noselect :noinsert]
+      :completeopt [:fuzzy :menu :preview :noselect :noinsert]
       :conceallevel 3
       : diffopt
       :expandtab true
@@ -70,7 +69,7 @@
       :modelineexpr true
       :mouse :a
       :mousemodel :extend
-      :path ".,**"
+      :path "**"
       :pumblend 10
       :shell :zsh
       :shortmess :+c
@@ -90,8 +89,8 @@
       :wildcharm (tonumber (vim.keycode :<C-Z>))
       :wildignore [:*/.git/* :*/node_modules/*]
       :wildignorecase true
-      :wildmode "longest:full,full"
-      :wildoptions :pum
+      :wildmode "noselect:longest,full"
+      :wildoptions "pum,fuzzy"
       :wrap false})
 
 (local {: LoadLocalCfg : ReColor : LspHintsToggle : PackChanged}
@@ -126,7 +125,7 @@
              [:BufWritePost ReColor :*froggy/*]
              [:BufWritePre "TrimTrailingSpace | TrimTrailingBlankLines" :*.txt]]})
 
-(local {: FzFiles : LspCapabilities : LastWindow : LspHintsToggle}
+(local {: LspCapabilities : LastWindow : LspHintsToggle}
        (require :config.commands))
 
 ;; Format is: {CommandName CommandSpec, ...}
@@ -142,8 +141,7 @@
 ;;   :nargs - if <args> is present in command string, then is set to 1,
 ;;            for functions it is always set to "*".
 (com {:Grep {:cmd "sil grep <args>" :bar false}
-      :PackUpdate "lua vim.pack.update()"
-      :FzFiles {:cmd FzFiles :complete :file}
+      :PackUp "lua vim.pack.update()"
       :Term {:cmd "12split | term <args>" :nargs "*"}
       :SetProjRoot "let w:proj_root = fnamemodify(finddir('.git/..', expand('%:p:h').';'), ':p')"
       :CdProjRoot "SetProjRoot | cd `=w:proj_root`"
@@ -157,29 +155,22 @@
       : LspHintsToggle
       :JQ {:cmd "<line1>,<line2>!jq -S ." :range true}})
 
-(map (let [S {:silent true}
-           toggle-fold "@=((foldclosed(line('.')) < 0) ? 'zc' : 'zO')<CR>"
-           syn-stack "<Cmd>echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, \"name\")')<CR>"]
+(map (let [S {:silent true}]
        {:n [[:gb "<Cmd>ls<CR>:b<Space>" S]
             [:db "<Cmd>%bd<bar>e#<CR>" S]
-            [:<C-P> :<Cmd>FzFiles<CR> S]
-            [:<C-S-P> :<Cmd>FzfLua<CR> S]
-            [:<C-Q> "<Cmd>FzfLua live_grep<CR>" S]
-            [:<F5> :<Cmd>Inspect<CR>]
+            [:<F2> :Grep S]
             [:<F3> vim.cmd.only S]
+            [:<F5> :<Cmd>Inspect<CR>]
             [:<F8> :<Cmd>Gdiff<CR> S]
             [:<Leader>w :<Cmd>SaveAndClose<CR> S]
             [:<Leader>s #(pcall vim.treesitter.start 0)]
-            [:<Space> toggle-fold S]
+            [:<Space> "@=((foldclosed(line('.')) < 0) ? 'zc' : 'zO')<CR>" S]
             [:Q :<Nop> S]
             [:<Esc> :<Cmd>noh<CR>]
-            ["," ":find "]
-            [:<F10> syn-stack S]]
+            ["," ":find "]]
         :i [["'" "''<Left>"]
             ["(" "()<Left>"]
             ["[" "[]<Left>"]
             ["{" "{}<Left>"]]}))
 
-;((. (require :fzf-lua) :register_ui_select))
-
-(vim.cmd.colorscheme :challenge)
+(vim.cmd.colorscheme :rose-pine)
