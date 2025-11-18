@@ -14,7 +14,7 @@
 
   (fn on_exit []
     ;; job code
-    (let [lines (vim.tbl_flatten output)
+    (let [lines (: (: (vim.iter output) :flatten) :totable)
           json-str (table.concat lines "")
           (ok result) (pcall vim.json.decode json-str)
           qf (if ok
@@ -36,7 +36,7 @@
       (if (= (length qf) 0)
           (print :OK))))
 
-  (let [job "golangci-lint run --output.json.path=stdout --show-stats=false --issues-exit-code=1"
+  (let [job "go tool -modfile=tools/go.mod golangci-lint run --output.json.path=stdout --show-stats=false --issues-exit-code=1"
         opts {: on_exit : on_stdout :on_stderr on_stdout}]
     (vim.fn.jobstart job opts)))
 
@@ -45,9 +45,13 @@
   (var curr-fn ((. (require :nvim-treesitter) :statusline)))
   (if (not (vim.startswith curr-fn "func ")) (set curr-fn "*")
       (set curr-fn (curr-fn:sub 6 (- (curr-fn:find "%(") 1))))
-  (vim.lsp.buf.execute_command {:arguments [{:URI (vim.uri_from_bufnr 0)
-                                             :Tests [curr-fn]}]
-                                :command :gopls.run_tests}))
+  (let [bufnr (vim.api.nvim_get_current_buf)
+        clients (vim.lsp.get_clients {: bufnr})]
+    (each [_ client (ipairs clients)]
+      (if (= client.name :gopls)
+          (client:exec_cmd {:arguments [{:URI (vim.uri_from_bufnr 0)
+                                         :Tests [curr-fn]}]
+                            :command :gopls.run_tests})))))
 
 (let [opts {:range "%" :nargs "*" :bar true}
       com vim.api.nvim_create_user_command]

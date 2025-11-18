@@ -1,49 +1,49 @@
 {
   "plugins": {
     "d2-vim": {
-      "rev": "cb3eb7f",
+      "rev": "cb3eb7fcb1a2d45c4304bf2e91077d787b724a39",
       "src": "https://github.com/terrastruct/d2-vim"
     },
     "gitsigns.nvim": {
-      "rev": "20ad441",
+      "rev": "cdafc320f03f2572c40ab93a4eecb733d4016d07",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "markview.nvim": {
-      "rev": "cfc8ec8",
+      "rev": "86fcabc793e8aa361cb308e794cd0e1356fdc0e1",
       "src": "https://github.com/OXY2DEV/markview.nvim"
     },
     "neovim": {
-      "rev": "eb3ff49",
+      "rev": "cf2a288696b03d0934da713d66c6d71557b5c997",
       "src": "https://github.com/rose-pine/neovim"
     },
     "nvim-treesitter": {
-      "rev": "f46e3a09",
+      "rev": "c682a239a9404ce5f90a2d0da34790eff1ed2932",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter",
       "version": "'main'"
     },
     "nvim-treesitter-context": {
-      "rev": "660861b",
+      "rev": "660861b1849256398f70450afdf93908d28dc945",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter-context"
     },
     "nvim-treesitter-textobjects": {
-      "rev": "06c00bc",
+      "rev": "227165aaeb07b567fb9c066f224816aa8f3ce63f",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter-textobjects",
       "version": "'main'"
     },
     "nvim-ts-autotag": {
-      "rev": "c4ca798",
+      "rev": "c4ca798ab95b316a768d51eaaaee48f64a4a46bc",
       "src": "https://github.com/windwp/nvim-ts-autotag"
     },
     "nvim-web-devicons": {
-      "rev": "8dcb311",
+      "rev": "8dcb311b0c92d460fac00eac706abd43d94d68af",
       "src": "https://github.com/nvim-tree/nvim-web-devicons"
     },
     "sidekick.nvim": {
-      "rev": "c2bdf8c",
+      "rev": "c2bdf8cfcd87a6be5f8b84322c1b5052e78e302e",
       "src": "https://github.com/folke/sidekick.nvim"
     },
     "site-util": {
-      "rev": "c79c454",
+      "rev": "c79c454fc785f6c1a5919d89e285e26bdb2d9518",
       "src": "https://github.com/alexaandru/site-util"
     }
   }

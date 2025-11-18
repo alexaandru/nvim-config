@@ -4,13 +4,15 @@
 (local block-list [2339 2531 7043 7044 7045 7046 7047 7048 7049 7050])
 
 ;https://neovim.io/doc/user/lsp.html#lsp-handler
+(local default-handler (. vim.lsp.handlers "textDocument/publishDiagnostics"))
+
 (fn err-filter [err result ctx config]
   (if (= vim.bo.filetype :javascript)
       (set result.diagnostics
            (icollect [_ v (ipairs result.diagnostics)]
              (let [allow-code (not (vim.tbl_contains block-list v.code))]
                (if allow-code v)))))
-  (vim.lsp.diagnostic.on_publish_diagnostics err result ctx config))
+  (default-handler err result ctx config))
 
 ;; fnlfmt: skip
 (local inlayHints {:includeInlayEnumMemberValueHints true

@@ -11,7 +11,6 @@
         :<Leader>D vim.diagnostic.setqflist
         :<Leader>k vim.lsp.codelens.run
         :<Leader>e vim.diagnostic.open_float
-        :<Leader>gl vim.lsp.buf.document_link
         :grci vim.lsp.buf.incoming_calls
         :grco vim.lsp.buf.outgoing_calls
         :gOO workspace-symbol
@@ -41,9 +40,6 @@
       (if (= client.name :ts_ls)
           (client:exec_cmd {:arguments [(vim.uri_from_bufnr bufnr)]
                             :command :_typescript.organizeImports})))))
-
-; (vim.lsp.buf.execute_command {:arguments [(vim.fn.expand "%:p")]
-;                               :command :_typescript.organizeImports}))
 
 (fn au [group-name commands]
   (let [group (vim.api.nvim_create_augroup group-name {:clear true})
@@ -84,7 +80,8 @@
     found?))
 
 (fn on-attach [args]
-  (let [client (vim.lsp.get_client_by_id args.data.client_id)
+  (let [client_id args.data.client_id
+        client (vim.lsp.get_client_by_id client_id)
         buffer args.buf]
     (set vim.b.offset_encoding client.offset_encoding)
     (let [opts {:silent true : buffer}]
@@ -105,23 +102,10 @@
             {[:TextChangedI] #(if (inside-call-args?)
                                   (vim.lsp.buf.signature_help))}))
     (if (client:supports_method :textDocument/onTypeFormatting)
-        (let [provider client.server_capabilities.documentOnTypeFormattingProvider
-              first-trigger (or (?. provider :firstTriggerCharacter) ";")
-              more-triggers (or (?. provider :moreTriggerCharacter) [])
-              all-triggers (vim.list_extend [first-trigger] more-triggers)]
-          (au :LSPFormatOnType
-              {[:InsertCharPre] #(if (vim.tbl_contains all-triggers vim.v.char)
-                                     (vim.defer_fn vim.lsp.buf.on_type_formatting
-                                       100))})))
+        (vim.lsp.on_type_formatting.enable true {: client_id}))
     (if (client:supports_method :$/progress)
         (set client.handlers.$/progress progress-handler))
     false))
-
-;; fnlfmt: skip
-(each [_ name (ipairs (vim.fn.globpath (.. (vim.fn.stdpath :config) "/fnl/lsp") :*.fnl false true))]
-  (let [name (vim.fn.fnamemodify name ":t:r")]
-    (tset vim.lsp.config name (require name))
-    (vim.lsp.enable name)))
 
 (vim.diagnostic.config {:underline true
                         :virtual_text {:spacing 0 :prefix "‼"}
@@ -143,7 +127,8 @@
                  :expr true
                  :replace_keycodes true})
 
-(vim.keymap.set :n :<Tab> #(if (not ((. (require :sidekick) :nes_jump_or_apply))) :<Tab>)
+(vim.keymap.set :n :<Tab> #(if (not ((. (require :sidekick) :nes_jump_or_apply)))
+                               :<Tab>)
                 {:desc "Get the next inline completion (via Sidekick)"
                  :expr true
                  :replace_keycodes true})
@@ -154,7 +139,7 @@
 (vim.keymap.set :i :<C-i> #(vim.lsp.buf.signature_help)
                 {:desc "Show signature help"})
 
-(vim.lsp.log.set_level vim.lsp.log.levels.ERROR)
+(vim.lsp.log.set_level vim.log.levels.ERROR)
 
 ;:refactor :quickfix
 (local global-ca [:source.organizeImports :source.fixAll])

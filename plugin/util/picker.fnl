@@ -334,20 +334,24 @@
 
 ;; fnlfmt: skip
 (vim.api.nvim_create_autocmd :LspAttach
-     {:callback #(let [bufnr $.buf opts {:buffer bufnr :silent true}]
-                   (vim.keymap.set :n :<leader>ls lsp-symbols-picker opts)
-                   (vim.keymap.set :n :<leader>lw lsp-workspace-symbols-picker opts)
-                   (vim.keymap.set :n :<leader>ld lsp-diagnostics-picker opts)
-                   (vim.keymap.set :n :<leader>lr lsp-references-picker opts))})
+     {:callback #(let [bufnr $.buf
+                       opts {:buffer bufnr :silent true}
+                       nmap #(vim.keymap.set :n $1 $2 $3)]
+                   (nmap :<leader>ls lsp-symbols-picker opts)
+                   (nmap :<leader>lw lsp-workspace-symbols-picker opts)
+                   (nmap :<leader>ld lsp-diagnostics-picker opts)
+                   (nmap :<leader>lr lsp-references-picker opts))})
 
-(vim.api.nvim_create_user_command :PickFile file-picker {})
-(vim.api.nvim_create_user_command :PickBuffer buffer-picker {})
-(vim.api.nvim_create_user_command :PickLspSymbols lsp-symbols-picker {})
-(vim.api.nvim_create_user_command :PickLspWorkspaceSymbols
-                                  lsp-workspace-symbols-picker {})
+(let [com vim.api.nvim_create_user_command]
+  (com :PickFile file-picker {:desc "Files picker"})
+  (com :PickBuffer buffer-picker {:desc "Buffers picker"})
+  (com :PickLspSymbols lsp-symbols-picker {:desc "LSP document symbols picker"})
+  (com :PickLspWorkspaceSymbols lsp-workspace-symbols-picker
+       {:desc "LSP workspace symbols picker"})
+  (com :PickLspDiagnostics lsp-diagnostics-picker
+       {:desc "LSP diagnostics picker"})
+  (com :PickLspReferences lsp-references-picker {:desc "LSP references picker"}))
 
-(vim.api.nvim_create_user_command :PickLspDiagnostics lsp-diagnostics-picker {})
-(vim.api.nvim_create_user_command :PickLspReferences lsp-references-picker {})
-
-(vim.keymap.set :n :<C-p> file-picker {:desc "Find files"})
-(vim.keymap.set :n :<C-b> buffer-picker {:desc "Find buffers"})
+(let [nmap #(vim.keymap.set :n $1 $2 $3)]
+  (nmap :<C-p> file-picker {:desc "Find files"})
+  (nmap :<C-b> buffer-picker {:desc "Find buffers"}))

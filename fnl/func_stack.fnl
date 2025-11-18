@@ -17,7 +17,7 @@
               (set result (node-text child)))))
         result)))
 
-(fn _G.ts_func_stack []
+(fn []
   (when (pcall vim.treesitter.get_parser 0)
     (local node (vim.treesitter.get_node {:ignore_injections false}))
     (when node

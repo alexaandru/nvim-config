@@ -2,32 +2,22 @@
 
 (var std-lib nil)
 
-(fn identify-go-dir [custom-args on-complete]
-  (let [cmd [:go :env custom-args.envvar_id]]
-    (vim.system cmd {:text true}
-                (fn [output]
-                  (var res (vim.trim (or output.stdout "")))
-                  (if (and (= output.code 0) (not= res ""))
-                      (do
-                        (when (and custom-args.custom_subdir
-                                   (not= custom-args.custom_subdir ""))
-                          (set res (.. res custom-args.custom_subdir)))
-                        (on-complete res))
-                      (do
-                        (vim.schedule #(vim.notify (: (.. "[gopls] identify "
-                                                          custom-args.envvar_id
-                                                          " dir cmd failed with code %d: %s %s")
-                                                      :format output.code
-                                                      (vim.inspect cmd)
-                                                      output.stderr)))
-                        (on-complete nil)))))))
+(fn identify-go-dir [custom-args]
+  (let [cmd [:go :env custom-args.envvar_id]
+        out (vim.fn.system cmd)
+        trimmed (vim.trim (or out ""))]
+    (if (and (not= trimmed "") (= 0 vim.v.shell_error))
+        (if (and custom-args.custom_subdir (not= custom-args.custom_subdir ""))
+            (.. trimmed custom-args.custom_subdir)
+            trimmed)
+        nil)))
 
 ;; fnlfmt: skip
 (fn get-std-lib-dir []
   (if (and std-lib (not= std-lib ""))
       std-lib
       (do
-        (identify-go-dir {:custom_subdir :/src :envvar_id :GOROOT} #(when $ (set std-lib $)))
+        (set std-lib (identify-go-dir {:custom_subdir :/src :envvar_id :GOROOT}))
         std-lib)))
 
 ;; fnlfmt: skip
@@ -35,7 +25,7 @@
   (if (and mod-cache (not= mod-cache ""))
       mod-cache
       (do
-        (identify-go-dir {:envvar_id :GOMODCACHE} #(when $ (set mod-cache $)))
+        (set mod-cache (identify-go-dir {:envvar_id :GOMODCACHE}))
         mod-cache)))
 
 (fn get-root-dir [fname]
@@ -50,7 +40,7 @@
       (vim.fs.root fname "go.work") (vim.fs.root fname "go.mod")
       (vim.fs.root fname ".git")))
 
-{:cmd [:gopls :-remote=auto]
+{:cmd [:gopls :-remote=auto :-remote.listen.timeout=8h]
  :filetypes [:go :gomod :gowork :gotmpl :template]
  :root_dir (fn [bufnr on-dir]
              (let [fname (vim.api.nvim_buf_get_name bufnr)]
