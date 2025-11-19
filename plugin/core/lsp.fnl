@@ -18,6 +18,10 @@
         :<Leader>wlr vim.lsp.buf.remove_workspace_folder
         :<Leader>wll #(print (vim.inspect (vim.fn.uniq (vim.fn.sort (vim.lsp.buf.list_workspace_folders)))))})
 
+(vim.lsp.inline_completion.enable true)
+(vim.lsp.document_color.enable)
+(vim.lsp.log.set_level vim.log.levels.ERROR)
+
 (var lsp-progress-info "")
 
 (fn get-lsp-progress []
@@ -121,7 +125,6 @@
                                 :severity_sort true
                                 :header ""}})
 
-(vim.lsp.inline_completion.enable true)
 (vim.keymap.set :i :<Tab> #(if (not (vim.lsp.inline_completion.get)) :<Tab>)
                 {:desc "Get the current inline completion"
                  :expr true
@@ -138,8 +141,6 @@
 
 (vim.keymap.set :i :<C-i> #(vim.lsp.buf.signature_help)
                 {:desc "Show signature help"})
-
-(vim.lsp.log.set_level vim.log.levels.ERROR)
 
 ;:refactor :quickfix
 (local global-ca [:source.organizeImports :source.fixAll])

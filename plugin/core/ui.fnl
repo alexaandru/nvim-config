@@ -16,7 +16,6 @@
 
       (vim.keymap.set :i :<CR> choose {:buffer b :silent true})
       (vim.keymap.set :i :<Esc> close {:buffer b :silent true})
-      (vim.fn.cursor 0 (+ 1 (length opts.default)))
       (vim.cmd.startinsert))))
 
 (fn vim.ui.select [items opts on-choice]

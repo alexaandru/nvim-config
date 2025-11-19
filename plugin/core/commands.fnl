@@ -22,11 +22,9 @@
     (vim.lsp.inlay_hint.enable vim.b.hints {:bufnr 0})))
 
 (fn SetProjRoot []
-  (let [pat (vim.fn.expand "%:p:h")
-        pat (.. pat ";")
-        dir (vim.fn.finddir ".git/.." pat)
-        root (vim.fn.fnamemodify dir ":p")]
-    (set vim.w.proj_root root)))
+  (if (not vim.w.proj_root)
+      (set vim.w.proj_root (-> (vim.fn.system "git rev-parse --show-toplevel")
+                               (: :gsub "\n$" "")))))
 
 (fn BuiltinPacks []
   (let [result []
@@ -40,21 +38,18 @@
         (table.insert result (vim.fs.basename path))))
     (print (vim.inspect result))))
 
-; TODO: use more API commands and rely less on vimL
-; TODO: reuse diff buffer (similar to how FnlEval does it).
-;
-; Gdiff shows diff of current file against its version from another branch.
-; By default it diffs against master, a name of a different branch may be 
-; passed as an argument.
 (fn Gdiff [opts]
-  (vim.cmd :SetProjRoot)
-  (vim.cmd :SetProjMaster) ; TODO: fix it, currently it shows current branch instead of master/main.
-  (let [branch (if (= opts.args "") :master opts.args)
+  (let [gh-cmd "gh repo view --json defaultBranchRef --jq .defaultBranchRef.name"
+        default-branch (-> (vim.fn.system gh-cmd)
+                           (: :gsub "\n$" ""))
+        branch (if (= opts.args "") default-branch opts.args)
         path (vim.fn.expand "%:p")
-        proj-rel-path (path:sub (+ (length vim.w.proj_root) 1))
-        cmd "setl scrollbind diff | vnew | setl scrollbind diff | Scratchify | r !git show %s:%s"
-        cmd (cmd:format branch proj-rel-path)]
-    (vim.cmd cmd)))
+        proj-rel-path (path:sub (+ (length vim.w.proj_root) 2))
+        ft vim.bo.filetype]
+    (vim.cmd "setl scrollbind diff | vnew | setl scrollbind diff | Scratchify")
+    (vim.cmd (string.format "setl ft=%s" ft))
+    (vim.cmd (string.format "r !git show %s:%s" branch proj-rel-path))
+    (vim.cmd "norm ggdd")))
 
 (let [cmd vim.api.nvim_create_user_command]
   (cmd :Gdiff Gdiff
