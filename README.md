@@ -9,10 +9,11 @@ Requires `nightly`.
   and [Sidekick.nvim](https://github.com/folke/sidekick.nvim);
 - builtin [LSP](https://neovim.io/doc/user/lsp.html) setup for a dozen+ languages, of which I mostly use **Go**,
   **JavaScript**, **Terraform** and **Fennel**; base configs copied from [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig);
-- multi **LSP** setup: always **Copilot** then (mostly) [EFM](https://github.com/mattn/efm-langserver)
-  to cover for "gaps", where needed, i.e.: I use `tsserver` for **JS**, but prefer `prettier` for formatting;
+- multi **LSP** setup: always **Copilot** then various LSP and/or 'formatprg' combinations:
+  I use `tsserver` for **JS**, but prefer `prettier` for formatting;
   I use `gopls` for **Go**, but I also want warnings from `golangci-lint-ls`, etc.;
-- **autoformat** wherever possible plus organize imports for **Go** and **JS**;
+- **autoformat** wherever possible, either via LSP or via 'formatprg',
+  plus organize imports for **Go** and **JS**;
 - builtin "fuzzy" searching (`set path=",**"` and just use `:find whatever<Tab>` for filenames or `:Grep *whatever*`
   (set to `git grep`) for content);
 - custom picker for buffers, files, LSP symbols and diagnostics;

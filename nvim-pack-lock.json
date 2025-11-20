@@ -17,7 +17,7 @@
       "src": "https://github.com/rose-pine/neovim"
     },
     "nvim-treesitter": {
-      "rev": "c682a239a9404ce5f90a2d0da34790eff1ed2932",
+      "rev": "bb83a676128d95c865e40ba71376d883bdadec14",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter",
       "version": "'main'"
     },

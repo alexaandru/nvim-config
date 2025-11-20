@@ -23,8 +23,11 @@
 
 (fn SetProjRoot []
   (if (not vim.w.proj_root)
-      (set vim.w.proj_root (-> (vim.fn.system "git rev-parse --show-toplevel")
-                               (: :gsub "\n$" "")))))
+      (let [cmd "git rev-parse --show-toplevel"
+            root (-> (vim.fn.system cmd)
+                     (: :gsub "\n$" ""))
+            root (if (= vim.v.shell_error 0) root ".")]
+        (set vim.w.proj_root root))))
 
 (fn BuiltinPacks []
   (let [result []

@@ -332,6 +332,68 @@
                :config {:prompt "References: " :width 140 :height 35}})
       (vim.notify "No LSP client attached" vim.log.levels.WARN)))
 
+;; Live grep implementation
+(var grep-data [])
+(var grep-query "")
+
+(fn live-grep-source [filter _]
+  (set grep-data [])
+  (set grep-query filter)
+  (if (< (length filter) 2)
+      []
+      (let [results []
+            cmd (.. "rg --vimgrep --smart-case --max-count 1000 "
+                    (vim.fn.shellescape filter) " 2>/dev/null")
+            output (vim.fn.system cmd)]
+        (when (= vim.v.shell_error 0)
+          (each [line (vim.gsplit output "\n")]
+            (when (not= line "")
+              (let [filepath (string.match line "^([^:]+):")
+                    line-num (tonumber (string.match line "^[^:]+:(%d+):"))
+                    col-num (tonumber (string.match line "^[^:]+:%d+:(%d+):"))
+                    text (string.match line "^[^:]+:%d+:%d+:(.*)$")]
+                (when (and filepath line-num col-num text)
+                  (let [display (.. filepath ":" line-num)
+                        item {:filepath filepath
+                              :line line-num
+                              :col col-num
+                              :text text}]
+                    (table.insert results display)
+                    (table.insert grep-data item)))))))
+        results)))
+
+(fn live-grep-preview [_ idx]
+  (let [data-item (. grep-data idx)]
+    (if (and data-item data-item.filepath
+             (vim.fn.filereadable data-item.filepath))
+        (let [lines (vim.fn.readfile data-item.filepath)]
+          (if (and (> (length lines) 0) (<= data-item.line (length lines)))
+              {:content lines
+               :filename data-item.filepath
+               :line data-item.line
+               :search-pattern grep-query}
+              {:content ["[Line out of range]"] :filename data-item.filepath}))
+        {:content ["[File not readable]"]
+         :filename (or (and data-item data-item.filepath) "")})))
+
+(fn live-grep-select [_ idx original-win]
+  (let [data-item (. grep-data idx)]
+    (when (and data-item data-item.filepath data-item.line)
+      (if (vim.api.nvim_win_is_valid original-win)
+          (vim.api.nvim_set_current_win original-win))
+      (vim.cmd.edit data-item.filepath)
+      (vim.api.nvim_win_set_cursor 0 [data-item.line (- data-item.col 1)])
+      (vim.cmd "normal! zz"))))
+
+(fn live-grep-picker []
+  (picker live-grep-source {:preview-fn live-grep-preview
+                            :on-select live-grep-select
+                            :setup-list-fn set-file-icons
+                            :dynamic-source true
+                            :config {:prompt "Live Grep: "
+                                     :width 140
+                                     :height 35}}))
+
 ;; fnlfmt: skip
 (vim.api.nvim_create_autocmd :LspAttach
      {:callback #(let [bufnr $.buf
@@ -350,8 +412,10 @@
        {:desc "LSP workspace symbols picker"})
   (com :PickLspDiagnostics lsp-diagnostics-picker
        {:desc "LSP diagnostics picker"})
-  (com :PickLspReferences lsp-references-picker {:desc "LSP references picker"}))
+  (com :PickLspReferences lsp-references-picker {:desc "LSP references picker"})
+  (com :LiveGrep live-grep-picker {:desc "Live grep with ripgrep"}))
 
 (let [nmap #(vim.keymap.set :n $1 $2 $3)]
   (nmap :<C-p> file-picker {:desc "Find files"})
-  (nmap :<C-b> buffer-picker {:desc "Find buffers"}))
+  (nmap :<C-b> buffer-picker {:desc "Find buffers"})
+  (nmap "<C-;>" live-grep-picker {:desc "Live grep"}))
