@@ -1,5 +1,5 @@
 (local picker (require :picker))
-(local findfunc _G.Fd_findfunc)
+(local findfunc vim.g.findfunc)
 (local (has-devicons devicons) (pcall require :nvim-web-devicons))
 (local {: get_icon} devicons)
 

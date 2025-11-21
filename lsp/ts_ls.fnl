@@ -60,7 +60,10 @@
             :textDocument/publishDiagnostics err-filter}
  :init_options {:hostInfo :neovim
                 :plugins [{:name "@vue/typescript-plugin"
-                           :location "/home/alex/.nvm/versions/node/v22.12.0/lib/node_modules/@vue/typescript-plugin"
+                           :location (let [nvm-dir (or vim.env.NVM_DIR (.. vim.env.HOME "/.nvm"))
+                                           node-version (vim.trim (vim.fn.system "node --version"))
+                                           node-version (node-version:gsub "^v" "")]
+                                       (.. nvm-dir "/versions/node/v" node-version "/lib/node_modules/@vue/typescript-plugin"))
                            :languages [:javascript :typescript :vue]}]}
  :on_attach (fn [client bufnr]
               (vim.api.nvim_buf_create_user_command bufnr

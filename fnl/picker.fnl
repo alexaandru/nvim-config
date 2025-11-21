@@ -239,7 +239,8 @@
 
 (fn setup-keymaps [state _config close-keys select-keys]
   (let [filter-opts {:buffer state.filter-buf :silent true}
-        list-opts {:buffer state.list-buf :silent true}]
+        list-opts {:buffer state.list-buf :silent true}
+        nmap #(vim.keymap.set :n $1 $2 list-opts)]
     (each [_ key (ipairs close-keys)]
       (vim.keymap.set :i key #(close-picker state) filter-opts))
     (each [_ key (ipairs select-keys)]
@@ -262,107 +263,22 @@
                                (vim.fn.win_execute preview-win "normal! 5j"))))
                     filter-opts)
     (each [_ key (ipairs close-keys)]
-      (vim.keymap.set :n key #(close-picker state) list-opts))
+      (nmap key #(close-picker state)))
     (each [_ key (ipairs select-keys)]
-      (vim.keymap.set :n key #(select-current state) list-opts))
-    (vim.keymap.set :n :j #(move-selection state :down) list-opts)
-    (vim.keymap.set :n :k #(move-selection state :up) list-opts)
-    (vim.keymap.set :n :<Down> #(move-selection state :down) list-opts)
-    (vim.keymap.set :n :<Up> #(move-selection state :up) list-opts)
-    (vim.keymap.set :n ":"
-                    #(let [filter-win (vim.fn.bufwinid state.filter-buf)]
-                       (when (> filter-win -1)
-                         (vim.api.nvim_set_current_win filter-win)
-                         (vim.cmd.startinsert))) list-opts)
-    ;; Redirect any typing from list window to filter window
-    (vim.keymap.set :n :i
-                    #(let [filter-win (vim.fn.bufwinid state.filter-buf)]
-                       (when (> filter-win -1)
-                         (vim.api.nvim_set_current_win filter-win)
-                         (vim.cmd.startinsert))) list-opts)
-    (vim.keymap.set :n :a
-                    #(let [filter-win (vim.fn.bufwinid state.filter-buf)]
-                       (when (> filter-win -1)
-                         (vim.api.nvim_set_current_win filter-win)
-                         (vim.cmd "startinsert!")))
-                    list-opts)
-    ;; Map alphanumeric keys to switch to filter and insert the character
-    (each [_ char (ipairs ["0"
-                           "1"
-                           "2"
-                           "3"
-                           "4"
-                           "5"
-                           "6"
-                           "7"
-                           "8"
-                           "9"
-                           "a"
-                           "b"
-                           "c"
-                           "d"
-                           "e"
-                           "f"
-                           "g"
-                           "h"
-                           "i"
-                           "j"
-                           "k"
-                           "l"
-                           "m"
-                           "n"
-                           "o"
-                           "p"
-                           "q"
-                           "r"
-                           "s"
-                           "t"
-                           "u"
-                           "v"
-                           "w"
-                           "x"
-                           "y"
-                           "z"
-                           "A"
-                           "B"
-                           "C"
-                           "D"
-                           "E"
-                           "F"
-                           "G"
-                           "H"
-                           "I"
-                           "J"
-                           "K"
-                           "L"
-                           "M"
-                           "N"
-                           "O"
-                           "P"
-                           "Q"
-                           "R"
-                           "S"
-                           "T"
-                           "U"
-                           "V"
-                           "W"
-                           "X"
-                           "Y"
-                           "Z"
-                           "/"
-                           "."
-                           "-"
-                           "_"
-                           " "
-                           "'"
-                           "\""])]
-      (vim.keymap.set :n char
-                      #(let [filter-win (vim.fn.bufwinid state.filter-buf)]
-                         (when (> filter-win -1)
-                           (vim.api.nvim_set_current_win filter-win)
-                           (vim.cmd.startinsert)
-                           (vim.api.nvim_feedkeys char :n false)))
-                      list-opts))
+      (nmap key #(select-current state)))
+    (nmap :j #(move-selection state :down))
+    (nmap :k #(move-selection state :up))
+    (nmap :<Down> #(move-selection state :down))
+    (nmap :<Up> #(move-selection state :up))
+    ;; Redirect typing to filter buffer
+    (let [chars "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_./:'\"[]{}()<>!@#$%^&*+=~`|\\;,?"]
+      (for [i 1 (length chars)]
+        (let [char (string.sub chars i i)]
+          (nmap char
+                #(let [filter-win (vim.fn.bufwinid state.filter-buf)]
+                   (when (> filter-win -1)
+                     (vim.api.nvim_set_current_win filter-win)
+                     (vim.api.nvim_feedkeys char :n false)))))))
     (if state.preview-buf
         (let [preview-opts {:buffer state.preview-buf :silent true}]
           (each [_ key (ipairs close-keys)]

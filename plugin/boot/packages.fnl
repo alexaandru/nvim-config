@@ -1,8 +1,6 @@
 (local packs [:OXY2DEV/markview.nvim
               :alexaandru/site-util
-              ;:dstein64/vim-startuptime
               :folke/sidekick.nvim
-              ;:folke/tokyonight.nvim
               :lewis6991/gitsigns.nvim
               :nvim-tree/nvim-web-devicons
               {:src :nvim-treesitter/nvim-treesitter
@@ -11,8 +9,6 @@
               :nvim-treesitter/nvim-treesitter-context
               {:src :nvim-treesitter/nvim-treesitter-textobjects
                :version :main}
-              ;:olimorris/codecompanion.nvim
-              ;:ravitemer/mcphub.nvim
               :rose-pine/neovim
               :terrastruct/d2-vim
               :windwp/nvim-ts-autotag])

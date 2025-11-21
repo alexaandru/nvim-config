@@ -24,10 +24,8 @@
 
 (var lsp-progress-info "")
 
-(fn get-lsp-progress []
+(fn vim.g.get_lsp_progress []
   lsp-progress-info)
-
-(set _G.get_lsp_progress get-lsp-progress)
 
 (fn apply-code-actions [actions]
   (let [bufnr (vim.api.nvim_get_current_buf)
@@ -96,7 +94,7 @@
     (if (client:supports_method :textDocument/documentHighlight)
         (set-highlight))
     (if (client:supports_method :textDocument/completion)
-        (vim.lsp.completion.enable true client.id args.buf {:autotrigger true}))
+        (vim.lsp.completion.enable true client.id args.buf {:autotrigger false}))
     (when (client:supports_method :textDocument/codeLens)
       (au :CodeLens
           {[:BufEnter :CursorHold :InsertLeave] vim.lsp.codelens.refresh})
@@ -125,40 +123,34 @@
                                 :severity_sort true
                                 :header ""}})
 
-(vim.keymap.set :i :<Tab> #(if (not (vim.lsp.inline_completion.get)) :<Tab>)
-                {:desc "Get the current inline completion"
-                 :expr true
-                 :replace_keycodes true})
-
-(vim.keymap.set :n :<Tab> #(if (not ((. (require :sidekick) :nes_jump_or_apply)))
-                               :<Tab>)
-                {:desc "Get the next inline completion (via Sidekick)"
-                 :expr true
-                 :replace_keycodes true})
-
-(vim.keymap.set :i :<C-n> #(vim.lsp.inline_completion.select {:count 1})
-                {:desc "Get the next inline completion"})
-
-(vim.keymap.set :i :<C-i> #(vim.lsp.buf.signature_help)
-                {:desc "Show signature help"})
-
-;:refactor :quickfix
-(local global-ca [:source.organizeImports :source.fixAll])
-
-(let [group (vim.api.nvim_create_augroup :LSP {:clear true})
-      au #(vim.api.nvim_create_autocmd :BufWritePre
-                                       {: group
-                                        :callback $1
-                                        :pattern $2
-                                        :desc $3})]
-  (au #(let [bufnr (vim.api.nvim_get_current_buf)
-             clients (vim.lsp.get_clients {: bufnr})]
-         (each [_ client (ipairs clients)]
-           (if (client:supports_method :textDocument/formatting)
-               (vim.lsp.buf.format {:async false :filter #(not= $.name :ts_ls)}))))
-      nil "Format on save")
-  (au #(apply-code-actions global-ca) nil "Organize imports on save")
-  (au org-ts-imports "*.ts,*.tsx,*.js,*.jsx" "Organize TS imports on save"))
-
-(vim.api.nvim_create_autocmd :LspAttach {:group :LSP :callback on-attach})
-;(vim.api.nvim_create_autocmd :LspTokenUpdate {:group :LSP :callback #(print (vim.inspect $1))})
+;TODO Should we add :refactor :quickfix ?
+(let [global-ca [:source.organizeImports :source.fixAll]
+      group (vim.api.nvim_create_augroup :LSP {:clear true})
+      au #(vim.api.nvim_create_autocmd $1 (vim.tbl_extend :force $2 {: group}))
+      imap #(vim.keymap.set :i $1 $2 $3)
+      nmap #(vim.keymap.set :n $1 $2 $3)]
+  (au :BufWritePre {:callback #(let [bufnr (vim.api.nvim_get_current_buf)
+                                     clients (vim.lsp.get_clients {: bufnr})]
+                                 (each [_ client (ipairs clients)]
+                                   (if (client:supports_method :textDocument/formatting)
+                                       (vim.lsp.buf.format {:async false
+                                                            :filter #(not= $.name
+                                                                           :ts_ls)}))))
+                    :desc "Format on save"})
+  (au :BufWritePre {:callback #(apply-code-actions global-ca)
+                    :desc "Organize imports on save"})
+  (au :BufWritePre {:callback org-ts-imports
+                    :pattern "*.ts,*.tsx,*.js,*.jsx"
+                    :desc "Organize TS imports on save"})
+  (au :LspAttach {:callback on-attach})
+  (imap :<Tab> #(if (not (vim.lsp.inline_completion.get)) :<Tab>)
+        {:desc "Get the current inline completion"
+         :expr true
+         :replace_keycodes true})
+  (nmap :<Tab> #(if (not ((. (require :sidekick) :nes_jump_or_apply))) :<Tab>)
+        {:desc "Get the next inline completion (via Sidekick)"
+         :expr true
+         :replace_keycodes true})
+  (imap :<C-n> #(vim.lsp.inline_completion.select {:count 1})
+        {:desc "Get the next inline completion"})
+  (imap :<C-i> #(vim.lsp.buf.signature_help) {:desc "Show signature help"}))

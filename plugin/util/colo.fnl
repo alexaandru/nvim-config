@@ -37,7 +37,8 @@
   (let [schemes (get-colorschemes)
         current-idx (get-current-index schemes)
         current (or vim.g.colors_name :default)]
-    (print (.. "🎨 Current: " current " (" current-idx "/" (length schemes) ")"))))
+    (print (.. "🎨 Current: " current " (" current-idx "/" (length schemes)
+               ")"))))
 
 (fn list-all []
   (let [schemes (get-colorschemes)
@@ -55,17 +56,22 @@
           (print (.. "🎨 Set to: " scheme)))
         (list-all))))
 
-(vim.api.nvim_create_user_command :ColorNext cycle-next {:desc "Cycle to next colorscheme"})
-(vim.api.nvim_create_user_command :ColorPrev cycle-prev {:desc "Cycle to previous colorscheme"})
-(vim.api.nvim_create_user_command :ColorCurrent show-current {:desc "Show current colorscheme info"})
-(vim.api.nvim_create_user_command :ColorList list-all {:desc "List all available colorschemes"})
-(vim.api.nvim_create_user_command :ColorSet set-by-name {:nargs "?" :complete :color :desc "Set colorscheme by name"})
-
-(let [nmap #(vim.keymap.set :n $1 $2 $3)]
+(let [com vim.api.nvim_create_user_command
+      nmap #(vim.keymap.set :n $1 $2 $3)]
+  (com :ColorNext cycle-next {:desc "Cycle to next colorscheme"})
+  (com :ColorPrev cycle-prev {:desc "Cycle to previous colorscheme"})
+  (com :ColorCurrent show-current {:desc "Show current colorscheme info"})
+  (com :ColorList list-all {:desc "List all available colorschemes"})
+  (com :ColorSet set-by-name
+       {:nargs "?" :complete :color :desc "Set colorscheme by name"})
   (nmap :<F12> :<Cmd>ColorNext<CR> {:silent true :desc "Next colorscheme"})
-  (nmap :<S-F12> :<Cmd>ColorPrev<CR> {:silent true :desc "Previous colorscheme"})
+  (nmap :<S-F12> :<Cmd>ColorPrev<CR>
+        {:silent true :desc "Previous colorscheme"})
   (nmap :<Leader>cn :<Cmd>ColorNext<CR> {:silent true :desc "Next colorscheme"})
-  (nmap :<Leader>cp :<Cmd>ColorPrev<CR> {:silent true :desc "Previous colorscheme"})
-  (nmap :<Leader>cc :<Cmd>ColorCurrent<CR> {:silent true :desc "Show current colorscheme"})
-  (nmap :<Leader>cl :<Cmd>ColorList<CR> {:silent true :desc "List colorschemes"})
+  (nmap :<Leader>cp :<Cmd>ColorPrev<CR>
+        {:silent true :desc "Previous colorscheme"})
+  (nmap :<Leader>cc :<Cmd>ColorCurrent<CR>
+        {:silent true :desc "Show current colorscheme"})
+  (nmap :<Leader>cl :<Cmd>ColorList<CR>
+        {:silent true :desc "List colorschemes"})
   (nmap :<Leader>cs ":ColorSet " {:desc "Set colorscheme"}))
