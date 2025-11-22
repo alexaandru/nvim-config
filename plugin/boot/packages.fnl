@@ -23,7 +23,7 @@
                    :experimental {:check_rtp_message false}}})
 
 ; Setup attempts to locate a setup function in each package.
-; If it exists, it will be called (with an optional config from pack-configs map).
+; If it exists, it will be called (with an optional config from pack-confs).
 (fn setup [packs]
   (each [_ p (ipairs packs)]
     (let [name (if (= (type p) :string) p (. p :src))
