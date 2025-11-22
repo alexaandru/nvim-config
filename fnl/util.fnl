@@ -51,4 +51,17 @@
 
       (values buf close))))
 
-{: get-range : get-selection : max : float-win}
+;; fnlfmt: skip
+(fn stylize-text [text]
+  (let [normal "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        styled ["𝗮" "𝗯" "𝗰" "𝗱" "𝗲" "𝗳" "𝗴" "𝗵" "𝗶" "𝗷" "𝗸" "𝗹" "𝗺" "𝗻" "𝗼" "𝗽" "𝗾" "𝗿" "𝘀" "𝘁" "𝘂" "𝘃" "𝘄" "𝘅" "𝘆" "𝘇"
+                "𝗔" "𝗕" "𝗖" "𝗗" "𝗘" "𝗙" "𝗚" "𝗛" "𝗜" "𝗝" "𝗞" "𝗟" "𝗠" "𝗡" "𝗢" "𝗣" "𝗤" "𝗥" "𝗦" "𝗧" "𝗨" "𝗩" "𝗪" "𝗫" "𝗬" "𝗭"
+                "𝟬" "𝟭" "𝟮" "𝟯" "𝟰" "𝟱" "𝟲" "𝟳" "𝟴" "𝟵"]
+        result []]
+    (for [i 1 (length text)]
+      (let [char (text:sub i i)
+            idx (normal:find char 1 true)]
+        (table.insert result (if idx (. styled idx) char))))
+    (table.concat result)))
+
+{: get-range : get-selection : max : float-win : stylize-text}

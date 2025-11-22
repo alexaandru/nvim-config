@@ -20,3 +20,5 @@
 (let [au vim.api.nvim_create_autocmd]
   (au :ColorScheme {:pattern "*" :callback patch-colors
                     :desc "Make background transparent after colorscheme change"}))
+
+(vim.cmd.colorscheme :rose-pine)

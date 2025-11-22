@@ -83,6 +83,3 @@
       group (vim.api.nvim_create_augroup :PackSetup {:clear true})]
   (au :PackChanged {: group :callback pack-changed})
   (pack-add packs))
-
-; Place any code that should run after plugins are loaded here.
-(vim.cmd.colorscheme :rose-pine)
