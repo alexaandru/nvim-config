@@ -1,3 +1,48 @@
+(local opts [[:autocomplete false]
+             [:autowriteall true]
+             [:clipboard :unnamedplus]
+             [:completeopt [:fuzzy :menu :noselect :noinsert]]
+             [:conceallevel 3]
+             [:expandtab true]
+             [:fillchars "fold:─"]
+             [:findfunc "v:lua.vim.g.findfunc"]
+             [:foldexpr "v:lua.vim.treesitter.foldexpr()"]
+             [:foldtext ""]
+             [:foldmethod :expr]
+             [:grepprg "git grep -EIn"]
+             [:grepformat "%f:%l:%m"]
+             [:ignorecase true]
+             [:indentexpr "v:lua.require('nvim-treesitter').indentexpr()"]
+             [:laststatus 0]
+             [:mouse :a]
+             [:mousemodel :extend]
+             [:path "**"]
+             [:pumblend 10]
+             [:signcolumn "yes:2"]
+             [:smartcase true]
+             [:smartindent true]
+             [:splitbelow true]
+             [:splitright true]
+             [:title true]
+             [:titlestring
+              (.. "🐙 %{v:lua.vim.g.get_git_branch()} %{get(b:,'gitsigns_status','')} "
+                  "📚 %<%f%M  "
+                  "📦 %{v:lua.require('func_stack')()}%{v:lua.vim.g.get_lsp_progress()}")]
+             [:updatetime 200]
+             [:virtualedit [:block :onemore]]
+             [:wildcharm (tonumber (vim.keycode :<C-Z>))]
+             [:wildignore [:*/.git/* :*/node_modules/*]]
+             [:wildignorecase true]
+             [:wildmode "noselect:longest,full"]
+             [:wildoptions "pum,fuzzy"]
+             [:winborder :rounded]
+             [:wrap false]])
+
+;; fnlfmt: skip
+(local inc-opts [[:complete :kspell]
+                 [:diffopt ["algorithm:patience" :indent-heuristic :vertical "linematch:60"]]
+                 [:shortmess :c]])
+
 (fn vim.g.get_git_branch []
   (let [status-dict vim.b.gitsigns_status_dict]
     (if (and status-dict status-dict.head)
@@ -11,45 +56,7 @@
         fd-output
         (vim.fn.matchfuzzy fd-output cmdarg {:matchseq 1 :key "tail"}))))
 
-;; fnlfmt: skip
 (let [set-opt #(tset vim.opt $1 $2)
       inc-opt #(: (. vim.opt $1) :append $2)]
-  (set-opt :autocomplete false)
-  (set-opt :autowriteall true)
-  (set-opt :clipboard :unnamedplus)
-  (set-opt :completeopt [:fuzzy :menu :noselect :noinsert])
-  (set-opt :conceallevel 3)
-  (set-opt :expandtab true)
-  (set-opt :fillchars "fold:─")
-  (set-opt :findfunc "v:lua.vim.g.findfunc")
-  (set-opt :foldexpr "v:lua.vim.treesitter.foldexpr()")
-  (set-opt :foldtext "")
-  (set-opt :foldmethod :expr)
-  (set-opt :grepprg "git grep -EIn")
-  (set-opt :grepformat "%f:%l:%m")
-  (set-opt :ignorecase true)
-  (set-opt :indentexpr "v:lua.require('nvim-treesitter').indentexpr()")
-  (set-opt :laststatus 0)
-  (set-opt :mouse :a)
-  (set-opt :mousemodel :extend)
-  (set-opt :path "**")
-  (set-opt :pumblend 10)
-  (set-opt :signcolumn "yes:2")
-  (set-opt :smartcase true)
-  (set-opt :smartindent true)
-  (set-opt :splitbelow true)
-  (set-opt :splitright true)
-  (set-opt :title true)
-  (set-opt :titlestring "🐙 %{v:lua.vim.g.get_git_branch()} %{get(b:,'gitsigns_status','')} 📚 %<%f%M  📦 %{v:lua.require('func_stack')()}%{v:lua.vim.g.get_lsp_progress()}")
-  (set-opt :updatetime 200)
-  (set-opt :virtualedit [:block :onemore])
-  (set-opt :wildcharm (tonumber (vim.keycode :<C-Z>)))
-  (set-opt :wildignore [:*/.git/* :*/node_modules/*])
-  (set-opt :wildignorecase true)
-  (set-opt :wildmode "noselect:longest,full")
-  (set-opt :wildoptions "pum,fuzzy")
-  (set-opt :winborder :rounded)
-  (set-opt :wrap false)
-  (inc-opt :complete :kspell)
-  (inc-opt :diffopt ["algorithm:patience" :indent-heuristic :vertical "linematch:60"])
-  (inc-opt :shortmess :c))
+  (each [_ [opt val] (ipairs opts)] (set-opt opt val))
+  (each [_ [opt val] (ipairs inc-opts)] (inc-opt opt val)))
