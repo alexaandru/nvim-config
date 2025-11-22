@@ -5,7 +5,7 @@
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "markview.nvim": {
-      "rev": "86fcabc793e8aa361cb308e794cd0e1356fdc0e1",
+      "rev": "1cc5d64dc0b9f80a23ea9aaa75359659fea126a8",
       "src": "https://github.com/OXY2DEV/markview.nvim"
     },
     "neovim": {
@@ -39,12 +39,13 @@
       "src": "https://github.com/folke/sidekick.nvim"
     },
     "site-util": {
-      "rev": "c79c454fc785f6c1a5919d89e285e26bdb2d9518",
+      "rev": "92f41034387ebfade5863641ae232601e9fd81f8",
       "src": "https://github.com/alexaandru/site-util"
     },
     "tree-sitter-d2": {
       "rev": "ffb66ce4c801a1e37ed145ebd5eca1ea8865e00f",
-      "src": "https://github.com/ravsii/tree-sitter-d2"
+      "src": "https://github.com/ravsii/tree-sitter-d2",
+      "version": "'main'"
     }
   }
 }

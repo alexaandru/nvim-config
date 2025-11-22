@@ -9,11 +9,13 @@
               :nvim-treesitter/nvim-treesitter-context
               {:src :nvim-treesitter/nvim-treesitter-textobjects
                :version :main}
-              :ravsii/tree-sitter-d2
+              {:src :ravsii/tree-sitter-d2
+               :version :main
+               :data {:build "make nvim-install"}}
               :rose-pine/neovim
               :windwp/nvim-ts-autotag])
 
-(local pack-configs
+(local pack-confs
        {:rose-pine {:styles {:bold true :italic true :transparency true}}
         :markview {:preview {:icon_provider :devicons
                              :filetypes [:markdown :codecompanion]
@@ -30,7 +32,7 @@
           (ok pack) (pcall require name)]
       (if ok (let [setup (if (= (type pack) :table) (. pack :setup))
                    setup (if (= (type setup) :function) setup)
-                   conf (?. pack-configs name)]
+                   conf (?. pack-confs name)]
                (if setup (if conf (setup conf) (setup))))))))
 
 (fn patch-pack [pack]
@@ -48,12 +50,27 @@
 
 ; Hook to be called after a package is changed.
 (fn pack-changed [event]
-  (let [after (?. event.data.spec.data :after)]
+  (let [name event.data.spec.name
+        dir event.data.path
+        spec (: (vim.iter packs) :find
+                #(let [name (if (= (type $) :string) $ (. $ :src))
+                       name (vim.fn.fnamemodify name ":t")]
+                   (= name name)))
+        build (?. spec :data :build)
+        after (?. spec :data :after)]
+    (if build
+        (let [cmd (.. "cd " (vim.fn.shellescape dir) " && " build)
+              out (vim.fn.system cmd)
+              fy vim.notify]
+          (if (= vim.v.shell_error 0)
+              (fy (.. "Build succeeded for " event.data.spec.name)
+                  vim.log.levels.INFO)
+              (fy (.. "Build failed for " event.data.spec.name ": " out)
+                  vim.log.levels.ERROR))))
     (if after
-        (let [pkg-name event.data.spec.name
-              wait-for-pkg (fn wait []
-                             (tset package.loaded pkg-name nil)
-                             (let [(ok _) (pcall require pkg-name)]
+        (let [wait-for-pkg (fn wait []
+                             (tset package.loaded name nil)
+                             (let [(ok _) (pcall require name)]
                                (if ok
                                    (if (= (type after) :string) (vim.cmd after)
                                        (= (type after) :function) (after)
