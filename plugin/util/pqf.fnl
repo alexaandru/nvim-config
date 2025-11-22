@@ -68,4 +68,8 @@
       au #(vim.api.nvim_create_autocmd $1 $2)
       desc "Prettify quickfix and location lists"]
   (set-opt :qftf "v:lua.vim.g.pqf_filter_text")
-  (au :FileType {:pattern :qf :callback setup : desc}))
+  (au :FileType {:callback setup :pattern :qf : desc})
+  (au :FileType {:command :AutoWinHeight :pattern :qf})
+  (au :FileType {:command "setl cul" :pattern :qf})
+  (au :QuickFixCmdPost {:command :cw :pattern "[^l]*"})
+  (au :QuickFixCmdPost {:command :lw :pattern :l*}))

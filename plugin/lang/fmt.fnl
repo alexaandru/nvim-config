@@ -1,11 +1,11 @@
-(fn FormatBuffer []
+(fn format-buffer []
   (let [view (vim.fn.winsaveview)]
     (vim.cmd "silent! norm ggVGgq")
     (vim.fn.winrestview view)
     (vim.schedule #(vim.cmd "norm zR"))
     false))
 
-(fn FormatJson []
+(fn format-json []
   (let [lines (vim.api.nvim_buf_get_lines 0 0 -1 false)
         output (vim.fn.systemlist "jq ." lines)]
     (if (= vim.v.shell_error 0)
@@ -30,5 +30,5 @@
   ;; Due to site-util marking certain .txt files as markdown we need pass the parser.
   (au :FileType {:command "setl fp=prettier\\ --parser\\ markdown\\ --stdin-filepath=%"
                  :pattern :markdown})
-  (au :BufWritePre {:callback #(if vim.bo.modified (FormatBuffer)) :pattern compat-format})
-  (au :BufWritePre {:callback #(if vim.bo.modified (FormatJson)) :pattern :*.json}))
+  (au :BufWritePre {:callback #(if vim.bo.modified (format-buffer)) :pattern compat-format})
+  (au :BufWritePre {:callback #(if vim.bo.modified (format-json)) :pattern :*.json}))

@@ -1,37 +1,18 @@
-(fn LoadLocalCfg []
-  (if (= 1 (vim.fn.filereadable :.nvimrc))
-      (vim.cmd "so .nvimrc")))
-
-(fn LspHintsToggle [val]
-  (if vim.b.hints_on (vim.lsp.inlay_hint.enable val {:bufnr 0})))
-
 (let [setup (vim.api.nvim_create_augroup :Setup {:clear true})
       au #(vim.api.nvim_create_autocmd $1 (doto $2 (tset :group setup)))]
-  (au [:VimEnter :DirChanged] {:callback LoadLocalCfg})
   (au :VimEnter {:command :CdProjRoot})
   (au :VimResized {:command "wincmd ="})
-  (au :InsertEnter {:callback #(LspHintsToggle false)})
-  (au :InsertLeave {:callback #(LspHintsToggle (not= false vim.b.hints))})
   (au :TextYankPost {:callback #(vim.hl.on_yank {:timeout 450})})
-  (au :QuickFixCmdPost {:command :cw :pattern "[^l]*"})
-  (au :QuickFixCmdPost {:command :lw :pattern :l*})
   (au :TermOpen {:command :star})
   (au :TermClose {:command :q})
   (au :FileType {:command "wincmd L" :pattern :help})
-  (au :FileType {:command :AutoWinHeight :pattern :qf})
-  (au :FileType {:command "setl cul" :pattern :qf})
-  (au :FileType {:command "setl spell spl=en_us"
-                 :pattern "gitcommit,asciidoc,markdown"})
-  (au :FileType {:command "setl ts=2 sw=2 sts=2 fdls=0"
-                 :pattern "lua,vim,zsh,sh"})
+  (au :FileType {:command "setl spell spl=en_us" :pattern "gitcommit,asciidoc,markdown"})
+  (au :FileType {:command "setl ts=2 sw=2 sts=2 fdls=0" :pattern "lua,vim,zsh,sh"})
   (au :FileType {:command "setl ts=4 sw=4 noet cole=1" :pattern :go})
   ;; https://www.reddit.com/r/neovim/comments/1oxgrnx/enabling_treesitter_highlighting_if_its_installed/
-  (au :FileType {:callback #(let [_ (pcall vim.treesitter.start)]
-                              false)})
+  (au :FileType {:callback #(let [_ (pcall vim.treesitter.start)] false)})
   (au :BufEnter {:command :LastWindow})
   (au :BufEnter {:command "setl ft=nginx" :pattern :nginx/*})
   (au :BufEnter {:command "setl ft=risor" :pattern :*.risor})
-  (au :BufEnter {:command :startinsert :pattern :dap-repl})
   (au :BufReadPost {:command :JumpToLastLocation})
-  (au :BufWritePre {:command "TrimTrailingSpace | TrimTrailingBlankLines"
-                    :pattern :*.txt}))
+  (au :BufWritePre {:command "TrimTrailingSpace | TrimTrailingBlankLines" :pattern :*.txt}))

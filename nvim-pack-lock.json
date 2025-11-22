@@ -1,9 +1,5 @@
 {
   "plugins": {
-    "d2-vim": {
-      "rev": "cb3eb7fcb1a2d45c4304bf2e91077d787b724a39",
-      "src": "https://github.com/terrastruct/d2-vim"
-    },
     "gitsigns.nvim": {
       "rev": "cdafc320f03f2572c40ab93a4eecb733d4016d07",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
@@ -45,6 +41,10 @@
     "site-util": {
       "rev": "c79c454fc785f6c1a5919d89e285e26bdb2d9518",
       "src": "https://github.com/alexaandru/site-util"
+    },
+    "tree-sitter-d2": {
+      "rev": "ffb66ce4c801a1e37ed145ebd5eca1ea8865e00f",
+      "src": "https://github.com/ravsii/tree-sitter-d2"
     }
   }
 }

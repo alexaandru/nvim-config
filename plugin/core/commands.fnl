@@ -16,10 +16,10 @@
       (vim.cmd "norm ZQ")))
 
 (fn LspHintsToggle []
-  (when vim.b.hints_on
-    (if (not vim.b.hints) (set vim.b.hints (vim.lsp.inlay_hint.is_enabled)))
-    (set vim.b.hints (not vim.b.hints))
-    (vim.lsp.inlay_hint.enable vim.b.hints {:bufnr 0})))
+  (if vim.b.hints_on
+      (let [x (not vim.b.hints)]
+        (set vim.b.hints x)
+        (vim.lsp.inlay_hint.enable x {:bufnr 0}))))
 
 (fn SetProjRoot []
   (if (not vim.w.proj_root)

@@ -11,6 +11,7 @@
         :<Leader>D vim.diagnostic.setqflist
         :<Leader>k vim.lsp.codelens.run
         :<Leader>e vim.diagnostic.open_float
+        :<Leader>h #(vim.cmd :LspHintsToggle)
         :grci vim.lsp.buf.incoming_calls
         :grco vim.lsp.buf.outgoing_calls
         :gOO workspace-symbol
@@ -21,6 +22,16 @@
 (vim.lsp.inline_completion.enable true)
 (vim.lsp.document_color.enable)
 (vim.lsp.log.set_level vim.log.levels.ERROR)
+
+;; fnlfmt: skip
+(vim.diagnostic.config (let [s vim.diagnostic.severity]
+                         {:underline true
+                          :virtual_text {:spacing 0 :prefix "‼"}
+                          :signs {:text {s.ERROR "✘" s.WARN "⚠" s.INFO "i" s.HINT "h"}}
+                          :update_in_insert true
+                          :severity_sort true
+                          :float {:border :rounded :source true :suffix " " 
+                          :severity_sort true :header ""}}))
 
 (var lsp-progress-info "")
 
@@ -43,6 +54,7 @@
           (client:exec_cmd {:arguments [(vim.uri_from_bufnr bufnr)]
                             :command :_typescript.organizeImports})))))
 
+;; TODO: reconcile this with the one in let at the end.
 (fn au [group-name commands]
   (let [group (vim.api.nvim_create_augroup group-name {:clear true})
         c #(vim.api.nvim_create_autocmd $1 {:callback $2 : group :buffer 0})]
@@ -81,6 +93,16 @@
         (set cur (cur:parent))))
     found?))
 
+(fn lsp-hints-toggle [val]
+  (if vim.b.hints_on (vim.lsp.inlay_hint.enable val {:bufnr 0})))
+
+(fn lsp-format [args]
+  (let [bufnr args.buf
+        clients (vim.lsp.get_clients {: bufnr})]
+    (each [_ client (ipairs clients)]
+      (if (client:supports_method :textDocument/formatting)
+          (vim.lsp.buf.format {:async false :filter #(not= $.name :ts_ls)})))))
+
 (fn on-attach [args]
   (let [client_id args.data.client_id
         client (vim.lsp.get_client_by_id client_id)
@@ -89,8 +111,9 @@
     (let [opts {:silent true : buffer}]
       (each [lhs rhs (pairs lsp-keys)] (vim.keymap.set :n lhs rhs opts)))
     (when (client:supports_method :textDocument/inlayHint)
-      (vim.lsp.inlay_hint.enable false)
-      (set vim.b.hints_on true))
+      (set vim.b.hints_on true)
+      (set vim.b.hints false)
+      (vim.lsp.inlay_hint.enable vim.b.hints))
     (if (client:supports_method :textDocument/documentHighlight)
         (set-highlight))
     (if (client:supports_method :textDocument/completion)
@@ -109,40 +132,26 @@
         (set client.handlers.$/progress progress-handler))
     false))
 
-(vim.diagnostic.config {:underline true
-                        :virtual_text {:spacing 0 :prefix "‼"}
-                        :signs {:text {vim.diagnostic.severity.ERROR "✘"
-                                       vim.diagnostic.severity.WARN "⚠"
-                                       vim.diagnostic.severity.INFO "i"
-                                       vim.diagnostic.severity.HINT "h"}}
-                        :update_in_insert true
-                        :severity_sort true
-                        :float {:border :rounded
-                                :source true
-                                :suffix " "
-                                :severity_sort true
-                                :header ""}})
-
 ;TODO Should we add :refactor :quickfix ?
 (let [global-ca [:source.organizeImports :source.fixAll]
+      code-actions #(apply-code-actions global-ca)
       group (vim.api.nvim_create_augroup :LSP {:clear true})
-      au #(vim.api.nvim_create_autocmd $1 (vim.tbl_extend :force $2 {: group}))
-      imap #(vim.keymap.set :i $1 $2 $3)
-      nmap #(vim.keymap.set :n $1 $2 $3)]
-  (au :BufWritePre {:callback #(let [bufnr (vim.api.nvim_get_current_buf)
-                                     clients (vim.lsp.get_clients {: bufnr})]
-                                 (each [_ client (ipairs clients)]
-                                   (if (client:supports_method :textDocument/formatting)
-                                       (vim.lsp.buf.format {:async false
-                                                            :filter #(not= $.name
-                                                                           :ts_ls)}))))
-                    :desc "Format on save"})
-  (au :BufWritePre {:callback #(apply-code-actions global-ca)
-                    :desc "Organize imports on save"})
+      au #(vim.api.nvim_create_autocmd $1 (vim.tbl_extend :force $2 {: group}))]
+  (au :BufWritePre {:callback lsp-format :desc "Format on save"})
+  (au :BufWritePre {:callback code-actions :desc "Organize imports on save"})
   (au :BufWritePre {:callback org-ts-imports
                     :pattern "*.ts,*.tsx,*.js,*.jsx"
                     :desc "Organize TS imports on save"})
-  (au :LspAttach {:callback on-attach})
+  (au :InsertEnter
+      {:callback #(lsp-hints-toggle false)
+       :desc "Disable LSP hints on insert enter"})
+  (au :InsertLeave
+      {:callback #(lsp-hints-toggle vim.b.hints)
+       :desc "Enable LSP hints on insert leave"})
+  (au :LspAttach {:callback on-attach}))
+
+(let [imap #(vim.keymap.set :i $1 $2 $3)
+      nmap #(vim.keymap.set :n $1 $2 $3)]
   (imap :<Tab> #(if (not (vim.lsp.inline_completion.get)) :<Tab>)
         {:desc "Get the current inline completion"
          :expr true

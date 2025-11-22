@@ -9,8 +9,8 @@
               :nvim-treesitter/nvim-treesitter-context
               {:src :nvim-treesitter/nvim-treesitter-textobjects
                :version :main}
+              :ravsii/tree-sitter-d2
               :rose-pine/neovim
-              :terrastruct/d2-vim
               :windwp/nvim-ts-autotag])
 
 (local pack-configs

@@ -62,6 +62,14 @@
                     :hoverKind :FullDocumentation
                     ;; :SynopsisDocumentation
                     ; https://github.com/golang/tools/blob/master/gopls/doc/inlayHints.md
+                    :hints {:assignVariableTypes true
+                            :compositeLiteralFields true
+                            :compositeLiteralTypes true
+                            :constantValues true
+                            :functionTypeParameters true
+                            :ignoredError true
+                            :parameterNames true
+                            :rangeVariableTypes true}
                     :experimentalPostfixCompletions true
                     :semanticTokens true
                     :usePlaceholders false
