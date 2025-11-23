@@ -27,8 +27,7 @@
              [:titlestring
               (.. "%{v:lua.vim.g.get_zsandbox()}"
                   "🐙 %{v:lua.vim.g.get_git_branch()} %{get(b:,'gitsigns_status','')} "
-                  "📚 %<%f%M  "
-                  "📦 %{v:lua.require('func_stack')()}%{v:lua.vim.g.get_lsp_progress()}")]
+                  "📚 %<%f%M")]
              [:updatetime 200]
              [:virtualedit [:block :onemore]]
              [:wildcharm (tonumber (vim.keycode :<C-Z>))]

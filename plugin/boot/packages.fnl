@@ -1,61 +1,50 @@
-(local packs [:OXY2DEV/markview.nvim
-              :alexaandru/site-util
-              :folke/sidekick.nvim
-              :lewis6991/gitsigns.nvim
-              :nvim-tree/nvim-web-devicons
-              {:src :nvim-treesitter/nvim-treesitter
-               :version :main
-               :data {:after :TSUpdate}}
-              :nvim-treesitter/nvim-treesitter-context
-              {:src :nvim-treesitter/nvim-treesitter-textobjects
-               :version :main}
-              {:src :ravsii/tree-sitter-d2
-               :version :main
-               :data {:build "make nvim-install"}}
-              :rose-pine/neovim
-              :windwp/nvim-ts-autotag])
-
-(local pack-confs
-       {:rose-pine {:styles {:bold true :italic true :transparency true}}
-        :markview {:preview {:icon_provider :devicons
-                             :filetypes [:markdown :codecompanion]
-                             :ignore_buftypes []}
-                   :experimental {:check_rtp_message false}}})
-
-; Setup attempts to locate a setup function in each package.
-; If it exists, it will be called (with an optional config from pack-confs).
-(fn setup [packs]
-  (each [_ p (ipairs packs)]
-    (let [name (if (= (type p) :string) p (. p :src))
-          name (vim.fn.fnamemodify name ":t")
-          name (vim.fn.substitute name "\\.nvim$" "" "")
-          (ok pack) (pcall require name)]
-      (if ok (let [setup (if (= (type pack) :table) (. pack :setup))
-                   setup (if (= (type setup) :function) setup)
-                   conf (?. pack-confs name)]
-               (if setup (if conf (setup conf) (setup))))))))
-
 (fn patch-pack [pack]
-  (if (= (type pack) :string)
-      (if (vim.startswith pack "https://") pack (.. "https://github.com/" pack))
-      (do
-        (set pack.src (patch-pack (. pack :src)))
-        pack)))
+  (let [pack (if (= (type pack) :string) {:src pack} pack)
+        src (. pack :src)
+        src (if (vim.startswith src "https://") src
+                (.. "https://github.com/" src))
+        name (or (. pack :name) (vim.fn.fnamemodify src ":t"))
+        name (vim.fn.substitute name :.nvim$ "" "")]
+    (doto pack
+      (tset :src src)
+      (tset :name name))))
 
-; Loads plugins and attempts to call setup() for each.
-(fn pack-add [packs opts]
-  (set-forcibly! opts {:confirm false})
-  (vim.pack.add (icollect [_ pack (ipairs packs)] (patch-pack pack)) opts)
-  (setup packs))
+(local packs
+       [{:src :OXY2DEV/markview.nvim
+         :data {:conf {:preview {:icon_provider :devicons
+                                 :filetypes [:markdown :codecompanion]
+                                 :ignore_buftypes []}
+                       :experimental {:check_rtp_message false}}}}
+        {:src :alexaandru/site-util :name :site.util}
+        :folke/sidekick.nvim
+        {:src :lewis6991/gitsigns.nvim
+         :data {:conf (fn [] {:on_attach (require :gitsigns_conf)})}}
+        :nvim-tree/nvim-web-devicons
+        {:src :nvim-treesitter/nvim-treesitter
+         :version :main
+         :data {:after :TSUpdate}}
+        {:src :nvim-treesitter/nvim-treesitter-context
+         :name :treesitter-context
+         :data {:conf {:max_lines 5 :trim_scope :inner}}}
+        {:src :nvim-treesitter/nvim-treesitter-textobjects :version :main}
+        {:src :ravsii/tree-sitter-d2
+         :version :main
+         :data {:build "make nvim-install"}}
+        {:src :rose-pine/neovim
+         :name :rose-pine
+         :data {:conf {:styles {:bold true :italic true :transparency true}}}}
+        {:src :windwp/nvim-ts-autotag
+         :data {:conf {:opts {:enable_close_on_slash true}}}}])
+
+;; Standardize pack definitions.
+(each [i p (ipairs packs)]
+  (tset packs i (patch-pack p)))
 
 ; Hook to be called after a package is changed.
 (fn pack-changed [event]
   (let [name event.data.spec.name
         dir event.data.path
-        spec (: (vim.iter packs) :find
-                #(let [name (if (= (type $) :string) $ (. $ :src))
-                       name (vim.fn.fnamemodify name ":t")]
-                   (= name name)))
+        spec (: (vim.iter packs) :find #(= (. $ :name) name))
         build (?. spec :data :build)
         after (?. spec :data :after)]
     (if build
@@ -79,7 +68,22 @@
           (wait-for-pkg))))
   false)
 
+; Setup attempts to locate a setup function in each package.
+; If it exists, it will be called (with an optional config from pack data).
+(fn setup [packs]
+  (each [_ p (ipairs packs)]
+    (let [name (. p :name)
+          (ok pack) (pcall require name)]
+      (if ok (let [setup (if (= (type pack) :table) (. pack :setup))
+                   setup (if (= (type setup) :function) setup)
+                   conf (?. p :data :conf)
+                   conf (if (= (type conf) :function) (conf))]
+               (if setup (if conf (setup conf) (setup))))
+          (vim.notify (.. "Package not found " name "; will not call setup()")
+                      vim.log.levels.INFO)))))
+
 (let [au vim.api.nvim_create_autocmd
       group (vim.api.nvim_create_augroup :PackSetup {:clear true})]
   (au :PackChanged {: group :callback pack-changed})
-  (pack-add packs))
+  (vim.pack.add packs {:confirm false})
+  (setup packs))

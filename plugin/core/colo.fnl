@@ -14,7 +14,9 @@
     (hl :DiagnosticVirtualTextError {:link :DiagnosticError :bg :NONE})
     (hl :DiagnosticVirtualTextWarn {:link :DiagnosticWarn :bg :NONE})
     (hl :DiagnosticVirtualTextInfo {:link :DiagnosticInfo :bg :NONE})
-    (hl :DiagnosticVirtualTextHint {:link :DiagnosticHint :bg :NONE})))
+    (hl :DiagnosticVirtualTextHint {:link :DiagnosticHint :bg :NONE})
+    (hl :Special {:bg :#89ffb4 :fg :#000000 :bold true})
+    (hl "@string.special" {:link :Special})))
 
 ;; fnlfmt: skip
 (let [au vim.api.nvim_create_autocmd]

@@ -1,5 +1,4 @@
 (var mod-cache nil)
-
 (var std-lib nil)
 
 (fn identify-go-dir [custom-args]
@@ -31,12 +30,12 @@
 (fn get-root-dir [fname]
   (or (and mod-cache (= (fname:sub 1 (length mod-cache)) mod-cache)
            (let [clients (vim.lsp.get_clients {:name :gopls})]
-             (when (> (length clients) 0)
-               (. clients (length clients) :config :root_dir))))
+             (if (> (length clients) 0)
+                 (. clients (length clients) :config :root_dir))))
       (and std-lib (= (fname:sub 1 (length std-lib)) std-lib)
            (let [clients (vim.lsp.get_clients {:name :gopls})]
-             (when (> (length clients) 0)
-               (. clients (length clients) :config :root_dir))))
+             (if (> (length clients) 0)
+                 (. clients (length clients) :config :root_dir))))
       (vim.fs.root fname "go.work") (vim.fs.root fname "go.mod")
       (vim.fs.root fname ".git")))
 
@@ -49,10 +48,8 @@
                (on-dir (get-root-dir fname))))
  :single_file_support true
  :settings {:gopls {:vulncheck :Imports
-                    :analyses {;; https://github.com/golang/tools/blob/master/gopls/doc/analyzers.md
-                               :appendclipped true
-                               :shadow true
-                               :slicesdelete true}
+                    ;; https://github.com/golang/tools/blob/master/gopls/doc/analyzers.md
+                    :analyses {:appendclipped true :shadow true :slicesdelete true}
                     :buildFlags [:-tags=test]
                     :directoryFilters [:-**/node_modules :-**/testdata]
                     :templateExtensions [:tmpl]

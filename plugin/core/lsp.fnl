@@ -65,23 +65,6 @@
   (au :Highlight {[:CursorHold :CursorHoldI] vim.lsp.buf.document_highlight
                   :CursorMoved vim.lsp.buf.clear_references}))
 
-(fn progress-handler [err result _ctx]
-  (if (and (not err) result result.value)
-      (let [kind result.value.kind
-            msg (or result.value.message "")
-            pct result.value.percentage
-            title result.value.title
-            token result.token
-            ft vim.bo.filetype
-            out (if (= ft :rust) token title)]
-        (set lsp-progress-info
-             (if (= kind :end) ""
-                 (.. "   🔄 " out
-                     (if (and pct (> pct 0)) (.. " (" pct "%" ")")
-                         (> (length msg) 0) (.. " :: " msg)
-                         ""))))
-        (vim.schedule #(vim.cmd.redrawtabline)))))
-
 (fn inside-call-args? []
   (let [node (vim.treesitter.get_node)]
     (var cur node)
@@ -128,8 +111,6 @@
                                   (vim.lsp.buf.signature_help))}))
     (if (client:supports_method :textDocument/onTypeFormatting)
         (vim.lsp.on_type_formatting.enable true {: client_id}))
-    (if (client:supports_method :$/progress)
-        (set client.handlers.$/progress progress-handler))
     false))
 
 ;TODO Should we add :refactor :quickfix ?

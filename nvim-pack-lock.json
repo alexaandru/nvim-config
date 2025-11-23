@@ -1,25 +1,17 @@
 {
   "plugins": {
-    "gitsigns.nvim": {
+    "gitsigns": {
       "rev": "cdafc320f03f2572c40ab93a4eecb733d4016d07",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
-    "markview.nvim": {
+    "markview": {
       "rev": "1cc5d64dc0b9f80a23ea9aaa75359659fea126a8",
       "src": "https://github.com/OXY2DEV/markview.nvim"
     },
-    "neovim": {
-      "rev": "cf2a288696b03d0934da713d66c6d71557b5c997",
-      "src": "https://github.com/rose-pine/neovim"
-    },
     "nvim-treesitter": {
-      "rev": "bb83a676128d95c865e40ba71376d883bdadec14",
+      "rev": "3bbae7b32e0cc417438e54ec77eb7083e5f38c0f",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter",
       "version": "'main'"
-    },
-    "nvim-treesitter-context": {
-      "rev": "660861b1849256398f70450afdf93908d28dc945",
-      "src": "https://github.com/nvim-treesitter/nvim-treesitter-context"
     },
     "nvim-treesitter-textobjects": {
       "rev": "227165aaeb07b567fb9c066f224816aa8f3ce63f",
@@ -34,11 +26,15 @@
       "rev": "8dcb311b0c92d460fac00eac706abd43d94d68af",
       "src": "https://github.com/nvim-tree/nvim-web-devicons"
     },
-    "sidekick.nvim": {
+    "rose-pine": {
+      "rev": "cf2a288696b03d0934da713d66c6d71557b5c997",
+      "src": "https://github.com/rose-pine/neovim"
+    },
+    "sidekick": {
       "rev": "c2bdf8cfcd87a6be5f8b84322c1b5052e78e302e",
       "src": "https://github.com/folke/sidekick.nvim"
     },
-    "site-util": {
+    "site.util": {
       "rev": "92f41034387ebfade5863641ae232601e9fd81f8",
       "src": "https://github.com/alexaandru/site-util"
     },
@@ -46,6 +42,10 @@
       "rev": "ffb66ce4c801a1e37ed145ebd5eca1ea8865e00f",
       "src": "https://github.com/ravsii/tree-sitter-d2",
       "version": "'main'"
+    },
+    "treesitter-context": {
+      "rev": "660861b1849256398f70450afdf93908d28dc945",
+      "src": "https://github.com/nvim-treesitter/nvim-treesitter-context"
     }
   }
 }

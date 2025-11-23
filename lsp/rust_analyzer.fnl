@@ -47,15 +47,14 @@
                                    (on-dir (or cargo-workspace-root cargo-crate-dir)))
                                  (vim.schedule #(vim.notify (: "[rust_analyzer] cmd failed with code %d: %s %s" "format" $.code cmd $.stderr)))))))))))
 
-(local uc vim.api.nvim_buf_create_user_command)
-
-{:before_init (fn [init-params config]
-                (when (and config.settings (. config.settings :rust-analyzer))
-                  (set init-params.initializationOptions
-                       (. config.settings :rust-analyzer))))
- :capabilities {:experimental {:serverStatusNotification true}}
- :cmd [:rust-analyzer]
- :filetypes [:rust]
- :on_attach #(uc $2 :LspCargoReload #(reload-workspace $2)
-                 {:desc "Reload Cargo Workspace"})
- : root_dir}
+(let [uc vim.api.nvim_buf_create_user_command]
+  {:before_init (fn [init-params config]
+                  (if (and config.settings (. config.settings :rust-analyzer))
+                      (set init-params.initializationOptions
+                           (. config.settings :rust-analyzer))))
+   :capabilities {:experimental {:serverStatusNotification true}}
+   :cmd [:rust-analyzer]
+   :filetypes [:rust]
+   :on_attach #(uc $2 :LspCargoReload #(reload-workspace $2)
+                   {:desc "Reload Cargo Workspace"})
+   : root_dir})

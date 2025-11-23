@@ -43,11 +43,20 @@
         (vim.api.nvim_set_current_win original-win))
     (vim.cmd.edit filepath)))
 
+(fn open-multiple-files [filepaths original-win]
+  (when (> (length filepaths) 0)
+    (if (vim.api.nvim_win_is_valid original-win)
+        (vim.api.nvim_set_current_win original-win))
+    (each [_ filepath (ipairs filepaths)]
+      (vim.cmd.edit filepath))
+    (vim.notify (.. "Opened " (length filepaths) " files") vim.log.levels.INFO)))
+
 (fn file-picker []
   (picker (fn [filter _]
             (findfunc filter _))
           {:preview-fn file-preview
            :on-select open-file
+           :on-multi-select open-multiple-files
            :setup-list-fn set-file-icons
            :config {:prompt "Find File: " :preview {:width-ratio 0.55}}}))
 
@@ -245,6 +254,29 @@
       (vim.api.nvim_win_set_cursor 0 [data-item.line 0])
       (vim.cmd "normal! zz"))))
 
+(fn lsp-diagnostics-multi-select [items original-win]
+  (let [qf-list []]
+    (each [_ message (ipairs items)]
+      (each [_ data-item (ipairs diagnostics-data)]
+        (when (= data-item.message message)
+          (table.insert qf-list
+                        {:filename data-item.file
+                         :lnum data-item.line
+                         :col (or data-item.diagnostic.col 0)
+                         :text data-item.message
+                         :type (case data-item.diagnostic.severity
+                                 1 "E"
+                                 2 "W"
+                                 3 "I"
+                                 4 "H"
+                                 _  "E")}))))
+    (vim.fn.setqflist qf-list)
+    (if (vim.api.nvim_win_is_valid original-win)
+        (vim.api.nvim_set_current_win original-win))
+    (vim.cmd.copen)
+    (vim.notify (.. "Added " (length qf-list) " diagnostics to quickfix")
+                vim.log.levels.INFO)))
+
 (fn setup-diagnostics-signs [buf lines]
   (let [ns (vim.api.nvim_create_namespace :diagnostics-picker-signs)
         ;; Use unicode emoji signs if available, otherwise fallback to letters
@@ -278,6 +310,7 @@
         (picker lsp-diagnostics-source
                 {:preview-fn lsp-diagnostics-preview
                  :on-select lsp-diagnostics-select
+                 :on-multi-select lsp-diagnostics-multi-select
                  :setup-list-fn setup-diagnostics-signs
                  :config {:prompt "Diagnostics: " :width 140 :height 30}})
         (vim.notify "No diagnostics found" vim.log.levels.INFO))))
