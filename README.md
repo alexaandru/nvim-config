@@ -23,7 +23,7 @@ Requires `nightly`.
 - **custom picker** for files, buffers, LSP (workspace) symbols and diagnostics,
   that uses `'findfunc'` and the builtin `fuzzy-matching`; with multiple select;
 - custom **live grep**;
-- **git** integration: a custom visual `:Gdiff` + [gitsigns](https://github.com/lewis6991/gitsigns.nvim);
+- **git** integration via [gitsigns](https://github.com/lewis6991/gitsigns.nvim): despite the misleading name it packs quite a lot of power!;
 - persistent terminal toggled via `<C-Enter>` (`:ToggleTerm`) starts in the current file's folder;
   `:Term` available for spawning additional terminal instances;
 - minimal UI (no statusbar/linenumber; git branch, filename and status in titlebar);

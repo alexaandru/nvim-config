@@ -36,7 +36,7 @@
         {:src :windwp/nvim-ts-autotag
          :data {:conf {:opts {:enable_close_on_slash true}}}}])
 
-;; Standardize pack definitions.
+; Standardize pack definitions.
 (each [i p (ipairs packs)]
   (tset packs i (patch-pack p)))
 

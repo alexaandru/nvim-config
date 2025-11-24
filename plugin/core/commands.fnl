@@ -41,23 +41,9 @@
         (table.insert result (vim.fs.basename path))))
     (print (vim.inspect result))))
 
-(fn Gdiff [opts]
-  (let [gh-cmd "gh repo view --json defaultBranchRef --jq .defaultBranchRef.name"
-        default-branch (-> (vim.fn.system gh-cmd)
-                           (: :gsub "\n$" ""))
-        branch (if (= opts.args "") default-branch opts.args)
-        path (vim.fn.expand "%:p")
-        proj-rel-path (path:sub (+ (length vim.w.proj_root) 2))
-        ft vim.bo.filetype]
-    (vim.cmd "setl scrollbind diff | vnew | setl scrollbind diff | Scratchify")
-    (vim.cmd (string.format "setl ft=%s" ft))
-    (vim.cmd (string.format "r !git show %s:%s" branch proj-rel-path))
-    (vim.cmd "norm ggdd")))
-
 (let [cmd vim.api.nvim_create_user_command]
-  (cmd :Gdiff Gdiff
-       {:range "%" :nargs "*" :bar true
-        :desc "Git diff against another branch"})
+  (cmd :Gdiff "Gitsigns diffthis"
+       {:desc "Git diff against another branch"})
   (cmd :Grep "sil grep <args>"
        {:bar true :nargs 1 :desc "Search using git grep"})
   ;; https://github.com/neovim/neovim/issues/34764#issuecomment-3543397752
