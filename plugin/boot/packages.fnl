@@ -85,5 +85,6 @@
 (let [au vim.api.nvim_create_autocmd
       group (vim.api.nvim_create_augroup :PackSetup {:clear true})]
   (au :PackChanged {: group :callback pack-changed})
-  (vim.pack.add packs {:confirm false})
-  (setup packs))
+  (doto packs
+    (vim.pack.add {:confirm false})
+    (setup)))
