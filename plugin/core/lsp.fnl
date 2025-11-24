@@ -17,26 +17,23 @@
         :gOO workspace-symbol
         :<Leader>wla vim.lsp.buf.add_workspace_folder
         :<Leader>wlr vim.lsp.buf.remove_workspace_folder
-        :<Leader>wll #(print (vim.inspect (vim.fn.uniq (vim.fn.sort (vim.lsp.buf.list_workspace_folders)))))})
+        :<Leader>wll #(vim.print (vim.fn.uniq (vim.fn.sort (vim.lsp.buf.list_workspace_folders))))})
+
+;; fnlfmt: skip
+(local diagnostic-config 
+       (let [s vim.diagnostic.severity]
+         {:underline true
+          :virtual_text {:spacing 0 :prefix "‼"}
+          :signs {:text {s.ERROR "✘" s.WARN "⚠" s.INFO "i" s.HINT "h"}}
+          :update_in_insert true
+          :severity_sort true
+          :float {:border :rounded :source true :suffix " " :severity_sort true :header ""}}))
 
 (vim.lsp.inline_completion.enable true)
 (vim.lsp.document_color.enable)
 (vim.lsp.log.set_level vim.log.levels.ERROR)
-
-;; fnlfmt: skip
-(vim.diagnostic.config (let [s vim.diagnostic.severity]
-                         {:underline true
-                          :virtual_text {:spacing 0 :prefix "‼"}
-                          :signs {:text {s.ERROR "✘" s.WARN "⚠" s.INFO "i" s.HINT "h"}}
-                          :update_in_insert true
-                          :severity_sort true
-                          :float {:border :rounded :source true :suffix " " 
-                          :severity_sort true :header ""}}))
-
-(var lsp-progress-info "")
-
-(fn vim.g.get_lsp_progress []
-  lsp-progress-info)
+(vim.diagnostic.config diagnostic-config)
+(vim.defer_fn (. (require :mini.icons) :tweak_lsp_kind) 10)
 
 (fn apply-code-actions [actions]
   (let [bufnr (vim.api.nvim_get_current_buf)
@@ -54,7 +51,6 @@
           (client:exec_cmd {:arguments [(vim.uri_from_bufnr bufnr)]
                             :command :_typescript.organizeImports})))))
 
-;; TODO: reconcile this with the one in let at the end.
 (fn au [group-name commands]
   (let [group (vim.api.nvim_create_augroup group-name {:clear true})
         c #(vim.api.nvim_create_autocmd $1 {:callback $2 : group :buffer 0})]
@@ -79,12 +75,8 @@
 (fn lsp-hints-toggle [val]
   (if vim.b.hints_on (vim.lsp.inlay_hint.enable val {:bufnr 0})))
 
-(fn lsp-format [args]
-  (let [bufnr args.buf
-        clients (vim.lsp.get_clients {: bufnr})]
-    (each [_ client (ipairs clients)]
-      (if (client:supports_method :textDocument/formatting)
-          (vim.lsp.buf.format {:async false :filter #(not= $.name :ts_ls)})))))
+(fn lsp-format [_args]
+  (vim.lsp.buf.format {:filter #(not= $.name :ts_ls)}))
 
 (fn on-attach [args]
   (let [client_id args.data.client_id
@@ -107,8 +99,7 @@
       (vim.defer_fn vim.lsp.codelens.refresh 100))
     (if (client:supports_method :textDocument/signatureHelp)
         (au :LSPSignatureHelp
-            {[:TextChangedI] #(if (inside-call-args?)
-                                  (vim.lsp.buf.signature_help))}))
+            {[:TextChangedI] #(if (inside-call-args?) (vim.lsp.buf.signature_help))}))
     (if (client:supports_method :textDocument/onTypeFormatting)
         (vim.lsp.on_type_formatting.enable true {: client_id}))
     false))
@@ -135,12 +126,10 @@
       nmap #(vim.keymap.set :n $1 $2 $3)]
   (imap :<Tab> #(if (not (vim.lsp.inline_completion.get)) :<Tab>)
         {:desc "Get the current inline completion"
-         :expr true
-         :replace_keycodes true})
+         :expr true :replace_keycodes true})
   (nmap :<Tab> #(if (not ((. (require :sidekick) :nes_jump_or_apply))) :<Tab>)
         {:desc "Get the next inline completion (via Sidekick)"
-         :expr true
-         :replace_keycodes true})
+         :expr true :replace_keycodes true})
   (imap :<C-n> #(vim.lsp.inline_completion.select {:count 1})
         {:desc "Get the next inline completion"})
   (imap :<C-i> #(vim.lsp.buf.signature_help) {:desc "Show signature help"}))

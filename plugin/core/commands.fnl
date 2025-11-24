@@ -1,19 +1,15 @@
 (fn LspCapabilities []
-  (vim.notify (vim.inspect (collect [_ c (pairs (vim.lsp.get_clients {:buffer 0}))]
-                             c.name
-                             (collect [k v (pairs c.server_capabilities)]
-                               (if v (values k v)))))))
+  (vim.print (collect [_ c (pairs (vim.lsp.get_clients {:buffer 0}))]
+               c.name
+               (collect [k v (pairs c.server_capabilities)]
+                 (if v (values k v))))))
 
 (fn LastWindow []
-  (fn is-quittable []
-    (let [{:buftype bt :filetype ft} (vim.fn.getbufvar "%" "&")]
-      (or (vim.tbl_contains [:quickfix :terminal :nofile] bt) (= ft :netrw))))
-
-  (fn last-window []
-    (= -1 (vim.fn.winbufnr 2)))
-
-  (if (and (is-quittable) (last-window))
-      (vim.cmd "norm ZQ")))
+  (let [{:buftype bt} (vim.fn.getbufvar "%" "&")
+        is-quittable (vim.tbl_contains [:quickfix :terminal :nofile] bt)
+        last-window (= -1 (vim.fn.winbufnr 2))]
+    (if (and is-quittable last-window)
+        (vim.cmd "norm ZQ"))))
 
 (fn LspHintsToggle []
   (if vim.b.hints_on
@@ -23,10 +19,12 @@
 
 (fn SetProjRoot []
   (if (not vim.w.proj_root)
-      (let [cmd "git rev-parse --show-toplevel"
+      (let [file-dir (vim.fn.expand "%:p:h")
+            rev-p " rev-parse --show-toplevel"
+            cmd (.. "git -C " (vim.fn.shellescape file-dir) rev-p)
             root (-> (vim.fn.system cmd)
                      (: :gsub "\n$" ""))
-            root (if (= vim.v.shell_error 0) root ".")]
+            root (if (= vim.v.shell_error 0) root file-dir)]
         (set vim.w.proj_root root))))
 
 (fn BuiltinPacks []
@@ -34,16 +32,24 @@
         all-opt (vim.fn.globpath vim.o.packpath "pack/*/opt/*" true true)
         all-start (vim.fn.globpath vim.o.packpath "plugin/*" true true)]
     (each [_ path (ipairs all-opt)]
-      (when (path:match "^/tmp/%.mount_nvim")
-        (table.insert result (.. "opt:" (vim.fs.basename path)))))
+      (if (path:match "^/tmp/%.mount_nvim")
+          (table.insert result (.. "opt:" (vim.fs.basename path)))))
     (each [_ path (ipairs all-start)]
-      (when (path:match "^/tmp/%.mount_nvim")
-        (table.insert result (vim.fs.basename path))))
-    (print (vim.inspect result))))
+      (if (path:match "^/tmp/%.mount_nvim")
+          (table.insert result (vim.fs.basename path))))
+    (vim.print result)))
+
+(fn Version []
+  (let [nvim-version (-> (vim.fn.execute "version")
+                         (: :gsub "^\n" "")
+                         (: :gsub "\n[^\n]*$" ""))
+        lines [nvim-version]]
+    (if vim.g.neovide
+        (table.insert lines (.. "Neovide " vim.g.neovide_version)))
+    (print (table.concat lines "\n"))))
 
 (let [cmd vim.api.nvim_create_user_command]
-  (cmd :Gdiff "Gitsigns diffthis"
-       {:desc "Git diff against another branch"})
+  (cmd :Gdiff "Gitsigns diffthis" {:desc "Git diff against another branch"})
   (cmd :Grep "sil grep <args>"
        {:bar true :nargs 1 :desc "Search using git grep"})
   ;; https://github.com/neovim/neovim/issues/34764#issuecomment-3543397752
@@ -67,5 +73,6 @@
   (cmd :LspCapabilities LspCapabilities {:desc "Show LSP server capabilities"})
   (cmd :LspHintsToggle LspHintsToggle {:desc "Toggle LSP inlay hints"})
   (cmd :BuiltinPacks BuiltinPacks {:desc "Show builtin packages"})
+  (cmd :Version Version {:desc "Show Neovim and Neovide versions"})
   (cmd :JQ "<line1>,<line2>!jq -S ."
        {:range true :bar true :desc "Format JSON with jq"}))

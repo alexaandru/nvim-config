@@ -1,10 +1,11 @@
 (local picker (require :picker))
 (local findfunc vim.g.findfunc)
-(local (has-devicons devicons) (pcall require :nvim-web-devicons))
-(local {: get_icon} devicons)
+(local (has-icons icons) (pcall require :mini.icons))
+(local get_icon (let [{: get} icons]
+                  #(get :file $)))
 
 (fn set-file-icons [buf lines]
-  (if has-devicons
+  (if has-icons
       (let [ns (vim.api.nvim_create_namespace :file-picker-icons)]
         ;; Clear existing extmarks first
         (vim.api.nvim_buf_clear_namespace buf ns 0 -1)
@@ -269,7 +270,7 @@
                                  2 "W"
                                  3 "I"
                                  4 "H"
-                                 _  "E")}))))
+                                 _ "E")}))))
     (vim.fn.setqflist qf-list)
     (if (vim.api.nvim_win_is_valid original-win)
         (vim.api.nvim_set_current_win original-win))
@@ -280,7 +281,7 @@
 (fn setup-diagnostics-signs [buf lines]
   (let [ns (vim.api.nvim_create_namespace :diagnostics-picker-signs)
         ;; Use unicode emoji signs if available, otherwise fallback to letters
-        severity-to-sign (if has-devicons
+        severity-to-sign (if has-icons
                              {1 "✘" 2 "⚠" 3 "i" 4 "h"}
                              {1 "E" 2 "W" 3 "I" 4 "H"})
         severity-to-hl {1 "DiagnosticSignError"
@@ -294,15 +295,17 @@
         (vim.api.nvim_set_option_value :linebreak true {:win win})))
     (vim.api.nvim_buf_clear_namespace buf ns 0 -1)
     (each [i line (ipairs lines)]
-      (when line
-        (let [data-item (. diagnostics-data i)]
-          (when data-item
-            (let [sign (or (. severity-to-sign data-item.diagnostic.severity)
-                           "?")
-                  hl (or (. severity-to-hl data-item.diagnostic.severity)
-                         "Normal")]
-              (vim.api.nvim_buf_set_extmark buf ns (- i 1) 0
-                                            {:sign_text sign :sign_hl_group hl}))))))))
+      (if line
+          (let [data-item (. diagnostics-data i)]
+            (if data-item
+                (let [sign (or (. severity-to-sign
+                                  data-item.diagnostic.severity)
+                               "?")
+                      hl (or (. severity-to-hl data-item.diagnostic.severity)
+                             "Normal")]
+                  (vim.api.nvim_buf_set_extmark buf ns (- i 1) 0
+                                                {:sign_text sign
+                                                 :sign_hl_group hl}))))))))
 
 (fn lsp-diagnostics-picker []
   (let [diag-count (length (vim.diagnostic.get))]

@@ -55,7 +55,6 @@
 
 (let [group (vim.api.nvim_create_augroup :Colorizer {:clear true})
       callback #(colorize-buf $.buf)
-      pattern "*"]
-  (vim.api.nvim_create_autocmd [:WinNew :BufEnter] {: group : callback : pattern})
-  (vim.api.nvim_create_autocmd [:TextChanged :TextChangedI] {: group :callback text-changed : pattern}))
-
+      au vim.api.nvim_create_autocmd]
+  (au [:WinNew :BufEnter] {: group : callback})
+  (au [:TextChanged :TextChangedI] {: group :callback text-changed}))

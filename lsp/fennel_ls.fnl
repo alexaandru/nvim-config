@@ -1,11 +1,11 @@
 (fn root_dir [bufnr on-dir]
-  (let [fname (vim.api.nvim_buf_get_name bufnr)]
+  (let [fname (vim.api.nvim_buf_get_name bufnr)
+        parents (vim.iter (vim.fs.parents fname))]
     (fn has-fls-project-cfg [path]
       (let [fnlpath (vim.fs.joinpath path :flsproject.fnl)]
         (= (. (or (vim.uv.fs_stat fnlpath) {}) :type) :file)))
 
-    (on-dir (or (: (vim.iter (vim.fs.parents fname)) :find has-fls-project-cfg)
-                (vim.fs.root 0 :.git)))))
+    (on-dir (or (parents:find has-fls-project-cfg) (vim.fs.root 0 :.git)))))
 
 {: root_dir
  :capabilities {:offsetEncoding [:utf-8 :utf-16]}

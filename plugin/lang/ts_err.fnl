@@ -47,14 +47,14 @@
              (not (vim.tbl_contains blacklist (. vim.bo args.buf :filetype))))
     (let [diagnostics {}
           parser (vim.treesitter.get_parser args.buf nil {:error false})]
-      (when parser
-        (parser:parse false (mk-parse-trees parser args diagnostics)))
+      (if parser
+          (parser:parse false (mk-parse-trees parser args diagnostics)))
       (vim.diagnostic.set namespace args.buf diagnostics))))
 
-(local autocmd-group
-       (vim.api.nvim_create_augroup :editor.treesitter {:clear true}))
-
-(vim.api.nvim_create_autocmd [:FileType :TextChanged :InsertLeave]
-                             {:callback (vim.schedule_wrap diagnose)
-                              :desc "treesitter diagnostics"
-                              :group autocmd-group})
+(let [aug vim.api.nvim_create_augroup
+      group (aug :editor.treesitter {:clear true})
+      au vim.api.nvim_create_autocmd]
+  (au [:FileType :TextChanged :InsertLeave]
+      {:callback (vim.schedule_wrap diagnose)
+       :desc "TreeSitter Diagnostics"
+       : group}))

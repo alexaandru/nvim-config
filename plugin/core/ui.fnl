@@ -2,7 +2,7 @@
 (local highlight "CursorLine:PmenuSel,NormalFloat:PMenu,Cursor:CursorLine")
 
 (fn vim.ui.input [opts on-confirm]
-  (vim.validate {:on_confirm [on-confirm :function false]})
+  (vim.validate :on_confirm on-confirm :function)
   (set-forcibly! opts (or (and opts (not (vim.tbl_isempty opts)) opts)
                           (vim.empty_dict)))
   (let [on-confirm #(if (> (length $) 0) (on-confirm $) (on-confirm))
@@ -17,8 +17,8 @@
     (vim.cmd.startinsert)))
 
 (fn vim.ui.select [items opts on-choice]
-  (vim.validate {:on_choice [on-choice :function false]
-                 :items [items :table false]})
+  (vim.validate :items items :table)
+  (vim.validate :on_choice on-choice :function)
   (set-forcibly! opts (or opts {}))
   (let [fmt (or opts.format_item tostring)
         choices (icollect [_ item (ipairs items)]

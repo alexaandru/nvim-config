@@ -1,14 +1,3 @@
-(fn patch-pack [pack]
-  (let [pack (if (= (type pack) :string) {:src pack} pack)
-        src (. pack :src)
-        src (if (vim.startswith src "https://") src
-                (.. "https://github.com/" src))
-        name (or (. pack :name) (vim.fn.fnamemodify src ":t"))
-        name (vim.fn.substitute name :.nvim$ "" "")]
-    (doto pack
-      (tset :src src)
-      (tset :name name))))
-
 (local packs
        [{:src :OXY2DEV/markview.nvim
          :data {:conf {:preview {:icon_provider :devicons
@@ -19,7 +8,7 @@
         :folke/sidekick.nvim
         {:src :lewis6991/gitsigns.nvim
          :data {:conf (fn [] {:on_attach (require :gitsigns_conf)})}}
-        :nvim-tree/nvim-web-devicons
+        :nvim-mini/mini.icons
         {:src :nvim-treesitter/nvim-treesitter
          :version :main
          :data {:after :TSUpdate}}
@@ -36,6 +25,17 @@
         {:src :windwp/nvim-ts-autotag
          :data {:conf {:opts {:enable_close_on_slash true}}}}])
 
+(fn patch-pack [pack]
+  (let [pack (if (= (type pack) :string) {:src pack} pack)
+        src (. pack :src)
+        src (if (vim.startswith src "https://") src
+                (.. "https://github.com/" src))
+        name (or (. pack :name) (vim.fn.fnamemodify src ":t"))
+        name (name:gsub :.nvim$ "")]
+    (doto pack
+      (tset :src src)
+      (tset :name name))))
+
 ; Standardize pack definitions.
 (each [i p (ipairs packs)]
   (tset packs i (patch-pack p)))
@@ -44,7 +44,8 @@
 (fn pack-changed [event]
   (let [name event.data.spec.name
         dir event.data.path
-        spec (: (vim.iter packs) :find #(= (. $ :name) name))
+        packs (vim.iter packs)
+        spec (packs:find #(= $.name name))
         build (?. spec :data :build)
         after (?. spec :data :after)]
     (if build

@@ -56,14 +56,14 @@
           (print (.. "🎨 Set to: " scheme)))
         (list-all))))
 
-(let [com vim.api.nvim_create_user_command
-      nmap #(vim.keymap.set :n $1 $2 $3)]
+(let [com vim.api.nvim_create_user_command]
   (com :ColorNext cycle-next {:desc "Cycle to next colorscheme"})
   (com :ColorPrev cycle-prev {:desc "Cycle to previous colorscheme"})
   (com :ColorCurrent show-current {:desc "Show current colorscheme info"})
   (com :ColorList list-all {:desc "List all available colorschemes"})
-  (com :ColorSet set-by-name
-       {:nargs "?" :complete :color :desc "Set colorscheme by name"})
+  (com :ColorSet set-by-name {:nargs "?" :complete :color :desc "Set colorscheme"}))
+
+(let [nmap #(vim.keymap.set :n $1 $2 $3)]
   (nmap :<F12> :<Cmd>ColorNext<CR> {:silent true :desc "Next colorscheme"})
   (nmap :<S-F12> :<Cmd>ColorPrev<CR>
         {:silent true :desc "Previous colorscheme"})

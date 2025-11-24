@@ -5,11 +5,15 @@
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "markview": {
-      "rev": "1cc5d64dc0b9f80a23ea9aaa75359659fea126a8",
+      "rev": "b687a041aba11a02e3ff50605b4383862e5917a0",
       "src": "https://github.com/OXY2DEV/markview.nvim"
     },
+    "mini.icons": {
+      "rev": "ff2e4f1d29f659cc2bad0f9256f2f6195c6b2428",
+      "src": "https://github.com/nvim-mini/mini.icons"
+    },
     "nvim-treesitter": {
-      "rev": "3bbae7b32e0cc417438e54ec77eb7083e5f38c0f",
+      "rev": "c5871d9d870c866fea9f271f1a3b3f29049a4793",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter",
       "version": "'main'"
     },
@@ -21,10 +25,6 @@
     "nvim-ts-autotag": {
       "rev": "c4ca798ab95b316a768d51eaaaee48f64a4a46bc",
       "src": "https://github.com/windwp/nvim-ts-autotag"
-    },
-    "nvim-web-devicons": {
-      "rev": "8dcb311b0c92d460fac00eac706abd43d94d68af",
-      "src": "https://github.com/nvim-tree/nvim-web-devicons"
     },
     "rose-pine": {
       "rev": "cf2a288696b03d0934da713d66c6d71557b5c997",

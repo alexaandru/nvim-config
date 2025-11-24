@@ -1,7 +1,31 @@
 (local {: float-win} (require :util))
 
-;; fnlfmt: skip
-(local default-config {:preview {:width-ratio 0.5 :number false}
+(local [UP DOWN] [:up :down])
+
+(local keymaps {:i {:<Up> [:move-selection UP]
+                    :<Down> [:move-selection DOWN]
+                    :<Right> [:toggle-selection true :move-selection DOWN]
+                    :<Left> [:toggle-selection false :move-selection UP]
+                    :<C-n> [:move-selection DOWN]
+                    :<C-p> [:move-selection UP]
+                    :<PageUp> [:move-selection-page UP]
+                    :<PageDown> [:move-selection-page DOWN]
+                    :<C-u> [:move-selection-page UP]
+                    :<C-d> [:move-selection-page DOWN]}
+                :n {:j [:move-selection DOWN]
+                    :k [:move-selection UP]
+                    :<Down> [:move-selection DOWN]
+                    :<Up> [:move-selection UP]
+                    :<Right> [:toggle-selection true :move-selection DOWN]
+                    :<Left> [:toggle-selection false :move-selection UP]
+                    :<PageUp> [:move-selection-page UP]
+                    :<PageDown> [:move-selection-page DOWN]
+                    :<C-u> [:move-selection-page UP]
+                    :<C-d> [:move-selection-page DOWN]}})
+
+(local default-config {:width-ratio 0.8
+                       :height-ratio 0.8
+                       :preview {:width-ratio 0.5 :number false}
                        :keymaps {:close [:<Esc> :<C-c>]
                                  :select [:<CR> :<Tab>]
                                  :preview-toggle [:<C-p>]
@@ -9,35 +33,46 @@
                                  :scroll-preview-down [:<C-d>]}
                        :prompt "Select: "})
 
-(fn create-picker-state []
-  {:filter-buf nil
-   :filter-close nil
-   :list-buf nil
-   :list-close nil
-   :preview-buf nil
-   :preview-close nil
-   :items []
-   :filtered-items []
-   :selected-idx 1
-   :filter-text ""
-   :all-items []
-   :preview-fn nil
-   :on-select nil
-   :on-multi-select nil
-   :source-fn nil
-   :setup-list-fn nil
-   :config {}
-   :original-win nil
-   :dynamic-source false
-   :selected-items {}})
+(local empty-state {:filter-buf nil
+                    :filter-close nil
+                    :list-buf nil
+                    :list-close nil
+                    :preview-buf nil
+                    :preview-close nil
+                    :filter-text ""
+                    :selected-idx 1
+                    :selected-items {}
+                    :items []
+                    :filtered-items []
+                    :all-items []
+                    :preview-fn nil
+                    :on-select nil
+                    :on-multi-select nil
+                    :source-fn nil
+                    :setup-list-fn nil
+                    :original-win nil
+                    :dynamic-source false})
+
+(local Picker {})
+(set Picker.__index Picker)
+
+(fn Picker.init [user-config]
+  (let [dex-f #(vim.tbl_deep_extend :force $ $2)
+        config (dex-f default-config (or user-config {}))
+        instance (dex-f empty-state {:config config})]
+    (setmetatable instance Picker)))
 
 (local o vim.api.nvim_set_option_value)
 (local c vim.api.nvim_win_set_config)
 
+(fn split-chars [s]
+  "Split a UTF-8 string into an array of characters"
+  (vim.fn.split s "\\zs"))
+
 ;; fnlfmt: skip
 (fn calculate-layout [config preview-enabled]
-  (let [total-width (math.floor (* 0.8 vim.o.columns))
-        total-height (math.floor (* 0.8 vim.o.lines))
+  (let [total-width (math.floor (* config.width-ratio vim.o.columns))
+        total-height (math.floor (* config.height-ratio vim.o.lines))
         preview-width (if preview-enabled (math.floor (* total-width config.preview.width-ratio)) 0)
         list-width (- total-width preview-width)
         filter-height 1
@@ -48,127 +83,127 @@
      :list {:width list-width :height list-height :row (+ start-row filter-height 1) :col start-col}
      :preview (if preview-enabled {:width preview-width :height total-height :row start-row :col (+ start-col list-width 1)})}))
 
-(fn update-filter [state filter-text]
-  (set state.filter-text filter-text)
-  ;; If source-fn is dynamic (re-calls on filter change), use it
-  ;; Otherwise do local fuzzy matching
-  (if state.dynamic-source
-      (let [new-items (state.source-fn filter-text nil)]
-        (set state.all-items new-items)
-        (set state.filtered-items new-items))
+(fn Picker.update-filter [self filter-text]
+  (set self.filter-text filter-text)
+  (if self.dynamic-source
+      ;; If source-fn is dynamic (re-calls on filter change), use it
+      (let [new-items (self.source-fn filter-text nil)]
+        (set self.all-items new-items)
+        (set self.filtered-items new-items))
+      ;; Otherwise do local fuzzy matching
       (if (= (length filter-text) 0)
-          (set state.filtered-items state.all-items)
+          (set self.filtered-items self.all-items)
           (let [strict-mode (string.find filter-text "^'")
                 search-text (if strict-mode (string.sub filter-text 2)
                                 filter-text)]
-            (set state.filtered-items
+            (set self.filtered-items
                  (if strict-mode
-                     (vim.fn.filter state.all-items #($2:find search-text))
-                     (vim.fn.matchfuzzy state.all-items search-text))))))
-  (set state.selected-idx 1)
-  ;; Clear multi-selection when filter changes
-  (set state.selected-items {}))
+                     (vim.fn.filter self.all-items #($2:find search-text))
+                     (vim.fn.matchfuzzy self.all-items search-text))))))
+  (set self.selected-idx 1)
+  (set self.selected-items {}))
 
-(fn update-list-display [state]
-  (let [buf state.list-buf
-        items state.filtered-items]
+(fn Picker.update-list-display [self]
+  (let [buf self.list-buf
+        items self.filtered-items]
     (when buf
       (o :modifiable true {: buf})
       (vim.api.nvim_buf_set_lines buf 0 -1 false items)
-      (if state.setup-list-fn
-          (state.setup-list-fn buf items))
+      (if self.setup-list-fn
+          (self.setup-list-fn buf items))
       (o :modifiable false {: buf})
       (o :modified false {: buf})
       ;; Update multi-selection markers
       (vim.fn.sign_unplace "picker-selected" {:buffer buf})
-      (each [idx _ (pairs state.selected-items)]
-        (when (and (>= idx 1) (<= idx (length items)))
-          (vim.fn.sign_place 0 "picker-selected" "PickerSelected" buf
-                             {:lnum idx :priority 100})))
+      (each [idx _ (pairs self.selected-items)]
+        (if (and (>= idx 1) (<= idx (length items)))
+            (vim.fn.sign_place 0 "picker-selected" "PickerSelected" buf
+                               {:lnum idx :priority 100})))
       (let [list-win (vim.fn.bufwinid buf)]
         (if (> list-win -1)
             (let [total-items (length items)
-                  idx state.selected-idx
-                  selected-count (length (vim.tbl_keys state.selected-items))
+                  idx self.selected-idx
+                  selected-count (length (vim.tbl_keys self.selected-items))
                   title (if (> selected-count 0)
-                            (.. " Results " idx "/" total-items " (" selected-count " selected) ")
+                            (.. " Results " idx "/" total-items " ("
+                                selected-count " selected) ")
                             (.. " Results " idx "/" total-items " "))]
               (c list-win {: title :title_pos :center})
               (vim.api.nvim_win_set_cursor list-win [idx 0])))))))
 
-(fn update-preview [state]
-  (if (and state.preview-buf state.preview-fn
-           (> (length state.filtered-items) 0))
-      (let [current-item (. state.filtered-items state.selected-idx)]
+(fn Picker.update-preview [self]
+  (if (and self.preview-buf self.preview-fn (> (length self.filtered-items) 0))
+      (let [current-item (. self.filtered-items self.selected-idx)]
         (if current-item
-            (let [preview-content (state.preview-fn current-item
-                                                    state.selected-idx)]
-              (o :modifiable true {:buf state.preview-buf})
+            (let [preview-content (self.preview-fn current-item
+                                                   self.selected-idx)]
+              (o :modifiable true {:buf self.preview-buf})
               ;; All preview functions now return enhanced format
-              (vim.api.nvim_buf_set_lines state.preview-buf 0 -1 false
+              (vim.api.nvim_buf_set_lines self.preview-buf 0 -1 false
                                           preview-content.content)
               ;; Set filetype based on filename if available
-              (when preview-content.filename
-                (let [filetype (vim.filetype.match {:filename preview-content.filename})]
-                  (when filetype
-                    (o :filetype filetype {:buf state.preview-buf})
-                    (pcall #(vim.treesitter.start state.preview-buf filetype)))))
+              (if preview-content.filename
+                  (let [filetype (vim.filetype.match {:filename preview-content.filename})]
+                    (when filetype
+                      (o :filetype filetype {:buf self.preview-buf})
+                      (pcall #(vim.treesitter.start self.preview-buf filetype)))))
               ;; Position cursor on specific line if provided
-              (when preview-content.line
-                (let [preview-win (vim.fn.bufwinid state.preview-buf)]
-                  (when (> preview-win -1)
-                    (vim.api.nvim_win_set_cursor preview-win
-                                                 [preview-content.line 0])
-                    (vim.api.nvim_win_call preview-win #(vim.cmd "normal! zz")))))
+              (if preview-content.line
+                  (let [preview-win (vim.fn.bufwinid self.preview-buf)]
+                    (when (> preview-win -1)
+                      (vim.api.nvim_win_set_cursor preview-win
+                                                   [preview-content.line 0])
+                      (vim.api.nvim_win_call preview-win
+                                             #(vim.cmd "normal! zz")))))
               ;; Set search pattern for highlighting if provided
-              (when preview-content.search-pattern
-                (let [preview-win (vim.fn.bufwinid state.preview-buf)]
-                  (when (> preview-win -1)
-                    (vim.api.nvim_win_call preview-win
-                                           #(do
-                                              (vim.fn.setreg "/"
-                                                             preview-content.search-pattern)
-                                              (set vim.o.hlsearch true))))))
+              (if preview-content.search-pattern
+                  (let [preview-win (vim.fn.bufwinid self.preview-buf)]
+                    (if (> preview-win -1)
+                        (vim.api.nvim_win_call preview-win
+                                               #(do
+                                                  (vim.fn.setreg "/"
+                                                                 preview-content.search-pattern)
+                                                  (set vim.o.hlsearch true))))))
               ;; Apply diagnostic highlights if diagnostic info is provided
-              (when preview-content.diagnostic
-                (let [diag preview-content.diagnostic
-                      ns (vim.api.nvim_create_namespace "diagnostics-picker-preview")
-                      severity-to-hl {1 "DiagnosticUnderlineError"
-                                      2 "DiagnosticUnderlineWarn"
-                                      3 "DiagnosticUnderlineInfo"
-                                      4 "DiagnosticUnderlineHint"}
-                      severity-to-line-hl {1 "DiagnosticVirtualTextError"
-                                           2 "DiagnosticVirtualTextWarn"
-                                           3 "DiagnosticVirtualTextInfo"
-                                           4 "DiagnosticVirtualTextHint"}
-                      line-hl (or (. severity-to-line-hl diag.severity)
-                                  "DiagnosticVirtualTextError")
-                      underline-hl (or (. severity-to-hl diag.severity)
-                                       "DiagnosticUnderlineError")]
-                  (vim.api.nvim_buf_clear_namespace state.preview-buf ns 0 -1)
-                  ;; Highlight the entire line with a subtle background
-                  (vim.api.nvim_buf_set_extmark state.preview-buf ns diag.lnum
-                                                0
-                                                {:end_line (+ diag.lnum 1)
-                                                 :hl_group line-hl
-                                                 :priority 50})
-                  ;; Apply diagnostic underline to the specific range
-                  (when (and diag.col (>= diag.col 0))
-                    (let [end-col (or diag.end_col (+ diag.col 1))]
-                      (vim.api.nvim_buf_set_extmark state.preview-buf ns
-                                                    diag.lnum diag.col
-                                                    {:end_col end-col
-                                                     :hl_group underline-hl
-                                                     :priority 100})))))
-              (o :modifiable false {:buf state.preview-buf})
-              (o :modified false {:buf state.preview-buf}))
+              (if preview-content.diagnostic
+                  (let [diag preview-content.diagnostic
+                        ns (vim.api.nvim_create_namespace "diagnostics-picker-preview")
+                        severity-to-hl {1 "DiagnosticUnderlineError"
+                                        2 "DiagnosticUnderlineWarn"
+                                        3 "DiagnosticUnderlineInfo"
+                                        4 "DiagnosticUnderlineHint"}
+                        severity-to-line-hl {1 "DiagnosticVirtualTextError"
+                                             2 "DiagnosticVirtualTextWarn"
+                                             3 "DiagnosticVirtualTextInfo"
+                                             4 "DiagnosticVirtualTextHint"}
+                        line-hl (or (. severity-to-line-hl diag.severity)
+                                    "DiagnosticVirtualTextError")
+                        underline-hl (or (. severity-to-hl diag.severity)
+                                         "DiagnosticUnderlineError")]
+                    (vim.api.nvim_buf_clear_namespace self.preview-buf ns 0 -1)
+                    ;; Highlight the entire line with a subtle background
+                    (vim.api.nvim_buf_set_extmark self.preview-buf ns diag.lnum
+                                                  0
+                                                  {:end_line (+ diag.lnum 1)
+                                                   :hl_group line-hl
+                                                   :priority 50})
+                    ;; Apply diagnostic underline to the specific range
+                    (when (and diag.col (>= diag.col 0))
+                      (let [end-col (or diag.end_col (+ diag.col 1))]
+                        (vim.api.nvim_buf_set_extmark self.preview-buf ns
+                                                      diag.lnum diag.col
+                                                      {:end_col end-col
+                                                       :hl_group underline-hl
+                                                       :priority 100})))))
+              (o :modifiable false {:buf self.preview-buf})
+              (o :modified false {:buf self.preview-buf}))
             ;; Update preview window title with footer info
-            (if state.preview-fn
-                (let [preview-win (vim.fn.bufwinid state.preview-buf)]
+            (if self.preview-fn
+                (let [preview-win (vim.fn.bufwinid self.preview-buf)]
                   (if (> preview-win -1)
                       (let [cursor (vim.api.nvim_win_get_cursor preview-win)
                             line (. cursor 1)
-                            total-lines (vim.api.nvim_buf_line_count state.preview-buf)
+                            total-lines (vim.api.nvim_buf_line_count self.preview-buf)
                             percentage (if (> total-lines 0)
                                            (math.floor (* (/ line total-lines)
                                                           100))
@@ -176,80 +211,82 @@
                             title (.. " Preview " percentage "% ")]
                         (c preview-win {:title title :title_pos :center})))))))))
 
-(fn move-selection [state direction]
-  (let [max-idx (length state.filtered-items)]
+(fn Picker.move-selection [self direction]
+  (let [max-idx (length self.filtered-items)]
     (when (> max-idx 0)
-      (set state.selected-idx
-           (case direction
-             :up (math.max 1 (- state.selected-idx 1))
-             :down (math.min max-idx (+ state.selected-idx 1))))
-      (update-list-display state)
-      (update-preview state))))
+      (set self.selected-idx
+           (if (= direction UP) (math.max 1 (- self.selected-idx 1))
+               (= direction DOWN) (math.min max-idx (+ self.selected-idx 1))))
+      (self:update-list-display)
+      (self:update-preview))))
 
-(fn move-selection-page [state direction]
-  (let [max-idx (length state.filtered-items)
-        list-win (vim.fn.bufwinid state.list-buf)]
-    (when (and (> max-idx 0) (> list-win -1))
-      (let [win-height (vim.api.nvim_win_get_height list-win)
-            page-size (math.max 1 (- win-height 1))]
-        (set state.selected-idx
-             (case direction
-               :up (math.max 1 (- state.selected-idx page-size))
-               :down (math.min max-idx (+ state.selected-idx page-size))))
-        (update-list-display state)
-        (update-preview state)))))
+(fn Picker.move-selection-page [self direction]
+  (let [max-idx (length self.filtered-items)
+        list-win (vim.fn.bufwinid self.list-buf)]
+    (if (and (> max-idx 0) (> list-win -1))
+        (let [win-height (vim.api.nvim_win_get_height list-win)
+              page-size (math.max 1 (- win-height 1))]
+          (set self.selected-idx
+               (if (= direction UP)
+                   (math.max 1 (- self.selected-idx page-size))
+                   (= direction DOWN)
+                   (math.min max-idx (+ self.selected-idx page-size))))
+          (self:update-list-display)
+          (self:update-preview)))))
 
-(fn toggle-selection [state select?]
-  (let [idx state.selected-idx]
-    (when (and (> (length state.filtered-items) 0) (<= idx (length state.filtered-items)))
+(fn Picker.toggle-selection [self select?]
+  (let [idx self.selected-idx]
+    (when (and (> (length self.filtered-items) 0)
+               (<= idx (length self.filtered-items)))
       (if select?
-          (tset state.selected-items idx true)
-          (tset state.selected-items idx nil))
-      (update-list-display state))))
+          (tset self.selected-items idx true)
+          (tset self.selected-items idx nil))
+      (self:update-list-display))))
 
 ;; fnlfmt: skip
-(fn close-picker [state]
+(fn Picker.close [self]
     (vim.schedule (fn []
-                    (each [_ close-fn (pairs [state.filter-close state.list-close state.preview-close])]
+                    (each [_ close-fn (pairs [self.filter-close self.list-close self.preview-close])]
                       (if (and close-fn (= (type close-fn) :function)) (pcall close-fn)))
                     (each [_ key (ipairs [:filter-buf :filter-close :list-buf :list-close :preview-buf :preview-close])]
-                      (tset state key nil))
-                    (set state.all-items []))))
+                      (tset self key nil))
+                    (set self.all-items []))))
 
-(fn select-current [state]
-  (if (> (length state.filtered-items) 0)
-      (let [selected-count (length (vim.tbl_keys state.selected-items))]
-        (if (and (> selected-count 0) state.on-multi-select)
+(fn Picker.select-current [self]
+  (if (> (length self.filtered-items) 0)
+      (let [selected-count (length (vim.tbl_keys self.selected-items))]
+        (if (and (> selected-count 0) self.on-multi-select)
             ;; Multi-selection mode: gather all selected items
             (let [selected-items []
-                  on-multi-select-fn state.on-multi-select]
-              (each [idx _ (pairs state.selected-items)]
-                (table.insert selected-items (. state.filtered-items idx)))
-              (close-picker state)
-              (vim.schedule #(on-multi-select-fn selected-items state.original-win)))
+                  on-multi-select-fn self.on-multi-select]
+              (each [idx _ (pairs self.selected-items)]
+                (table.insert selected-items (. self.filtered-items idx)))
+              (self:close)
+              (vim.schedule #(on-multi-select-fn selected-items
+                                                 self.original-win)))
             ;; Single selection mode: use current item
-            (when state.on-select
-              (let [selected-item (. state.filtered-items state.selected-idx)
-                    on-select-fn state.on-select]
-                (close-picker state)
-                (vim.schedule #(on-select-fn selected-item state.selected-idx
-                                             state.original-win))))))))
+            (if self.on-select
+                (let [selected-item (. self.filtered-items self.selected-idx)
+                      on-select-fn self.on-select]
+                  (self:close)
+                  (vim.schedule #(on-select-fn selected-item self.selected-idx
+                                               self.original-win))))))))
 
 ;; fnlfmt: skip
-(fn setup-filter-window [state buf]
+(fn Picker.setup-filter-window [self buf]
     (o :buftype :prompt {: buf})
     (vim.api.nvim_buf_call buf #(vim.cmd "setl nobl bt=prompt bh=delete noswf"))
     (vim.api.nvim_create_autocmd [:TextChanged :TextChangedI]
                                  {:buffer buf
                                   :callback #(let [lines (vim.api.nvim_buf_get_lines buf 0 -1 false)
                                                    filter-text (or (and (> (length lines) 0) (string.sub (. lines 1) 3)) "")]
-                                               (update-filter state filter-text)
-                                               (update-list-display state)
-                                               (update-preview state)
+                                               (self:update-filter filter-text)
+                                               (self:update-list-display)
+                                               (self:update-preview)
                                                ;; Reset modified state to prevent E37
                                                (vim.api.nvim_set_option_value :modified false {: buf}))}))
 
-(fn setup-list-window [state buf]
+(fn Picker.setup-list-window [self buf]
   (vim.api.nvim_buf_call buf #(vim.cmd "Scratchify"))
   (let [win (vim.fn.bufwinid buf)]
     (when (> win -1)
@@ -260,7 +297,8 @@
          {: win})))
   ;; Define sign for selected items with orange color
   (vim.api.nvim_set_hl 0 "PickerSelectedSign" {:fg "#ff8800" :bold true})
-  (vim.fn.sign_define "PickerSelected" {:text "▐" :texthl "PickerSelectedSign"})
+  (vim.fn.sign_define "PickerSelected"
+                      {:text "▐" :texthl "PickerSelectedSign"})
   ;; Add autocmd to track cursor movements (including mouse clicks) and update selection
   (vim.api.nvim_create_autocmd :CursorMoved
                                {:buffer buf
@@ -269,11 +307,11 @@
                                                (let [cursor (vim.api.nvim_win_get_cursor win)
                                                      line (. cursor 1)]
                                                  (when (and (<= line
-                                                                (length state.filtered-items))
+                                                                (length self.filtered-items))
                                                             (not= line
-                                                                  state.selected-idx))
-                                                   (set state.selected-idx line)
-                                                   (update-preview state)))))}))
+                                                                  self.selected-idx))
+                                                   (set self.selected-idx line)
+                                                   (self:update-preview)))))}))
 
 (fn setup-preview-window [buf config]
   (vim.api.nvim_buf_call buf #(vim.cmd "Scratchify"))
@@ -286,114 +324,100 @@
       (o :foldenable false {: win})
       (o :syntax :enable {: buf}))))
 
-(fn setup-keymaps [state _config close-keys select-keys]
-  (let [filter-opts {:buffer state.filter-buf :silent true}
-        list-opts {:buffer state.list-buf :silent true}
-        imap #(vim.keymap.set :i $1 $2 filter-opts)
-        nmap #(vim.keymap.set :n $1 $2 list-opts)]
-    (each [_ key (ipairs close-keys)]
-      (imap key #(close-picker state)))
-    (each [_ key (ipairs select-keys)]
-      (imap key #(select-current state)))
-    (imap :<Up> #(move-selection state :up))
-    (imap :<Down> #(move-selection state :down))
-    (imap :<C-n> #(move-selection state :down))
-    (imap :<C-p> #(move-selection state :up))
-    (imap :<PageUp> #(move-selection-page state :up))
-    (imap :<PageDown> #(move-selection-page state :down))
-    (imap :<C-u> #(move-selection-page state :up))
-    (imap :<C-d> #(move-selection-page state :down))
-    (imap :<Right> #(do
-                      (toggle-selection state true)
-                      (move-selection state :down)))
-    (imap :<Left> #(do
-                     (toggle-selection state false)
-                     (move-selection state :up)))
-    (imap "'" "'")
+(fn Picker.setup-keymaps [self close-keys select-keys]
+  (let [filter-opts {:buffer self.filter-buf :silent true}
+        list-opts {:buffer self.list-buf :silent true}
+        imap #(vim.keymap.set :i $1 $2 $3)
+        nmap #(vim.keymap.set :n $1 $2 $3)]
+    ;; Close/select keys (data-driven across modes)
+    (each [mode opts (pairs {:i filter-opts :n list-opts})]
+      (each [_ key (ipairs close-keys)]
+        (vim.keymap.set mode key #(self:close) opts))
+      (each [_ key (ipairs select-keys)]
+        (vim.keymap.set mode key #(self:select-current) opts)))
+    ;; Data-driven keymaps from top-level table
+    (each [mode mappings (pairs keymaps)]
+      (let [opts (if (= mode :i) filter-opts list-opts)]
+        (each [key actions (pairs mappings)]
+          (let [callback (fn []
+                           (for [i 1 (length actions) 2]
+                             (let [method (. actions i)
+                                   arg (. actions (+ i 1))]
+                               (: self method arg))))]
+            (vim.keymap.set mode key callback opts)))))
+    ;; Special keymaps with custom logic
+    (imap "'" "'" filter-opts)
     (imap :<M-k>
-          #(if state.preview-buf
-               (let [preview-win (vim.fn.bufwinid state.preview-buf)]
+          #(if self.preview-buf
+               (let [preview-win (vim.fn.bufwinid self.preview-buf)]
                  (if (> preview-win -1)
-                     (vim.fn.win_execute preview-win "normal! 5k")))))
+                     (vim.fn.win_execute preview-win "normal! 5k"))))
+          filter-opts)
     (imap :<M-j>
-          #(if state.preview-buf
-               (let [preview-win (vim.fn.bufwinid state.preview-buf)]
+          #(if self.preview-buf
+               (let [preview-win (vim.fn.bufwinid self.preview-buf)]
                  (if (> preview-win -1)
-                     (vim.fn.win_execute preview-win "normal! 5j")))))
-    (each [_ key (ipairs close-keys)]
-      (nmap key #(close-picker state)))
-    (each [_ key (ipairs select-keys)]
-      (nmap key #(select-current state)))
-    (nmap :j #(move-selection state :down))
-    (nmap :k #(move-selection state :up))
-    (nmap :<Down> #(move-selection state :down))
-    (nmap :<Up> #(move-selection state :up))
-    (nmap :<PageUp> #(move-selection-page state :up))
-    (nmap :<PageDown> #(move-selection-page state :down))
-    (nmap :<C-u> #(move-selection-page state :up))
-    (nmap :<C-d> #(move-selection-page state :down))
-    (nmap :<Right> #(do
-                      (toggle-selection state true)
-                      (move-selection state :down)))
-    (nmap :<Left> #(do
-                     (toggle-selection state false)
-                     (move-selection state :up)))
-    (nmap :x #(let [idx state.selected-idx]
-               (toggle-selection state (not (. state.selected-items idx)))))
+                     (vim.fn.win_execute preview-win "normal! 5j"))))
+          filter-opts)
+    (nmap :x
+          #(let [idx self.selected-idx]
+             (self:toggle-selection (not (. self.selected-items idx))))
+          list-opts)
     ;; Redirect typing to filter buffer (excluding 'x' which is used for toggle)
     (let [chars "abcdefghijklmnopqrstuvwyzABCDEFGHIJKLMNOPQRSTUVWYZ0123456789-_./:'\"[]{}()<>!@#$%^&*+=~`|\\;,?"]
       (for [i 1 (length chars)]
         (let [char (string.sub chars i i)]
           (nmap char
-                #(let [filter-win (vim.fn.bufwinid state.filter-buf)]
+                #(let [filter-win (vim.fn.bufwinid self.filter-buf)]
                    (when (> filter-win -1)
                      (vim.api.nvim_set_current_win filter-win)
-                     (vim.api.nvim_feedkeys char :n false)))))))
-    (if state.preview-buf
-        (let [preview-opts {:buffer state.preview-buf :silent true}
-              preview-nmap #(vim.keymap.set :n $1 $2 preview-opts)]
+                     (vim.api.nvim_feedkeys char :n false)))
+                list-opts))))
+    ;; Preview buffer keymaps
+    (if self.preview-buf
+        (let [preview-opts {:buffer self.preview-buf :silent true}]
           (each [_ key (ipairs close-keys)]
-            (preview-nmap key #(close-picker state)))
+            (nmap key #(self:close) preview-opts))
           (each [_ key (ipairs select-keys)]
-            (preview-nmap key #(select-current state)))
-          (preview-nmap ":"
-                        #(let [filter-win (vim.fn.bufwinid state.filter-buf)]
-                           (when (> filter-win -1)
-                             (vim.api.nvim_set_current_win filter-win)
-                             (vim.cmd.startinsert))))))))
+            (nmap key #(self:select-current) preview-opts))
+          (nmap ":" #(let [filter-win (vim.fn.bufwinid self.filter-buf)]
+                       (when (> filter-win -1)
+                         (vim.api.nvim_set_current_win filter-win)
+                         (vim.cmd.startinsert)))
+                preview-opts)))))
 
-(fn [source-fn opts]
-  (vim.validate {:source-fn [source-fn :function]})
-  (let [state (create-picker-state)
-        config (vim.tbl_deep_extend :force default-config (or opts.config {}))
+(fn new-picker [_self source-fn opts]
+  (vim.validate :source-fn source-fn :function)
+  (let [picker (Picker.init opts.config)
+        config picker.config
         close-keys config.keymaps.close
         select-keys config.keymaps.select
         preview-enabled (not= opts.preview-fn nil)]
-    ;; Initialize state
-    (set state.original-win (vim.api.nvim_get_current_win))
-    (set state.source-fn source-fn)
-    (set state.preview-fn opts.preview-fn)
-    (set state.on-select opts.on-select)
-    (set state.on-multi-select opts.on-multi-select)
-    (set state.setup-list-fn opts.setup-list-fn)
-    (set state.config config)
-    (set state.dynamic-source (or opts.dynamic-source false))
-    ;; Get initial items
-    (set state.items (source-fn "" nil))
-    (set state.all-items state.items)
-    (set state.filtered-items state.items)
-    (set state.selected-idx 1)
-    (set state.filter-text "")
+    ;; Initialize picker
+    (doto picker
+      (tset :original-win (vim.api.nvim_get_current_win))
+      (tset :source-fn source-fn)
+      (tset :preview-fn opts.preview-fn)
+      (tset :on-select opts.on-select)
+      (tset :on-multi-select opts.on-multi-select)
+      (tset :setup-list-fn opts.setup-list-fn)
+      (tset :dynamic-source (or opts.dynamic-source false))
+      (tset :items (source-fn "" nil)))
+    (doto picker
+      (tset :all-items picker.items)
+      (tset :filtered-items picker.items)
+      (tset :selected-idx 1)
+      (tset :filter-text ""))
     ;; Calculate layout
     (let [layout (calculate-layout config preview-enabled)]
       ;; Create filter window using float-win with custom border
-      (let [filter-border ["╭" "─" "┬" "│" "┤" "─" "├" "│"]
+      (let [filter-border (split-chars "╭─┬│┤─├│")
             (filter-buf filter-close) (float-win [""] layout.filter.width
                                                  layout.filter.height true
                                                  "Filter" filter-border)]
-        (set state.filter-buf filter-buf)
-        (set state.filter-close filter-close)
-        (setup-filter-window state filter-buf)
+        (set picker.filter-buf filter-buf)
+        (set picker.filter-close filter-close)
+        (picker:setup-filter-window filter-buf)
         ;; Position filter window
         (let [filter-win (vim.fn.bufwinid filter-buf)]
           (when (> filter-win -1)
@@ -406,18 +430,18 @@
                {:win filter-win})
             (vim.fn.prompt_setprompt filter-buf "> "))))
       ;; Create list window using float-win with custom border
-      (let [list-border ["├" "─" "┤" "│" "┴" "─" "╰" "│"]
-            (list-buf list-close) (float-win state.filtered-items
+      (let [list-border (split-chars "├─┤│┴─╰│")
+            (list-buf list-close) (float-win picker.filtered-items
                                              layout.list.width
                                              layout.list.height false "Results"
                                              list-border)]
-        (set state.list-buf list-buf)
-        (set state.list-close list-close)
-        (setup-list-window state list-buf)
+        (set picker.list-buf list-buf)
+        (set picker.list-close list-close)
+        (picker:setup-list-window list-buf)
         ;; Position list window with initial title
         (let [list-win (vim.fn.bufwinid list-buf)
-              total-items (length state.filtered-items)
-              title (.. " Results " state.selected-idx "/" total-items " ")]
+              total-items (length picker.filtered-items)
+              title (.. " Results " picker.selected-idx "/" total-items " ")]
           (if (> list-win -1)
               (c list-win {:relative :editor
                            :row layout.list.row
@@ -427,21 +451,14 @@
                            :zindex 51})))
         ;; Create preview window if enabled
         (if layout.preview
-            (let [preview-border ["┬"
-                                  "─"
-                                  "╮"
-                                  "│"
-                                  "╯"
-                                  "─"
-                                  "└"
-                                  "│"]
+            (let [preview-border (split-chars "┬─╮│╯─└│")
                   (preview-buf preview-close) (float-win [""]
                                                          layout.preview.width
                                                          layout.preview.height
                                                          false "Preview"
                                                          preview-border)]
-              (set state.preview-buf preview-buf)
-              (set state.preview-close preview-close)
+              (set picker.preview-buf preview-buf)
+              (set picker.preview-close preview-close)
               (setup-preview-window preview-buf config)
               ;; Position preview window
               (let [preview-win (vim.fn.bufwinid preview-buf)]
@@ -451,12 +468,14 @@
                         :row layout.preview.row
                         :col layout.preview.col})))))
         ;; Setup interactions
-        (setup-keymaps state config close-keys select-keys)
+        (picker:setup-keymaps close-keys select-keys)
         ;; Initial display
-        (update-list-display state)
-        (update-preview state)
+        (picker:update-list-display)
+        (picker:update-preview)
         ;; Focus filter window and enter insert mode
-        (let [filter-win (vim.fn.bufwinid state.filter-buf)]
+        (let [filter-win (vim.fn.bufwinid picker.filter-buf)]
           (when (> filter-win -1)
             (vim.api.nvim_set_current_win filter-win)
             (vim.cmd.startinsert)))))))
+
+(setmetatable Picker {:__call new-picker})
