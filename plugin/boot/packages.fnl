@@ -57,16 +57,15 @@
               (fy (.. "Build failed for " event.data.spec.name ": " out)
                   vim.log.levels.ERROR))))
     (if after
-        (let [wait-for-pkg (fn wait []
-                             (tset package.loaded name nil)
-                             (let [(ok _) (pcall require name)]
-                               (if ok
-                                   (if (= (type after) :string) (vim.cmd after)
-                                       (= (type after) :function) (after)
-                                       nil)
-                                   (vim.defer_fn wait 50))))]
-          (wait-for-pkg))))
-  false)
+        ((fn wait []
+           (tset package.loaded name nil)
+           (let [(ok _) (pcall require name)]
+             (if ok
+                 (if (= (type after) :string) (vim.cmd after)
+                     (= (type after) :function) (after)
+                     nil)
+                 (vim.defer_fn wait 50))))))
+    false))
 
 ; Setup attempts to locate a setup function in each package.
 ; If it exists, it will be called (with an optional config from pack data).
