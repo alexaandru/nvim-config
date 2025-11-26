@@ -13,7 +13,7 @@
                ;; The two main colors
                :blue :#bbdff4
                :blue_light :#95b3d4
-               :blue_dark :#ff8aae
+               :blue_dark :#2aaeff
                :blue_subtle :#8aa8c8
                :red :#ff0000
                ;; Functional colors
@@ -36,7 +36,7 @@
                    :Visual {:bg colors.bg4}
                    :VisualNOS {:bg colors.bg4}
                    :Search {:fg colors.bg0 :bg colors.yellow :bold true}
-                   :IncSearch {:fg colors.bg0 :bg colors.orange :bold true}
+                   :IncSearch {:fg :black :bg colors.cyan}
                    :CurSearch {:fg colors.bg0 :bg colors.red :bold true}
                    :Pmenu {:fg colors.fg1 :bg colors.bg2}
                    :PmenuSel {:fg colors.fg0 :bg colors.bg4 :bold true}
