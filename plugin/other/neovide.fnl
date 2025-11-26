@@ -1,9 +1,9 @@
-(local opts {:cursor_animation_length 0.00
-             :cursor_trail_size 0
-             :cursor_animate_in_insert_mode false
-             :cursor_animate_command_line false
-             :scroll_animation_far_lines 0
-             :scroll_animation_length 0.00
+(local opts {:cursor_animation_length 0.100
+             :cursor_trail_size 0.5
+             :cursor_animate_in_insert_mode true
+             :cursor_animate_command_line true
+             :scroll_animation_far_lines 10
+             :scroll_animation_length 0.100
              :padding_top 10
              :padding_bottom 0
              :padding_right 5

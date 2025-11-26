@@ -1,28 +1,3 @@
-(local {: float-win} (require :util))
-
-(local [UP DOWN] [:up :down])
-
-(local keymaps {:i {:<Up> [:move-selection UP]
-                    :<Down> [:move-selection DOWN]
-                    :<Right> [:toggle-selection true :move-selection DOWN]
-                    :<Left> [:toggle-selection false :move-selection UP]
-                    :<C-n> [:move-selection DOWN]
-                    :<C-p> [:move-selection UP]
-                    :<PageUp> [:move-selection-page UP]
-                    :<PageDown> [:move-selection-page DOWN]
-                    :<C-u> [:move-selection-page UP]
-                    :<C-d> [:move-selection-page DOWN]}
-                :n {:j [:move-selection DOWN]
-                    :k [:move-selection UP]
-                    :<Down> [:move-selection DOWN]
-                    :<Up> [:move-selection UP]
-                    :<Right> [:toggle-selection true :move-selection DOWN]
-                    :<Left> [:toggle-selection false :move-selection UP]
-                    :<PageUp> [:move-selection-page UP]
-                    :<PageDown> [:move-selection-page DOWN]
-                    :<C-u> [:move-selection-page UP]
-                    :<C-d> [:move-selection-page DOWN]}})
-
 (local default-config {:width-ratio 0.8
                        :height-ratio 0.8
                        :preview {:width-ratio 0.5 :number false}
@@ -53,6 +28,28 @@
                     :original-win nil
                     :dynamic-source false})
 
+(local [UP DOWN] [:up :down])
+(local keymaps {:i {:<Up> [:move-selection UP]
+                    :<Down> [:move-selection DOWN]
+                    :<Right> [:toggle-selection true :move-selection DOWN]
+                    :<Left> [:toggle-selection false :move-selection UP]
+                    :<C-n> [:move-selection DOWN]
+                    :<C-p> [:move-selection UP]
+                    :<PageUp> [:move-selection-page UP]
+                    :<PageDown> [:move-selection-page DOWN]
+                    :<C-u> [:move-selection-page UP]
+                    :<C-d> [:move-selection-page DOWN]}
+                :n {:j [:move-selection DOWN]
+                    :k [:move-selection UP]
+                    :<Down> [:move-selection DOWN]
+                    :<Up> [:move-selection UP]
+                    :<Right> [:toggle-selection true :move-selection DOWN]
+                    :<Left> [:toggle-selection false :move-selection UP]
+                    :<PageUp> [:move-selection-page UP]
+                    :<PageDown> [:move-selection-page DOWN]
+                    :<C-u> [:move-selection-page UP]
+                    :<C-d> [:move-selection-page DOWN]}})
+
 (local Picker {})
 (set Picker.__index Picker)
 
@@ -62,11 +59,7 @@
         instance (dex-f empty-state {:config config})]
     (setmetatable instance Picker)))
 
-(local o vim.api.nvim_set_option_value)
-(local c vim.api.nvim_win_set_config)
-
 (fn split-chars [s]
-  "Split a UTF-8 string into an array of characters"
   (vim.fn.split s "\\zs"))
 
 ;; fnlfmt: skip
@@ -102,6 +95,9 @@
                      (vim.fn.matchfuzzy self.all-items search-text))))))
   (set self.selected-idx 1)
   (set self.selected-items {}))
+
+(local o vim.api.nvim_set_option_value)
+(local c vim.api.nvim_win_set_config)
 
 (fn Picker.update-list-display [self]
   (let [buf self.list-buf
@@ -392,7 +388,8 @@
         config picker.config
         close-keys config.keymaps.close
         select-keys config.keymaps.select
-        preview-enabled (not= opts.preview-fn nil)]
+        preview-enabled (not= opts.preview-fn nil)
+        {: float-win} (require :util)]
     ;; Initialize picker
     (doto picker
       (tset :original-win (vim.api.nvim_get_current_win))
