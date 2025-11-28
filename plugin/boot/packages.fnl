@@ -1,13 +1,12 @@
 (local packs
        [{:src :OXY2DEV/markview.nvim
-         :data {:conf {:preview {:icon_provider :devicons
-                                 :filetypes [:markdown :codecompanion]
-                                 :ignore_buftypes []}
-                       :experimental {:check_rtp_message false}}}}
+         :data {:conf {:preview {:icon_provider :mini
+                                 :filetypes [:markdown :nvim-pack]}}}}
         {:src :alexaandru/site-util :name :site.util}
-        :folke/sidekick.nvim
-        {:src :lewis6991/gitsigns.nvim
-         :data {:conf (fn [] {:on_attach (require :gitsigns_conf)})}}
+        {:src :folke/sidekick.nvim
+         :data {:conf {:cli {:win {:layout :bottom}
+                             :mux {:enabled true :backend :zellij}}}}}
+        :lewis6991/gitsigns.nvim
         :nvim-mini/mini.icons
         {:src :nvim-treesitter/nvim-treesitter
          :version :main
@@ -15,21 +14,20 @@
         {:src :nvim-treesitter/nvim-treesitter-context
          :name :treesitter-context
          :data {:conf {:max_lines 5 :trim_scope :inner}}}
-        {:src :nvim-treesitter/nvim-treesitter-textobjects :version :main}
+        {:src :nvim-treesitter/nvim-treesitter-textobjects
+         :version :main
+         :data {:conf {:select {:lookahead true}}}}
         {:src :ravsii/tree-sitter-d2
          :version :main
          :data {:build "make nvim-install"}}
-        {:src :rose-pine/neovim
-         :name :rose-pine
-         :data {:conf {:styles {:bold true :italic true :transparency true}}}}
         {:src :windwp/nvim-ts-autotag
          :data {:conf {:opts {:enable_close_on_slash true}}}}])
 
 (fn patch-pack [pack]
   (let [pack (if (= (type pack) :string) {:src pack} pack)
+        https "https://"
         src (. pack :src)
-        src (if (vim.startswith src "https://") src
-                (.. "https://github.com/" src))
+        src (if (vim.startswith src https) src (.. https "github.com/" src))
         name (or (. pack :name) (vim.fn.fnamemodify src ":t"))
         name (name:gsub :.nvim$ "")]
     (doto pack
@@ -49,14 +47,17 @@
         build (?. spec :data :build)
         after (?. spec :data :after)]
     (if build
-        (let [cmd (.. "cd " (vim.fn.shellescape dir) " && " build)
-              out (vim.fn.system cmd)
-              fy vim.notify]
-          (if (= vim.v.shell_error 0)
-              (fy (.. "Build succeeded for " event.data.spec.name)
-                  vim.log.levels.INFO)
-              (fy (.. "Build failed for " event.data.spec.name ": " out)
-                  vim.log.levels.ERROR))))
+        ((fn wait []
+           (if (= (vim.fn.isdirectory dir) 1)
+               (let [cmd (.. "cd " (vim.fn.shellescape dir) " && " build)
+                     out (vim.fn.system cmd)
+                     fy vim.notify]
+                 (if (= vim.v.shell_error 0)
+                     (fy (.. "Build succeeded for " event.data.spec.name)
+                         vim.log.levels.INFO)
+                     (fy (.. "Build failed for " event.data.spec.name ": " out)
+                         vim.log.levels.ERROR)))
+               (vim.defer_fn wait 50)))))
     (if after
         ((fn wait []
            (tset package.loaded name nil)
@@ -77,9 +78,9 @@
       (if ok (let [setup (if (= (type pack) :table) (. pack :setup))
                    setup (if (= (type setup) :function) setup)
                    conf (?. p :data :conf)
-                   conf (if (= (type conf) :function) (conf))]
+                   conf (if (= (type conf) :function) (conf) conf)]
                (if setup (if conf (setup conf) (setup))))
-          (vim.notify (.. "Package not found " name "; will not call setup()")
+          (vim.notify (.. "Package not found " name "; cannot call setup()")
                       vim.log.levels.INFO)))))
 
 (let [au vim.api.nvim_create_autocmd
@@ -88,3 +89,5 @@
   (doto packs
     (vim.pack.add {:confirm false})
     (setup)))
+
+(vim.treesitter.language.register :markdown :nvim-pack)

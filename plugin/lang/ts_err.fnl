@@ -8,33 +8,33 @@
   (fn [_ trees]
     (when trees
       (parser:for_each_tree (fn [tree ltree]
-                              (when (and (not= (ltree:lang) :comment) (not= (ltree:lang) :markdown))
-                                (each [_ node (error-query:iter_captures (tree:root) args.buf)]
-                                  (var (lnum col end-lnum end-col) (node:range))
-                                  (local parent (node:parent))
-                                  (local should-skip (and parent (= (parent:type) "ERROR") (= (parent:range) (node:range))))
-                                  (when (not should-skip)
-                                    (when (> end-lnum lnum)
-                                      (set end-lnum (+ lnum 1))
-                                      (set end-col 0))
-                                    (local diagnostic {:bufnr args.buf :code (string.format "%s-syntax" (ltree:lang))
-                                            : col :end_col end-col :end_lnum end-lnum : lnum :source :treesitter
-                                            :message "" : namespace :severity vim.diagnostic.severity.ERROR})
-                                    (if (node:missing)
+                              (if (and (not= (ltree:lang) :comment) (not= (ltree:lang) :markdown))
+                                  (each [_ node (error-query:iter_captures (tree:root) args.buf)]
+                                    (var (lnum col end-lnum end-col) (node:range))
+                                    (local parent (node:parent))
+                                    (local should-skip (and parent (= (parent:type) "ERROR") (= (parent:range) (node:range))))
+                                    (when (not should-skip)
+                                      (when (> end-lnum lnum)
+                                        (set end-lnum (+ lnum 1))
+                                        (set end-col 0))
+                                      (local diagnostic {:bufnr args.buf :code (string.format "%s-syntax" (ltree:lang))
+                                              : col :end_col end-col :end_lnum end-lnum : lnum :source :treesitter
+                                              :message "" : namespace :severity vim.diagnostic.severity.ERROR})
+                                      (if (node:missing)
+                                          (set diagnostic.message
+                                               (string.format "missing `%s`" (node:type)))
+                                          (set diagnostic.message :error))
+                                      (local previous (node:prev_sibling))
+                                      (when (and previous (not= (previous:type) :ERROR))
+                                        (local previous-type
+                                               (or (and (previous:named) (previous:type))
+                                                   (string.format "`%s`" (previous:type))))
                                         (set diagnostic.message
-                                             (string.format "missing `%s`" (node:type)))
-                                        (set diagnostic.message :error))
-                                    (local previous (node:prev_sibling))
-                                    (when (and previous (not= (previous:type) :ERROR))
-                                      (local previous-type
-                                             (or (and (previous:named) (previous:type))
-                                                 (string.format "`%s`" (previous:type))))
-                                      (set diagnostic.message
-                                           (.. diagnostic.message " after " previous-type)))
-                                    (when (and parent (not= (parent:type) "ERROR") (or (= previous nil) (not= (previous:type) (parent:type))))
-                                      (set diagnostic.message
-                                           (.. diagnostic.message " in " (parent:type))))
-                                    (table.insert diagnostics diagnostic)))))))))
+                                             (.. diagnostic.message " after " previous-type)))
+                                      (when (and parent (not= (parent:type) "ERROR") (or (= previous nil) (not= (previous:type) (parent:type))))
+                                        (set diagnostic.message
+                                             (.. diagnostic.message " in " (parent:type))))
+                                      (table.insert diagnostics diagnostic)))))))))
 
 ; Blacklist filetypes that have a LSP configured.
 ; We only want Tree-sitter diagnostics if there is no LSP.

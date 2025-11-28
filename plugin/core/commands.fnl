@@ -4,10 +4,14 @@
                (collect [k v (pairs c.server_capabilities)]
                  (if v (values k v))))))
 
+; TODO: add back :nofile but with selective support for
+; acwrite buftype. The only catch is, that one is also nofile
+; on enter, the bt gets set later. It also the last/only window
+; in that tab, since it opens in a new tab by default.
 (fn LastWindow []
-  (let [{:buftype bt} (vim.fn.getbufvar "%" "&")
-        is-quittable (vim.tbl_contains [:quickfix :terminal :nofile] bt)
-        last-window (= -1 (vim.fn.winbufnr 2))]
+  (let [bt vim.bo.buftype
+        is-quittable (vim.tbl_contains [:quickfix :terminal] bt)
+        last-window (= 1 (vim.fn.winnr :$))]
     (if (and is-quittable last-window)
         (vim.cmd "norm ZQ"))))
 
@@ -30,12 +34,13 @@
 (fn BuiltinPacks []
   (let [result []
         all-opt (vim.fn.globpath vim.o.packpath "pack/*/opt/*" true true)
-        all-start (vim.fn.globpath vim.o.packpath "plugin/*" true true)]
+        all-start (vim.fn.globpath vim.o.packpath "plugin/**/*" true true)
+        root "^/tmp/%.mount_nvim"]
     (each [_ path (ipairs all-opt)]
-      (if (path:match "^/tmp/%.mount_nvim")
+      (if (path:match root)
           (table.insert result (.. "opt:" (vim.fs.basename path)))))
     (each [_ path (ipairs all-start)]
-      (if (path:match "^/tmp/%.mount_nvim")
+      (if (and (path:match root) (= (vim.fn.isdirectory path) 0))
           (table.insert result (vim.fs.basename path))))
     (vim.print result)))
 
@@ -45,34 +50,42 @@
                          (: :gsub "\n[^\n]*$" ""))
         lines [nvim-version]]
     (if vim.g.neovide
-        (table.insert lines (.. "Neovide " vim.g.neovide_version)))
+        (table.insert lines (.. "Neovide v" vim.g.neovide_version)))
+    (let [config-path (vim.fn.stdpath "config")
+          cmd "scc --include-ext fnl --exclude-dir lsp --format json "
+          cmd (.. cmd (vim.fn.shellescape config-path))
+          json (vim.fn.system cmd)
+          data (vim.fn.json_decode json)
+          loc (. (. data 1) :Code)
+          lsps (length (vim.tbl_keys vim.lsp.config._configs))
+          packs (length (vim.tbl_keys (vim.pack.get)))
+          tpl "%dLOC .fnl, %d LSPs, %d plugins"]
+      (table.insert lines (tpl:format loc lsps packs)))
     (print (table.concat lines "\n"))))
 
-(let [cmd vim.api.nvim_create_user_command]
-  (cmd :Gdiff "Gitsigns diffthis" {:desc "Git diff against another branch"})
-  (cmd :Grep "sil grep <args>"
-       {:bar true :nargs 1 :desc "Search using git grep"})
+(let [opts #(vim.tbl_extend :force {:desc $} (or $2 {}))
+      cmd #(vim.api.nvim_create_user_command $ $2 (opts $3 $4))]
+  (cmd :Gdiff "Gitsigns diffthis" "Git diff against another branch")
+  (cmd :Grep "sil grep <args>" "Search using git grep" {:bar true :nargs 1})
   ;; https://github.com/neovim/neovim/issues/34764#issuecomment-3543397752
-  (cmd :PackUpdate #(vim.pack.update) {:desc "Update all packages"})
-  (cmd :Term "12split | term <args>"
-       {:nargs "*" :desc "Open terminal in split"})
-  (cmd :SetProjRoot SetProjRoot {:bar true :desc "Set project root directory"})
-  (cmd :CdProjRoot "SetProjRoot | cd `=w:proj_root`"
-       {:desc "Change to project root"})
+  (cmd :PackUpdate #(vim.pack.update) "Update all packages")
+  (cmd :Term "12split | term <args>" "Open terminal in split" {:nargs "*"})
+  (cmd :SetProjRoot SetProjRoot "Set project root directory" {:bar true})
+  (cmd :CdProjRoot "SetProjRoot | cd `=w:proj_root`" "Change to project root")
   (cmd :JumpToLastLocation
        "let b:pos = line('''\"') | if b:pos && b:pos <= line('$') | exe b:pos | endif"
-       {:desc "Jump to last cursor position"})
-  (cmd :SaveAndClose "up | bdel" {:desc "Save and close buffer"})
-  (cmd :LastWindow LastWindow {:bar true :desc "Close if last window"})
+       "Jump to last cursor position")
+  (cmd :SaveAndClose "up | bdel" "Save and close buffer")
+  (cmd :LastWindow LastWindow "Close if last window" {:bar true})
   (cmd :Scratchify "setl nobl bt=nofile bh=delete noswf"
-       {:bar true :desc "Make buffer a scratch buffer"})
-  (cmd :Scratch "<mods> new +Scratchify"
-       {:bar true :desc "Create new scratch buffer"})
+       "Make buffer a scratch buffer" {:bar true})
+  (cmd :Scratch "<mods> new +Scratchify" "Create new scratch buffer"
+       {:bar true})
   (cmd :AutoWinHeight "sil exe max([min([line('$')+1, 16]), 1]).'wincmd _'"
-       {:bar true :desc "Auto-adjust window height"})
-  (cmd :LspCapabilities LspCapabilities {:desc "Show LSP server capabilities"})
-  (cmd :LspHintsToggle LspHintsToggle {:desc "Toggle LSP inlay hints"})
-  (cmd :BuiltinPacks BuiltinPacks {:desc "Show builtin packages"})
-  (cmd :Version Version {:desc "Show Neovim and Neovide versions"})
-  (cmd :JQ "<line1>,<line2>!jq -S ."
-       {:range true :bar true :desc "Format JSON with jq"}))
+       "Auto-adjust window height" {:bar true})
+  (cmd :LspCapabilities LspCapabilities "Show LSP server capabilities")
+  (cmd :LspHintsToggle LspHintsToggle "Toggle LSP inlay hints")
+  (cmd :BuiltinPacks BuiltinPacks "Show builtin packages")
+  (cmd :Version Version "Show Neovim and Neovide versions")
+  (cmd :JQ "<line1>,<line2>!jq -S ." "Format JSON with jq"
+       {:range true :bar true}))

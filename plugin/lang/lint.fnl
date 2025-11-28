@@ -63,10 +63,9 @@
     (vim.diagnostic.set ns bufnr diagnostics)))
 
 (let [events [:BufEnter :BufWritePost :InsertLeave :TextChanged]
-      au #(vim.api.nvim_create_autocmd events $1)]
-  (au {:pattern [:*.yml :*.yaml]
-       :callback #(let [filepath (vim.api.nvim_buf_get_name $.buf)]
-                    (if (filepath:match "%.github/") (actionlint $.buf))
-                    false)})
-  (au {:pattern :*.json :callback #(jq $.buf)})
-  (au {:pattern [:*.js :*.ts :*.vue] :callback #(eslint_d $.buf)}))
+      au #(vim.api.nvim_create_autocmd events {:callback $ :pattern $2})]
+  (au #(let [filepath (vim.api.nvim_buf_get_name $.buf)]
+         (if (filepath:match "%.github/") (actionlint $.buf))
+         false) [:*.yml :*.yaml])
+  (au #(jq $.buf) :*.json)
+  (au #(eslint_d $.buf) [:*.js :*.ts :*.vue]))

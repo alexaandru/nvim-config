@@ -1,5 +1,6 @@
 (local opts [[:autocomplete false]
              [:autowriteall true]
+             [:background :dark]
              [:clipboard :unnamedplus]
              [:completeopt [:fuzzy :menu :noselect :noinsert]]
              [:conceallevel 3]
@@ -27,7 +28,7 @@
              [:titlestring
               (.. "%{v:lua.vim.g.get_zsandbox()}"
                   "🐙 %{v:lua.vim.g.get_git_branch()} %{get(b:,'gitsigns_status','')} "
-                  "📚 %<%f%M")]
+                  "📚 %<%f%M" "  %{v:lua.vim.g.get_diagnostics_summary()}")]
              [:updatetime 200]
              [:virtualedit [:block :onemore]]
              [:wildcharm (tonumber (vim.keycode :<C-Z>))]
@@ -56,6 +57,26 @@
         status-dict.head
         "(no-vcs)")))
 
+(fn vim.g.get_diagnostics_summary []
+  (let [bufnr (vim.api.nvim_get_current_buf)
+        diagnostics (vim.diagnostic.get bufnr)
+        counts {:E 0 :W 0 :I 0 :H 0}
+        severity vim.diagnostic.severity]
+    (each [_ diag (ipairs diagnostics)]
+      (match diag.severity
+        severity.ERROR (set counts.E (+ counts.E 1))
+        severity.WARN (set counts.W (+ counts.W 1))
+        severity.INFO (set counts.I (+ counts.I 1))
+        severity.HINT (set counts.H (+ counts.H 1))))
+    (let [parts []]
+      (if (> counts.E 0) (table.insert parts (.. "❌" counts.E)))
+      (if (> counts.W 0) (table.insert parts (.. "⚠️" counts.W)))
+      (if (> counts.I 0) (table.insert parts (.. "ℹ️" counts.I)))
+      (if (> counts.H 0) (table.insert parts (.. "💡" counts.H)))
+      (if (> (length parts) 0)
+          (table.concat parts " ")
+          ""))))
+
 (fn vim.g.findfunc [cmdarg _cmdcomplete]
   (let [cmd "fd -t f --hidden --color=never --max-depth 10"
         fd-output (vim.fn.systemlist cmd)]
@@ -67,3 +88,5 @@
       inc-opt #(: (. vim.opt $1) :append $2)]
   (each [_ [opt val] (ipairs opts)] (set-opt opt val))
   (each [_ [opt val] (ipairs inc-opts)] (inc-opt opt val)))
+
+(vim.cmd.colo :monk)

@@ -1,11 +1,11 @@
 {
   "plugins": {
     "gitsigns": {
-      "rev": "cdafc320f03f2572c40ab93a4eecb733d4016d07",
+      "rev": "5813e4878748805f1518cee7abb50fd7205a3a48",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "markview": {
-      "rev": "f00ec3315ac9a55d10d197932cfcf51ec66be032",
+      "rev": "bf62f7d173f4b42cd02794c6c5f5a8bd3047a58a",
       "src": "https://github.com/OXY2DEV/markview.nvim"
     },
     "mini.icons": {
@@ -13,22 +13,18 @@
       "src": "https://github.com/nvim-mini/mini.icons"
     },
     "nvim-treesitter": {
-      "rev": "c5871d9d870c866fea9f271f1a3b3f29049a4793",
+      "rev": "00c906abb9550e72bc0c640545b5499b9525bb40",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter",
       "version": "'main'"
     },
     "nvim-treesitter-textobjects": {
-      "rev": "227165aaeb07b567fb9c066f224816aa8f3ce63f",
+      "rev": "63c4dce4a56312ef1bdeafd16bdefa008fcc950a",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter-textobjects",
       "version": "'main'"
     },
     "nvim-ts-autotag": {
       "rev": "c4ca798ab95b316a768d51eaaaee48f64a4a46bc",
       "src": "https://github.com/windwp/nvim-ts-autotag"
-    },
-    "rose-pine": {
-      "rev": "cf2a288696b03d0934da713d66c6d71557b5c997",
-      "src": "https://github.com/rose-pine/neovim"
     },
     "sidekick": {
       "rev": "c2bdf8cfcd87a6be5f8b84322c1b5052e78e302e",

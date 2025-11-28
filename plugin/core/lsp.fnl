@@ -21,10 +21,12 @@
 
 ;; fnlfmt: skip
 (local diagnostic-config 
-       (let [s vim.diagnostic.severity]
+       (let [s vim.diagnostic.severity
+               signs {:text {s.ERROR "✘" s.WARN "⚠" s.INFO "⚠" s.HINT "⚠"}}]
          {:underline true
           :virtual_text {:spacing 0 :prefix "‼"}
-          :signs {:text {s.ERROR "✘" s.WARN "⚠" s.INFO "⚠" s.HINT "⚠"}}
+          : signs 
+          :status signs
           :update_in_insert true
           :severity_sort true
           :float {:border :rounded :source true :suffix " " :severity_sort true :header ""}}))

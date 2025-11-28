@@ -1,4 +1,4 @@
-; inherits: fennel
+; extends
 
 ; Highlight pack source strings in package definitions
 (table

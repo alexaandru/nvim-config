@@ -381,21 +381,20 @@
             cmd (.. "rg --vimgrep --smart-case --max-count 1000 "
                     (vim.fn.shellescape filter) " 2>/dev/null")
             output (vim.fn.system cmd)]
-        (when (= vim.v.shell_error 0)
-          (each [line (vim.gsplit output "\n")]
-            (when (not= line "")
-              (let [filepath (string.match line "^([^:]+):")
-                    line-num (tonumber (string.match line "^[^:]+:(%d+):"))
-                    col-num (tonumber (string.match line "^[^:]+:%d+:(%d+):"))
-                    text (string.match line "^[^:]+:%d+:%d+:(.*)$")]
-                (when (and filepath line-num col-num text)
-                  (let [display (.. filepath ":" line-num)
-                        item {:filepath filepath
-                              :line line-num
-                              :col col-num
-                              :text text}]
-                    (table.insert results display)
-                    (table.insert grep-data item)))))))
+        (if (= vim.v.shell_error 0)
+            (each [line (vim.gsplit output "\n")]
+              (if (not= line "")
+                  (let [s #(string.match line $)
+                        n #(tonumber (s $))
+                        filepath (s "^([^:]+):")
+                        line (n "^[^:]+:(%d+):")
+                        col (n "^[^:]+:%d+:(%d+):")
+                        text (s "^[^:]+:%d+:%d+:(.*)$")]
+                    (if (and filepath line col text)
+                        (let [display (.. filepath ":" line)
+                              item {: filepath : line : col : text}]
+                          (table.insert results display)
+                          (table.insert grep-data item)))))))
         results)))
 
 (fn live-grep-preview [_ idx]
@@ -447,62 +446,61 @@
         all-colorschemes (vim.fn.getcompletion "" "color")]
     (var initial-idx 1)
     (each [i cs (ipairs all-colorschemes)]
-      (when (= cs original-cs)
-        (set initial-idx i)))
+      (if (= cs original-cs)
+          (set initial-idx i)))
     (picker colorscheme-source
             {:preview-fn (fn [scheme _]
-                          (when scheme
-                            (pcall vim.cmd.colorscheme scheme))
-                          (let [lines (vim.api.nvim_buf_get_lines original-buf 0 -1 false)
-                                filename (vim.api.nvim_buf_get_name original-buf)]
-                            {:content lines :filename filename}))
-             :on-select (fn [scheme _ original-win]
-                         (set cs-selected true)
-                         (when scheme
-                           (pcall vim.cmd.colorscheme scheme)))
-             :initial-idx initial-idx
+                           (when scheme
+                             (pcall vim.cmd.colorscheme scheme))
+                           (let [get-lines vim.api.nvim_buf_get_lines
+                                 content (get-lines original-buf 0 -1 false)
+                                 filename (vim.api.nvim_buf_get_name original-buf)]
+                             {: content : filename}))
+             :on-select (fn [scheme _ _]
+                          (set cs-selected true)
+                          (if scheme (pcall vim.cmd.colorscheme scheme)))
+             : initial-idx
              :config {:prompt "Colorscheme: " :preview {:width-ratio 0.65}}})
     ;; Restore original colorscheme if cancelled
-    (vim.defer_fn
-      (fn []
-        (let [bufs (vim.api.nvim_list_bufs)]
-          (each [_ buf (ipairs bufs)]
-            (let [(ok bt) (pcall vim.api.nvim_get_option_value "buftype" {:buf buf})]
-              (when (and ok (= bt "prompt"))
-                (vim.api.nvim_create_autocmd "BufUnload"
-                  {:buffer buf
-                   :once true
-                   :callback (fn []
-                              (vim.schedule
-                                (fn []
-                                  (when (and (not cs-selected) original-cs)
-                                    (pcall vim.cmd.colorscheme original-cs)))))})
-                (lua "return"))))))
+    (vim.defer_fn #(let [au vim.api.nvim_create_autocmd
+                         buffer (: (vim.iter (vim.api.nvim_list_bufs)) :find
+                                   #(let [(ok bt) (pcall vim.api.nvim_get_option_value
+                                                         "buftype" {:buf $1})]
+                                      (and ok (= bt "prompt"))))]
+                     (if buffer
+                         (au "BufUnload"
+                             {: buffer
+                              :once true
+                              :callback #(vim.schedule #(if (and (not cs-selected)
+                                                                 original-cs)
+                                                            (pcall vim.cmd.colorscheme
+                                                                   original-cs)))})))
       50)))
 
 ;; fnlfmt: skip
 (vim.api.nvim_create_autocmd :LspAttach
-     {:callback #(let [bufnr $.buf
-                       opts {:buffer bufnr :silent true}
-                       nmap #(vim.keymap.set :n $1 $2 $3)]
-                   (nmap :<leader>ls lsp-symbols-picker opts)
-                   (nmap :<leader>lw lsp-workspace-symbols-picker opts)
-                   (nmap :<leader>ld lsp-diagnostics-picker opts)
-                   (nmap :<leader>lr lsp-references-picker opts))})
+     {:callback #(let [buffer $.buf
+                       opts {: buffer :silent true}
+                       nmap #(vim.keymap.set :n $1 $2 opts)]
+                   (nmap :<leader>ls lsp-symbols-picker )
+                   (nmap :<leader>lw lsp-workspace-symbols-picker)
+                   (nmap :<leader>ld lsp-diagnostics-picker)
+                   (nmap :<leader>lr lsp-references-picker))})
 
-(let [com vim.api.nvim_create_user_command]
-  (com :PickFile file-picker {:desc "Files picker"})
-  (com :PickBuffer buffer-picker {:desc "Buffers picker"})
-  (com :PickLspSymbols lsp-symbols-picker {:desc "LSP document symbols picker"})
+(let [com #(vim.api.nvim_create_user_command $ $2 {:desc $3})]
+  (com :PickFile file-picker "Files picker")
+  (com :PickBuffer buffer-picker "Buffers picker")
+  (com :PickLspSymbols lsp-symbols-picker "LSP document symbols picker")
   (com :PickLspWorkspaceSymbols lsp-workspace-symbols-picker
-       {:desc "LSP workspace symbols picker"})
-  (com :PickLspDiagnostics lsp-diagnostics-picker
-       {:desc "LSP diagnostics picker"})
-  (com :PickLspReferences lsp-references-picker {:desc "LSP references picker"})
-  (com :LiveGrep live-grep-picker {:desc "Live grep with ripgrep"})
-  (com :PickColorscheme colorscheme-picker {:desc "Colorscheme picker with live preview"}))
+       "LSP workspace symbols picker")
+  (com :PickLspDiagnostics lsp-diagnostics-picker "LSP diagnostics picker")
+  (com :PickLspReferences lsp-references-picker "LSP references picker")
+  (com :LiveGrep live-grep-picker "Live grep with ripgrep")
+  (com :PickColorscheme colorscheme-picker
+       "Colorscheme picker with live preview"))
 
-(let [nmap #(vim.keymap.set :n $1 $2 $3)]
-  (nmap :<C-p> file-picker {:desc "Find files"})
-  (nmap :<C-b> buffer-picker {:desc "Find buffers"})
-  (nmap "<C-;>" live-grep-picker {:desc "Live grep"}))
+(let [nmap #(vim.keymap.set :n $1 $2 {:desc $3})]
+  (nmap :<C-p> file-picker "Find files")
+  (nmap :<C-b> buffer-picker "Find buffers")
+  (nmap "<C-;>" live-grep-picker "Live grep")
+  (nmap :<leader>lc colorscheme-picker "Pick colorscheme"))

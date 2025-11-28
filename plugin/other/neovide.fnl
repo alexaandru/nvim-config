@@ -8,6 +8,10 @@
              :padding_bottom 0
              :padding_right 5
              :padding_left 0
+             :progress_bar_enabled true
+             :progress_bar_height 3.0
+             :progress_bar_animation_speed 150.0
+             :progress_bar_hide_delay 1.0
              :opacity 0.98
              :confirm_quit false
              :hide_mouse_when_typing true})
