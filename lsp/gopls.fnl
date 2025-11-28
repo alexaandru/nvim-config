@@ -39,7 +39,7 @@
       (vim.fs.root fname "go.work") (vim.fs.root fname "go.mod")
       (vim.fs.root fname ".git")))
 
-{:cmd [:gopls :-remote=auto :-remote.listen.timeout=8h]
+{:cmd [:gopls :-remote=auto :-remote.listen.timeout=2h]
  :filetypes [:go :gomod :gowork :gotmpl :template]
  :root_dir (fn [bufnr on-dir]
              (let [fname (vim.api.nvim_buf_get_name bufnr)]

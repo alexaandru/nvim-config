@@ -24,7 +24,7 @@
        (let [s vim.diagnostic.severity]
          {:underline true
           :virtual_text {:spacing 0 :prefix "‼"}
-          :signs {:text {s.ERROR "✘" s.WARN "⚠" s.INFO "i" s.HINT "h"}}
+          :signs {:text {s.ERROR "✘" s.WARN "⚠" s.INFO "⚠" s.HINT "⚠"}}
           :update_in_insert true
           :severity_sort true
           :float {:border :rounded :source true :suffix " " :severity_sort true :header ""}}))

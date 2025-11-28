@@ -430,6 +430,56 @@
                                      :width 140
                                      :height 35}}))
 
+;; Colorscheme picker with live preview
+(var cs-selected false)
+(var original-cs nil)
+
+(fn colorscheme-source [filter _]
+  (let [colorschemes (vim.fn.getcompletion "" "color")]
+    (if (= (length filter) 0)
+        colorschemes
+        (vim.fn.matchfuzzy colorschemes filter))))
+
+(fn colorscheme-picker []
+  (set original-cs (or vim.g.colors_name "default"))
+  (set cs-selected false)
+  (let [original-buf (vim.api.nvim_get_current_buf)
+        all-colorschemes (vim.fn.getcompletion "" "color")]
+    (var initial-idx 1)
+    (each [i cs (ipairs all-colorschemes)]
+      (when (= cs original-cs)
+        (set initial-idx i)))
+    (picker colorscheme-source
+            {:preview-fn (fn [scheme _]
+                          (when scheme
+                            (pcall vim.cmd.colorscheme scheme))
+                          (let [lines (vim.api.nvim_buf_get_lines original-buf 0 -1 false)
+                                filename (vim.api.nvim_buf_get_name original-buf)]
+                            {:content lines :filename filename}))
+             :on-select (fn [scheme _ original-win]
+                         (set cs-selected true)
+                         (when scheme
+                           (pcall vim.cmd.colorscheme scheme)))
+             :initial-idx initial-idx
+             :config {:prompt "Colorscheme: " :preview {:width-ratio 0.65}}})
+    ;; Restore original colorscheme if cancelled
+    (vim.defer_fn
+      (fn []
+        (let [bufs (vim.api.nvim_list_bufs)]
+          (each [_ buf (ipairs bufs)]
+            (let [(ok bt) (pcall vim.api.nvim_get_option_value "buftype" {:buf buf})]
+              (when (and ok (= bt "prompt"))
+                (vim.api.nvim_create_autocmd "BufUnload"
+                  {:buffer buf
+                   :once true
+                   :callback (fn []
+                              (vim.schedule
+                                (fn []
+                                  (when (and (not cs-selected) original-cs)
+                                    (pcall vim.cmd.colorscheme original-cs)))))})
+                (lua "return"))))))
+      50)))
+
 ;; fnlfmt: skip
 (vim.api.nvim_create_autocmd :LspAttach
      {:callback #(let [bufnr $.buf
@@ -449,7 +499,8 @@
   (com :PickLspDiagnostics lsp-diagnostics-picker
        {:desc "LSP diagnostics picker"})
   (com :PickLspReferences lsp-references-picker {:desc "LSP references picker"})
-  (com :LiveGrep live-grep-picker {:desc "Live grep with ripgrep"}))
+  (com :LiveGrep live-grep-picker {:desc "Live grep with ripgrep"})
+  (com :PickColorscheme colorscheme-picker {:desc "Colorscheme picker with live preview"}))
 
 (let [nmap #(vim.keymap.set :n $1 $2 $3)]
   (nmap :<C-p> file-picker {:desc "Find files"})

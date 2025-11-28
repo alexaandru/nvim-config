@@ -18,7 +18,7 @@
                :red :#ff0000
                ;; Functional colors
                :green :#6b9e6b
-               :yellow :#d4a857
+               :yellow :#e4b837
                :orange :#c77a4a
                :cyan :#5a9999})
 
@@ -149,7 +149,7 @@
                    :LspReferenceRead {:bg colors.bg3}
                    :LspReferenceWrite {:bg colors.bg3}
                    :DiagnosticError {:fg colors.red}
-                   :DiagnosticWarn {:fg colors.orange}
+                   :DiagnosticWarn {:fg colors.yellow}
                    :DiagnosticInfo {:fg colors.blue}
                    :DiagnosticHint {:fg colors.cyan}
                    :DiagnosticVirtualTextError {:fg colors.red :bg colors.bg0}

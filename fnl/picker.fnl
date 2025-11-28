@@ -1,5 +1,5 @@
-(local default-config {:width-ratio 0.8
-                       :height-ratio 0.8
+(local default-config {:width-ratio 0.7
+                       :height-ratio 0.6
                        :preview {:width-ratio 0.5 :number false}
                        :keymaps {:close [:<Esc> :<C-c>]
                                  :select [:<CR> :<Tab>]
@@ -77,24 +77,28 @@
      :preview (if preview-enabled {:width preview-width :height total-height :row start-row :col (+ start-col list-width 1)})}))
 
 (fn Picker.update-filter [self filter-text]
-  (set self.filter-text filter-text)
-  (if self.dynamic-source
-      ;; If source-fn is dynamic (re-calls on filter change), use it
-      (let [new-items (self.source-fn filter-text nil)]
-        (set self.all-items new-items)
-        (set self.filtered-items new-items))
-      ;; Otherwise do local fuzzy matching
-      (if (= (length filter-text) 0)
-          (set self.filtered-items self.all-items)
-          (let [strict-mode (string.find filter-text "^'")
-                search-text (if strict-mode (string.sub filter-text 2)
-                                filter-text)]
-            (set self.filtered-items
-                 (if strict-mode
-                     (vim.fn.filter self.all-items #($2:find search-text))
-                     (vim.fn.matchfuzzy self.all-items search-text))))))
-  (set self.selected-idx 1)
-  (set self.selected-items {}))
+  (let [was-empty (= (length self.filter-text) 0)
+        is-empty (= (length filter-text) 0)]
+    (set self.filter-text filter-text)
+    (if self.dynamic-source
+        ;; If source-fn is dynamic (re-calls on filter change), use it
+        (let [new-items (self.source-fn filter-text nil)]
+          (set self.all-items new-items)
+          (set self.filtered-items new-items))
+        ;; Otherwise do local fuzzy matching
+        (if is-empty
+            (set self.filtered-items self.all-items)
+            (let [strict-mode (string.find filter-text "^'")
+                  search-text (if strict-mode (string.sub filter-text 2)
+                                  filter-text)]
+              (set self.filtered-items
+                   (if strict-mode
+                       (vim.fn.filter self.all-items #($2:find search-text))
+                       (vim.fn.matchfuzzy self.all-items search-text))))))
+    ;; Only reset index if we're actually filtering (not on initial empty->empty transition)
+    (when (not (and was-empty is-empty))
+      (set self.selected-idx 1)
+      (set self.selected-items {}))))
 
 (local o vim.api.nvim_set_option_value)
 (local c vim.api.nvim_win_set_config)
@@ -403,7 +407,7 @@
     (doto picker
       (tset :all-items picker.items)
       (tset :filtered-items picker.items)
-      (tset :selected-idx 1)
+      (tset :selected-idx (or opts.initial-idx 1))
       (tset :filter-text ""))
     ;; Calculate layout
     (let [layout (calculate-layout config preview-enabled)]

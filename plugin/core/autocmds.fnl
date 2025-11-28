@@ -4,7 +4,7 @@
   (au :VimResized {:command "wincmd ="})
   (au :TextYankPost {:callback #(vim.hl.on_yank {:timeout 450})})
   (au :TermOpen {:command :star})
-  (au :TermClose {:command :q})
+  (au :TermClose {:callback #(if (vim.startswith $.file (.. vim.env.HOME "/Downloads/")) (vim.cmd.q))})
   (au :FileType {:command "wincmd L" :pattern :help})
   (au :FileType {:command "setl spell spl=en_us" :pattern "gitcommit,asciidoc,markdown"})
   (au :FileType {:command "setl ts=2 sw=2 sts=2 fdls=0" :pattern "lua,vim,zsh,sh"})
