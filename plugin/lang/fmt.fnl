@@ -1,19 +1,17 @@
-
-;; fnlfmt: skip
 (local format-prgs
-       {:fennel "fnlfmt -"
-        :d2 "d2 fmt -"
-        :json "jq ."
-        [:javascript :typescript :vue]
-          (.. "prettier --no-semi --stdin-filepath=%|"
-              "eslint_d --fix-to-stdout --stdin --stdin-filename=%")
-        [:yaml :html :scss :css :markdown] "prettier --stdin-filepath=%"})
+       (let [prettier "prettier --no-semi --stdin-filepath=%"
+             eslint "eslint_d --fix-to-stdout --stdin --stdin-filename=%"]
+         {:fennel "fnlfmt -"
+          :d2 "d2 fmt -"
+          :json "jq ."
+          [:javascript :typescript :vue] (.. prettier :| eslint)
+          [:yaml :html :scss :css :markdown] prettier}))
 
 ;; fnlfmt: skip
-(local format-ext [:*.fnl :*.d2 :*.md :*.js :*.ts :*.vue
-                   :*.yaml :*.yml :*.html :*.scss :*.css :*.json])
+(local ext [:*.fnl :*.d2 :*.md :*.js :*.ts :*.vue
+            :*.yaml :*.yml :*.html :*.scss :*.css :*.json])
 
-(fn format-buf []
+(fn format []
   (let [lines (vim.api.nvim_buf_get_lines 0 0 -1 false)
         fname (vim.api.nvim_buf_get_name 0)
         cmd (vim.bo.formatprg:gsub "%%" fname)
@@ -31,4 +29,4 @@
       au #(vim.api.nvim_create_autocmd $ (opts $2 $3))]
   (each [pat fp (pairs format-prgs)]
     (au :FileType #(set vim.bo.formatprg fp) pat))
-  (au :BufWritePre #(if vim.bo.modified (format-buf)) format-ext))
+  (au :BufWritePre #(if vim.bo.modified (format)) ext))

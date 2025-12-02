@@ -1,66 +1,54 @@
 (local ns (vim.api.nvim_create_namespace :lint))
+(local num #(- (tonumber $) 1))
+(local [E W] [vim.diagnostic.severity.ERROR vim.diagnostic.severity.WARN])
 
 (fn parse-actionlint [lines _]
-  (let [diagnostics []]
+  (let [dx []]
     (each [_ line (ipairs lines)]
-      (let [(_ lnum col msg) (line:match "^(.+):(%d+):(%d+): (.+)$")]
-        (if (and lnum col msg)
-            (table.insert diagnostics
-                          {:lnum (- (tonumber lnum) 1)
-                           :col (- (tonumber col) 1)
-                           :message msg
-                           :severity vim.diagnostic.severity.WARN
-                           :source :actionlint}))))
-    diagnostics))
+      (let [(_ lnum col message) (line:match "^(.+):(%d+):(%d+): (.+)$")]
+        (if (and lnum col message)
+            (let [lnum (num lnum) col (num col) severity W source :actionlint]
+              (table.insert dx {: lnum : col : message : severity : source})))))
+    dx))
 
 (fn actionlint [bufnr]
   (let [lines (vim.api.nvim_buf_get_lines bufnr 0 -1 false)
         output (vim.fn.systemlist "actionlint --oneline -" lines)
-        diagnostics (parse-actionlint output bufnr)]
-    (vim.diagnostic.set ns bufnr diagnostics)))
+        dx (parse-actionlint output bufnr)]
+    (vim.diagnostic.set ns bufnr dx)))
 
 (fn parse-jq [lines _]
-  (let [diagnostics []]
+  (let [dx []]
     (each [_ line (ipairs lines)]
-      (let [(msg lnum col) (line:match "^jq: parse error: (.+) at line (%d+), column (%d+)$")]
-        (if (and lnum col msg)
-            (table.insert diagnostics
-                          {:lnum (- (tonumber lnum) 1)
-                           :col (- (tonumber col) 1)
-                           :message msg
-                           :severity vim.diagnostic.severity.ERROR
-                           :source :jq}))))
-    diagnostics))
+      (let [(message lnum col) (line:match "^jq: parse error: (.+) at line (%d+), column (%d+)$")]
+        (if (and lnum col message)
+            (let [lnum (num lnum) col (num col) severity E source :jq]
+              (table.insert dx {: lnum : col : message : severity : source})))))
+    dx))
 
 (fn jq [bufnr]
   (let [lines (vim.api.nvim_buf_get_lines bufnr 0 -1 false)
         output (vim.fn.systemlist "jq empty" lines)
-        diagnostics (parse-jq output bufnr)]
-    (vim.diagnostic.set ns bufnr diagnostics)))
+        dx (parse-jq output bufnr)]
+    (vim.diagnostic.set ns bufnr dx)))
 
 (fn parse-eslint [lines _]
-  (let [diagnostics []]
+  (let [dx []]
     (each [_ line (ipairs lines)]
-      (let [(_ lnum col level msg) (line:match "^(.+)%((%d+),(%d+)%): (%w+) (.+)$")]
-        (if (and lnum col level msg)
-            (let [severity (if (= level :error)
-                               vim.diagnostic.severity.ERROR
-                               vim.diagnostic.severity.WARN)]
-              (table.insert diagnostics
-                            {:lnum (- (tonumber lnum) 1)
-                             :col (- (tonumber col) 1)
-                             :message msg
-                             : severity
-                             :source :eslint_d})))))
-    diagnostics))
+      (let [(_ lnum col level message) (line:match "^(.+)%((%d+),(%d+)%): (%w+) (.+)$")]
+        (if (and lnum col level message)
+            (let [severity (if (= level :error) E W)
+                  lnum (num lnum) col (num col) source :eslint_d]
+              (table.insert dx {: lnum : col : message : severity : source})))))
+    dx))
 
 (fn eslint_d [bufnr]
   (let [file (vim.api.nvim_buf_get_name bufnr)
         lines (vim.api.nvim_buf_get_lines bufnr 0 -1 false)
         cmd (.. "eslint_d -f visualstudio --stdin --stdin-filename=" file)
         output (vim.fn.systemlist cmd lines)
-        diagnostics (parse-eslint output bufnr)]
-    (vim.diagnostic.set ns bufnr diagnostics)))
+        dx (parse-eslint output bufnr)]
+    (vim.diagnostic.set ns bufnr dx)))
 
 (let [events [:BufEnter :BufWritePost :InsertLeave :TextChanged]
       au #(vim.api.nvim_create_autocmd events {:callback $ :pattern $2})]
