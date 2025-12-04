@@ -38,18 +38,24 @@
                 {:content ["[Empty file]"] : filename})))
       {:content ["[File not readable]"] : filename}))
 
-(fn open-file [filepath _ original-win]
+(fn open-file [filepath _ original-win split-mode]
   (when filepath
     (if (vim.api.nvim_win_is_valid original-win)
         (vim.api.nvim_set_current_win original-win))
-    (vim.cmd.edit filepath)))
+    (case split-mode
+      :vsplit (vim.cmd.vsplit filepath)
+      :split (vim.cmd.split filepath)
+      _ (vim.cmd.edit filepath))))
 
-(fn open-multiple-files [filepaths original-win]
+(fn open-multiple-files [filepaths original-win split-mode]
   (when (> (length filepaths) 0)
     (if (vim.api.nvim_win_is_valid original-win)
         (vim.api.nvim_set_current_win original-win))
     (each [_ filepath (ipairs filepaths)]
-      (vim.cmd.edit filepath))
+      (case split-mode
+        :vsplit (vim.cmd.vsplit filepath)
+        :split (vim.cmd.split filepath)
+        _ (vim.cmd.edit filepath)))
     (vim.notify (.. "Opened " (length filepaths) " files") vim.log.levels.INFO)))
 
 (fn file-picker []
@@ -93,7 +99,7 @@
          :filename target-name}
         {:content ["[Buffer not found]"]})))
 
-(fn switch-to-buffer [bufname _]
+(fn switch-to-buffer [bufname _ _ split-mode]
   (let [all-bufs (vim.api.nvim_list_bufs)]
     (each [_ buf (ipairs all-bufs)]
       (if (vim.api.nvim_buf_is_loaded buf)
@@ -101,7 +107,14 @@
                 display-name (if (= name "") "[No Name]"
                                  (vim.fn.fnamemodify name ":t"))]
             (if (= display-name bufname)
-                (vim.api.nvim_set_current_buf buf)))))))
+                (case split-mode
+                  :vsplit (do
+                            (vim.cmd.vsplit)
+                            (vim.api.nvim_set_current_buf buf))
+                  :split (do
+                           (vim.cmd.split)
+                           (vim.api.nvim_set_current_buf buf))
+                  _ (vim.api.nvim_set_current_buf buf))))))))
 
 (fn buffer-picker []
   (picker buffer-source
@@ -144,7 +157,7 @@
           {:content lines :filename current-file :line line-num})
         {:content ["[Could not parse symbol location]"]})))
 
-(fn lsp-symbols-select [item _]
+(fn lsp-symbols-select [item _ _ _]
   (let [line-match (string.match item ":(%d+)$")]
     (if line-match
         (let [line-num (tonumber line-match)]
@@ -190,13 +203,16 @@
               {:content ["[File not readable]"] :filename filepath}))
         {:content ["[Could not parse location]"]})))
 
-(fn lsp-workspace-symbols-select [item _ original-win]
+(fn lsp-workspace-symbols-select [item _ original-win split-mode]
   (let [filepath (string.match item " ([^:]+):%d+$")
         line-num (tonumber (string.match item ":(%d+)$"))]
     (when (and filepath line-num)
       (if (vim.api.nvim_win_is_valid original-win)
           (vim.api.nvim_set_current_win original-win))
-      (vim.cmd.edit filepath)
+      (case split-mode
+        :vsplit (vim.cmd.vsplit filepath)
+        :split (vim.cmd.split filepath)
+        _ (vim.cmd.edit filepath))
       (vim.api.nvim_win_set_cursor 0 [line-num 0])
       (vim.cmd "normal! zz"))))
 
@@ -246,16 +262,19 @@
               {:content ["[Line out of range]"] :filename data-item.file}))
         {:content ["[File not readable]"] :filename (or data-item.file "")})))
 
-(fn lsp-diagnostics-select [_ idx original-win]
+(fn lsp-diagnostics-select [_ idx original-win split-mode]
   (let [data-item (. diagnostics-data idx)]
     (when (and data-item data-item.file data-item.line)
       (if (vim.api.nvim_win_is_valid original-win)
           (vim.api.nvim_set_current_win original-win))
-      (vim.cmd.edit data-item.file)
+      (case split-mode
+        :vsplit (vim.cmd.vsplit data-item.file)
+        :split (vim.cmd.split data-item.file)
+        _ (vim.cmd.edit data-item.file))
       (vim.api.nvim_win_set_cursor 0 [data-item.line 0])
       (vim.cmd "normal! zz"))))
 
-(fn lsp-diagnostics-multi-select [items original-win]
+(fn lsp-diagnostics-multi-select [items original-win _]
   (let [qf-list []]
     (each [_ message (ipairs items)]
       (each [_ data-item (ipairs diagnostics-data)]
@@ -349,14 +368,17 @@
               {:content ["[Line out of range]"] :filename filepath}))
         {:content ["[File not readable]"] :filename filepath})))
 
-(fn lsp-references-select [item _ original-win]
+(fn lsp-references-select [item _ original-win split-mode]
   (let [filepath (string.match item "^([^:]+):")
         line-num (tonumber (string.match item ":(%d+):"))
         col-num (tonumber (string.match item ":(%d+)$"))]
     (when (and filepath line-num col-num)
       (if (vim.api.nvim_win_is_valid original-win)
           (vim.api.nvim_set_current_win original-win))
-      (vim.cmd.edit filepath)
+      (case split-mode
+        :vsplit (vim.cmd.vsplit filepath)
+        :split (vim.cmd.split filepath)
+        _ (vim.cmd.edit filepath))
       (vim.api.nvim_win_set_cursor 0 [line-num col-num])
       (vim.cmd "normal! zz"))))
 
@@ -411,12 +433,15 @@
         {:content ["[File not readable]"]
          :filename (or (and data-item data-item.filepath) "")})))
 
-(fn live-grep-select [_ idx original-win]
+(fn live-grep-select [_ idx original-win split-mode]
   (let [data-item (. grep-data idx)]
     (when (and data-item data-item.filepath data-item.line)
       (if (vim.api.nvim_win_is_valid original-win)
           (vim.api.nvim_set_current_win original-win))
-      (vim.cmd.edit data-item.filepath)
+      (case split-mode
+        :vsplit (vim.cmd.vsplit data-item.filepath)
+        :split (vim.cmd.split data-item.filepath)
+        _ (vim.cmd.edit data-item.filepath))
       (vim.api.nvim_win_set_cursor 0 [data-item.line (- data-item.col 1)])
       (vim.cmd "normal! zz"))))
 
@@ -456,7 +481,7 @@
                                  content (get-lines original-buf 0 -1 false)
                                  filename (vim.api.nvim_buf_get_name original-buf)]
                              {: content : filename}))
-             :on-select (fn [scheme _ _]
+             :on-select (fn [scheme _ _ _]
                           (set cs-selected true)
                           (if scheme (pcall vim.cmd.colorscheme scheme)))
              : initial-idx

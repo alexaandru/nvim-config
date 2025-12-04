@@ -75,7 +75,7 @@
                    :Whitespace {:fg colors.bg3}
                    :EndOfBuffer {:fg colors.bg0 : bg}
                    ;; Mine
-                   :PackName {:bg colors.blue :fg :black}
+                   :PackName {:bg colors.yellow :fg :black}
                    "@string.special.pack_name" {:link :PackName}
                    ;; Syntax - THE MONK WAY
                    :Comment {:fg colors.fg4 :italic true}

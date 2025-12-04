@@ -5,7 +5,7 @@
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "markview": {
-      "rev": "bf62f7d173f4b42cd02794c6c5f5a8bd3047a58a",
+      "rev": "0a5033326f703d99a8788e2d47753d6298195e8a",
       "src": "https://github.com/OXY2DEV/markview.nvim"
     },
     "mini.icons": {
@@ -13,12 +13,12 @@
       "src": "https://github.com/nvim-mini/mini.icons"
     },
     "nvim-treesitter": {
-      "rev": "00c906abb9550e72bc0c640545b5499b9525bb40",
+      "rev": "20db421f5fba0c23f6a7629af96ba6d4fc531677",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter",
       "version": "'main'"
     },
     "nvim-treesitter-textobjects": {
-      "rev": "63c4dce4a56312ef1bdeafd16bdefa008fcc950a",
+      "rev": "76deedf0f1cec4496ef8d49b6d1f020f6d0c6ec9",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter-textobjects",
       "version": "'main'"
     },
@@ -40,7 +40,7 @@
       "version": "'main'"
     },
     "treesitter-context": {
-      "rev": "660861b1849256398f70450afdf93908d28dc945",
+      "rev": "64dd4cf3f6fd0ab17622c5ce15c91fc539c3f24a",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter-context"
     }
   }

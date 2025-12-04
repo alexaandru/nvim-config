@@ -11,7 +11,7 @@
       xomap #(_m [:x :o] $ $2 $3)]
   (nmap :gb "<Cmd>ls<CR>:b<Space>" {:silent true :desc "Go to Buffer"})
   (nmap :db "<Cmd>%bd<bar>e#<CR>" {:silent true :desc "Delete All Buffers"})
-  (nmap :<F3> vim.cmd.only {:silent true :desc "Zen mode"})
+  (nmap :<F3> :<Cmd>Zoom<CR> {:silent true :desc "Toggle Zen Mode"})
   (nmap :<F7> :<Cmd>Inspect<CR> {:desc "Inspect TS node under cursor"})
   (nmap :<F8> :<Cmd>Gdiff<CR> {:desc "Git Diff"})
   (nmap :<Leader>w :<Cmd>SaveAndClose<CR>

@@ -5,7 +5,8 @@
         {:src :alexaandru/site-util :name :site.util}
         {:src :folke/sidekick.nvim
          :data {:conf {:cli {:win {:layout :bottom}
-                             :mux {:enabled true :backend :zellij}}}}}
+                             :mux {:enabled true :backend :zellij}
+                             :tools {:amp (require :amp-conf)}}}}}
         :lewis6991/gitsigns.nvim
         :nvim-mini/mini.icons
         {:src :nvim-treesitter/nvim-treesitter

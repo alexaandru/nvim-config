@@ -252,7 +252,7 @@
                       (tset self key nil))
                     (set self.all-items []))))
 
-(fn Picker.select-current [self]
+(fn Picker.select-current [self split-mode]
   (if (> (length self.filtered-items) 0)
       (let [selected-count (length (vim.tbl_keys self.selected-items))]
         (if (and (> selected-count 0) self.on-multi-select)
@@ -263,14 +263,14 @@
                 (table.insert selected-items (. self.filtered-items idx)))
               (self:close)
               (vim.schedule #(on-multi-select-fn selected-items
-                                                 self.original-win)))
+                                                 self.original-win split-mode)))
             ;; Single selection mode: use current item
             (if self.on-select
                 (let [selected-item (. self.filtered-items self.selected-idx)
                       on-select-fn self.on-select]
                   (self:close)
                   (vim.schedule #(on-select-fn selected-item self.selected-idx
-                                               self.original-win))))))))
+                                               self.original-win split-mode))))))))
 
 ;; fnlfmt: skip
 (fn Picker.setup-filter-window [self buf]
@@ -335,6 +335,10 @@
         (vim.keymap.set mode key #(self:close) opts))
       (each [_ key (ipairs select-keys)]
         (vim.keymap.set mode key #(self:select-current) opts)))
+    ;; Split keymaps
+    (each [mode opts (pairs {:i filter-opts :n list-opts})]
+      (vim.keymap.set mode :<M-CR> #(self:select-current :vsplit) opts)
+      (vim.keymap.set mode :<C-S-CR> #(self:select-current :split) opts))
     ;; Data-driven keymaps from top-level table
     (each [mode mappings (pairs keymaps)]
       (let [opts (if (= mode :i) filter-opts list-opts)]
@@ -380,6 +384,9 @@
             (nmap key #(self:close) preview-opts))
           (each [_ key (ipairs select-keys)]
             (nmap key #(self:select-current) preview-opts))
+          ;; Split keymaps for preview buffer
+          (nmap :<S-CR> #(self:select-current :vsplit) preview-opts)
+          (nmap :<C-S-CR> #(self:select-current :split) preview-opts)
           (nmap ":" #(let [filter-win (vim.fn.bufwinid self.filter-buf)]
                        (when (> filter-win -1)
                          (vim.api.nvim_set_current_win filter-win)

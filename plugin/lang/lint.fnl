@@ -1,21 +1,6 @@
 (local ns (vim.api.nvim_create_namespace :lint))
 (local num #(- (tonumber $) 1))
-(local [E W] [vim.diagnostic.severity.ERROR vim.diagnostic.severity.WARN])
-
-(fn parse-actionlint [lines _]
-  (let [dx []]
-    (each [_ line (ipairs lines)]
-      (let [(_ lnum col message) (line:match "^(.+):(%d+):(%d+): (.+)$")]
-        (if (and lnum col message)
-            (let [lnum (num lnum) col (num col) severity W source :actionlint]
-              (table.insert dx {: lnum : col : message : severity : source})))))
-    dx))
-
-(fn actionlint [bufnr]
-  (let [lines (vim.api.nvim_buf_get_lines bufnr 0 -1 false)
-        output (vim.fn.systemlist "actionlint --oneline -" lines)
-        dx (parse-actionlint output bufnr)]
-    (vim.diagnostic.set ns bufnr dx)))
+(local [E W] (let [s vim.diagnostic.severity] [s.ERROR s.WARN]))
 
 (fn parse-jq [lines _]
   (let [dx []]
@@ -52,8 +37,5 @@
 
 (let [events [:BufEnter :BufWritePost :InsertLeave :TextChanged]
       au #(vim.api.nvim_create_autocmd events {:callback $ :pattern $2})]
-  (au #(let [filepath (vim.api.nvim_buf_get_name $.buf)]
-         (if (filepath:match "%.github/") (actionlint $.buf))
-         false) [:*.yml :*.yaml])
   (au #(jq $.buf) :*.json)
   (au #(eslint_d $.buf) [:*.js :*.ts :*.vue]))
