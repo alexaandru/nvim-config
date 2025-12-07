@@ -1,3 +1,5 @@
+;; Courtesy of @S1M0N38:
+;; https://github.com/folke/sidekick.nvim/issues/158#issuecomment-3491732950
 {:cmd [:amp]
  :format #(let [Text (require :sidekick.text)
                 tt #(or (and ($:find "[^%w/_%.%-]") (.. "\"" $ "\"")) $)]
