@@ -1,3 +1,5 @@
+; extends
+
 ((comment) @injection.content
   (#match? @injection.content "^// MAGIC [a-zA-Z\\s\\t]")
   ; (#set! injection.language "python")

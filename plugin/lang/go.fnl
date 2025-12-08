@@ -1,42 +1,53 @@
-(fn filter [qf args]
-  (let [curr-file (vim.fn.expand "%")
-        filter #(vim.tbl_filter $ qf)]
-    (case args
-      "%" (filter #(= curr-file $.filename))
-      v (filter #(string.match (or $.filename "") v))
-      _ qf)))
+(local namespace (vim.api.nvim_create_namespace :golangci-lint-manual))
 
-(fn GolangCI [args]
+(fn GolangCI [_args]
   (local output {})
 
-  (fn on_stdout [_ data] ;; job
-    (table.insert output data))
+  (fn on_stdout [_ data]
+    (each [_ line (ipairs data)]
+      (if (not= line "") (table.insert output line))))
 
   (fn on_exit []
-    ;; job code
-    (let [lines (: (: (vim.iter output) :flatten) :totable)
-          json-str (table.concat lines "")
+    (let [json-str (table.concat output "")
+          ;; Find where JSON starts and ends - just extract the JSON object
+          json-start (json-str:find "{\"Issues\":")
+          json-str (if json-start (json-str:sub json-start) json-str)
+          ;; Also strip any trailing log messages
+          json-str (json-str:gsub "level=.-\n" "")
           (ok result) (pcall vim.json.decode json-str)
-          qf (if ok
-                 (icollect [_ issue (ipairs (or result.Issues []))]
-                   (let [pos issue.Pos
-                         severity (if (= issue.Severity :error) :E :W)]
-                     {:filename pos.Filename
-                      :lnum pos.Line
-                      :col pos.Column
-                      :type severity
-                      :text (.. issue.FromLinter ": " issue.Text)}))
-                 [])
-          qf (filter qf args.args)
-          tbl-is-not-empty #(not (vim.tbl_isempty $))
-          qf (vim.tbl_filter tbl-is-not-empty qf)]
-      (when (> (length qf) 0)
-        (vim.fn.setqflist qf :r)
-        (vim.cmd.copen))
-      (if (= (length qf) 0)
-          (print :OK))))
+          diagnostics (if ok
+                          (icollect [_ issue (ipairs (or result.Issues []))]
+                            (let [pos issue.Pos
+                                  severity (match issue.Severity
+                                             :error vim.diagnostic.severity.ERROR
+                                             _ vim.diagnostic.severity.WARN)]
+                              {:bufnr (vim.fn.bufnr pos.Filename)
+                               :lnum (- pos.Line 1)
+                               :col (- pos.Column 1)
+                               :severity severity
+                               :source :golangci-lint
+                               :message (.. issue.FromLinter ": " issue.Text)}))
+                          [])
+          ;; Group diagnostics by buffer
+          by-bufnr {}]
+      (each [_ diag (ipairs diagnostics)]
+        (when (>= diag.bufnr 0)
+          (if (not (. by-bufnr diag.bufnr)) (tset by-bufnr diag.bufnr []))
+          (table.insert (. by-bufnr diag.bufnr) diag)))
+      ;; Set diagnostics for each buffer
+      (each [bufnr diags (pairs by-bufnr)]
+        (vim.diagnostic.set namespace bufnr diags))
+      (if (= (length diagnostics) 0)
+          (print :OK)
+          (print (.. (length diagnostics) " issue(s) found")))))
 
-  (let [job "go tool -modfile=tools/go.mod golangci-lint run --output.json.path=stdout --show-stats=false --issues-exit-code=1"
+  (let [bufdir (vim.fn.expand "%:p:h")
+        root (vim.fn.system "git rev-parse --show-toplevel")
+        root (vim.fn.trim root)
+        modfile (.. root "/tools/go.mod")
+        cmd (.. "go tool -modfile=" modfile
+                " golangci-lint run --output.json.path=stdout --show-stats=false --issues-exit-code=1")
+        job (.. "cd " (vim.fn.shellescape bufdir) " && " cmd)
         opts {: on_exit : on_stdout :on_stderr on_stdout}]
     (vim.fn.jobstart job opts)))
 
@@ -57,6 +68,3 @@
       com vim.api.nvim_create_user_command]
   (each [name func (pairs {: GolangCI : RunTests})]
     (com name func opts)))
-
-(each [lhs rhs (pairs {:<F5> "<Cmd>GolangCI %<CR>" :<F6> :<Cmd>RunTests<CR>})]
-  (vim.keymap.set :n lhs rhs {:silent true}))
