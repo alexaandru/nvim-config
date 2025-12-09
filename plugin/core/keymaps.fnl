@@ -3,18 +3,45 @@
 (local textobj-sel #(select_textobject $ :textobjects))
 (local gitsigns (require :gitsigns))
 
+(fn workspace-symbol []
+  (let [cword (vim.fn.expand :<cword>)]
+    (if (= cword "")
+        (vim.lsp.buf.workspace_symbol)
+        (vim.lsp.buf.workspace_symbol cword))))
+
+(local lsp-keys
+       {:<F2> vim.lsp.buf.rename
+        :<Leader>a vim.lsp.buf.code_action
+        :<Leader>d vim.diagnostic.setloclist
+        :<Leader>D vim.diagnostic.setqflist
+        :<Leader>k vim.lsp.codelens.run
+        :<Leader>e vim.diagnostic.open_float
+        :<Leader>h #(vim.cmd :LspHintsToggle)
+        :grci vim.lsp.buf.incoming_calls
+        :grco vim.lsp.buf.outgoing_calls
+        :gOO workspace-symbol
+        :<Leader>wla vim.lsp.buf.add_workspace_folder
+        :<Leader>wlr vim.lsp.buf.remove_workspace_folder
+        :<Leader>wll #(vim.print (vim.fn.uniq (vim.fn.sort (vim.lsp.buf.list_workspace_folders))))})
+
 (let [_m #(vim.keymap.set $ $2 $3 $4)
       nmap #(_m :n $ $2 $3)
+      imap #(_m :i $ $2 $3)
       vmap #(_m :v $ $2 $3)
       zmap #(_m [:n :t :i :x] $ $2 $3)
+      tnmap #(_m [:t :n] $ $2 $3)
       xnmap #(_m [:x :n] $ $2 $3)
-      xomap #(_m [:x :o] $ $2 $3)]
+      xomap #(_m [:x :o] $ $2 $3)
+      com vim.api.nvim_create_user_command]
   (nmap :gb "<Cmd>ls<CR>:b<Space>" {:silent true :desc "Go to Buffer"})
   (nmap :db "<Cmd>%bd<bar>e#<CR>" {:silent true :desc "Delete All Buffers"})
   (nmap :<F3> :<Cmd>Zoom<CR> {:silent true :desc "Toggle Zen Mode"})
   (nmap :<F6> :<Cmd>RunTests<CR> {:silent true :desc "Run Go Tests"})
   (nmap :<F7> :<Cmd>Inspect<CR> {:desc "Inspect TS node under cursor"})
   (nmap :<F8> :<Cmd>Gdiff<CR> {:desc "Git Diff"})
+  (tnmap :<C-Enter> :<Cmd>ToggleTerm<CR> {:silent true})
+  (xnmap :<Leader>c :<Cmd>FnlCompile<CR> {:silent true})
+  (xnmap :<Leader>e :<Cmd>FnlEval<CR> {:silent true})
   (nmap :<Leader>w :<Cmd>SaveAndClose<CR>
         {:silent true :desc "Save and Close Buffer"})
   (nmap :<Space> "@=((foldclosed(line('.')) < 0) ? 'zc' : 'zO')<CR>"
@@ -55,6 +82,23 @@
   (nmap :<leader>tb gitsigns.toggle_current_line_blame)
   (nmap :<leader>tw gitsigns.toggle_word_diff)
   (xomap :ih gitsigns.select_hunk)
+  ;; LSP :: global mappings (inline completion and signature help)
+  (imap :<Tab> #(if (not (vim.lsp.inline_completion.get)) :<Tab>)
+        {:desc "Get the current inline completion"
+         :expr true
+         :replace_keycodes true})
+  (nmap :<Tab> #(if (not ((. (require :sidekick) :nes_jump_or_apply))) :<Tab>)
+        {:desc "Get the next inline completion (via Sidekick)"
+         :expr true
+         :replace_keycodes true})
+  (imap :<C-n> #(vim.lsp.inline_completion.select {:count 1})
+        {:desc "Get the next inline completion"})
+  (imap :<C-i> #(vim.lsp.buf.signature_help) {:desc "Show signature help"})
+  ;; LSP :: buffer local mappings
+  (com :LspKeysMap #(let [buffer (tonumber (. $.fargs 1))
+                          opts {:silent true : buffer}]
+                      (each [lhs rhs (pairs lsp-keys)]
+                        (nmap lhs rhs opts))) {:nargs 1})
   ;; Tree-sitter Textobjects
   (let [obj-sel {:af "@function.outer"
                  :if "@function.inner"

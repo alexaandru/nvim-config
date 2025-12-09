@@ -22,8 +22,6 @@
             (cmd "setl nofoldenable")
             (vim.fn.setpos "." [0 0 0 0]))))))
 
-(each [_ mode (ipairs [:n :v])]
-  (each [lhs rhs (pairs {:<Leader>c #(show fennel.compileString)
-                         :<Leader>e #(show fennel.eval true)})]
-    (vim.keymap.set mode lhs rhs {:silent true})))
-
+(let [com vim.api.nvim_create_user_command]
+  (com :FnlCompile #(show fennel.compileString) {})
+  (com :FnlEval #(show fennel.eval true) {}))

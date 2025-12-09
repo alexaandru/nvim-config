@@ -1,31 +1,11 @@
-(fn workspace-symbol []
-  (let [cword (vim.fn.expand :<cword>)]
-    (if (= cword "")
-        (vim.lsp.buf.workspace_symbol)
-        (vim.lsp.buf.workspace_symbol cword))))
-
-(local lsp-keys
-       {:<F2> vim.lsp.buf.rename
-        :<Leader>a vim.lsp.buf.code_action
-        :<Leader>d vim.diagnostic.setloclist
-        :<Leader>D vim.diagnostic.setqflist
-        :<Leader>k vim.lsp.codelens.run
-        :<Leader>e vim.diagnostic.open_float
-        :<Leader>h #(vim.cmd :LspHintsToggle)
-        :grci vim.lsp.buf.incoming_calls
-        :grco vim.lsp.buf.outgoing_calls
-        :gOO workspace-symbol
-        :<Leader>wla vim.lsp.buf.add_workspace_folder
-        :<Leader>wlr vim.lsp.buf.remove_workspace_folder
-        :<Leader>wll #(vim.print (vim.fn.uniq (vim.fn.sort (vim.lsp.buf.list_workspace_folders))))})
 
 ;; fnlfmt: skip
-(local diagnostic-config 
+(local diagnostic-config
        (let [s vim.diagnostic.severity
                signs {:text {s.ERROR "✘" s.WARN "⚠" s.INFO "⚠" s.HINT "⚠"}}]
          {:underline true
           :virtual_text {:spacing 0 :prefix "‼"}
-          : signs 
+          : signs
           :status signs
           :update_in_insert true
           :severity_sort true
@@ -85,8 +65,7 @@
         client (vim.lsp.get_client_by_id client_id)
         buffer args.buf]
     (set vim.b.offset_encoding client.offset_encoding)
-    (let [opts {:silent true : buffer}]
-      (each [lhs rhs (pairs lsp-keys)] (vim.keymap.set :n lhs rhs opts)))
+    (vim.cmd.LspKeysMap buffer)
     (when (client:supports_method :textDocument/inlayHint)
       (set vim.b.hints_on true)
       (set vim.b.hints false)
@@ -101,7 +80,8 @@
       (vim.defer_fn vim.lsp.codelens.refresh 100))
     (if (client:supports_method :textDocument/signatureHelp)
         (au :LSPSignatureHelp
-            {[:TextChangedI] #(if (inside-call-args?) (vim.lsp.buf.signature_help))}))
+            {[:TextChangedI] #(if (inside-call-args?)
+                                  (vim.lsp.buf.signature_help))}))
     (if (client:supports_method :textDocument/onTypeFormatting)
         (vim.lsp.on_type_formatting.enable true {: client_id}))
     false))
@@ -123,15 +103,3 @@
       {:callback #(lsp-hints-toggle vim.b.hints)
        :desc "Enable LSP hints on insert leave"})
   (au :LspAttach {:callback on-attach}))
-
-(let [imap #(vim.keymap.set :i $1 $2 $3)
-      nmap #(vim.keymap.set :n $1 $2 $3)]
-  (imap :<Tab> #(if (not (vim.lsp.inline_completion.get)) :<Tab>)
-        {:desc "Get the current inline completion"
-         :expr true :replace_keycodes true})
-  (nmap :<Tab> #(if (not ((. (require :sidekick) :nes_jump_or_apply))) :<Tab>)
-        {:desc "Get the next inline completion (via Sidekick)"
-         :expr true :replace_keycodes true})
-  (imap :<C-n> #(vim.lsp.inline_completion.select {:count 1})
-        {:desc "Get the next inline completion"})
-  (imap :<C-i> #(vim.lsp.buf.signature_help) {:desc "Show signature help"}))

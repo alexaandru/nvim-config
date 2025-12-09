@@ -13,7 +13,7 @@
       "src": "https://github.com/nvim-mini/mini.icons"
     },
     "nvim-treesitter": {
-      "rev": "f47f549f74cea5d5f25a5205c9e127cd882f1d20",
+      "rev": "2979e048b356cfd32dc419d5803dc356b9832adf",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter",
       "version": "'main'"
     },

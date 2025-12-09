@@ -14,7 +14,7 @@
              [:grepformat "%f:%l:%m"]
              [:ignorecase true]
              [:indentexpr "v:lua.require('nvim-treesitter').indentexpr()"]
-             [:laststatus 0]
+             [:laststatus 3]
              [:mouse :a]
              [:mousemodel :extend]
              [:path "**"]
@@ -24,6 +24,7 @@
              [:smartindent true]
              [:splitbelow true]
              [:splitright true]
+             ;[:statusline (.. "hello " _G.bars.foo)]
              [:title true]
              [:titlestring
               (.. "%{v:lua.vim.g.get_zsandbox()}"
@@ -36,6 +37,7 @@
              [:wildignorecase true]
              [:wildmode "noselect:longest,full"]
              [:wildoptions "pum,fuzzy"]
+             [:winbar "%= %t %{% luaeval('vim.diagnostic.status()') %}"]
              [:winborder :rounded]
              [:wrap false]])
 
@@ -74,7 +76,7 @@
       (if (> counts.I 0) (table.insert parts (.. "ℹ️" counts.I)))
       (if (> counts.H 0) (table.insert parts (.. "💡" counts.H)))
       (if (> (length parts) 0)
-          (table.concat parts " ")
+          (.. (table.concat parts " ") " ")
           ""))))
 
 (fn vim.g.findfunc [cmdarg _cmdcomplete]

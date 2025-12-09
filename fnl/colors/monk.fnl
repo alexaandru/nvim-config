@@ -8,6 +8,7 @@
               :NONE))
 
 (local colors {;; Base colors - serene
+               :bgs :#131311
                :bg0 :#0e1419
                :bg1 :#1e2429
                :bg2 :#1c2329
@@ -50,9 +51,9 @@
                    :PmenuSel {:fg :black :bg colors.blue}
                    :PmenuSbar {:bg colors.bg3}
                    :PmenuThumb {:bg colors.fg3}
-                   :StatusLine {:fg colors.fg0 :bg colors.bg3}
+                   :StatusLine {:fg :black :bg colors.blue}
                    :StatusLineNC {:fg colors.fg2 :bg colors.bg2}
-                   :WinBar {:fg colors.fg1 :bg :NONE}
+                   :WinBar {:fg colors.blue :bg :NONE}
                    :WinBarNC {:fg colors.fg3 :bg :NONE}
                    :TabLine {:fg colors.fg2 :bg colors.bg2}
                    :TabLineFill {:bg colors.bg1}

@@ -87,13 +87,16 @@
                             :lnum pos.Line
                             :col pos.Column
                             :text (.. issue.FromLinter ": " issue.Text)
-                            :type (if (= issue.Severity :error) :E :W)}))]
-            (vim.fn.setqflist qflist)))))
+                            :type (if (= issue.Severity :error) :E :W)}))
+                current-qf (vim.fn.getqflist {:title 0})
+                current-title (or current-qf.title "")
+                new-title (.. "golangci-lint: " vim.w.proj_root)]
+            ;; Only overwrite if empty or it's THIS exact module's list
+            (if (or (= current-title "") (= current-title new-title))
+                (vim.fn.setqflist [] " " {:items qflist :title new-title}))))))
 
   (let [bufdir (vim.fn.expand "%:p:h")
-        root (vim.fn.system "git rev-parse --show-toplevel")
-        root (vim.fn.trim root)
-        modfile (.. root "/tools/go.mod")
+        modfile (.. vim.w.proj_root "/tools/go.mod")
         cmd (.. "go tool -modfile=" modfile
                 " golangci-lint run --output.json.path=stdout --show-stats=false --issues-exit-code=1")
         job (.. "cd " (vim.fn.shellescape bufdir) " && " cmd)
@@ -101,6 +104,8 @@
         job-id (vim.fn.jobstart job opts)]
     ;; Track the job
     (tset golangci-jobs bufnr job-id)))
+
+(vim.cmd.SetProjRoot)
 
 (let [au #(vim.api.nvim_create_autocmd $1 {:callback $2 :pattern $3})]
   (au [:BufEnter :BufWritePost :InsertLeave :TextChanged] #(jq $.buf) :*.json)

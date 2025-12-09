@@ -20,5 +20,5 @@
         (> buf 0) (show-buf term-name)
         (create-term term-name))))
 
-(vim.api.nvim_create_user_command :ToggleTerm ToggleTerm {:nargs "*" :bar true})
-(vim.keymap.set [:n :t] :<C-Enter> ToggleTerm {:silent true})
+(let [com vim.api.nvim_create_user_command]
+  (com :ToggleTerm ToggleTerm {:nargs "*" :bar true}))
