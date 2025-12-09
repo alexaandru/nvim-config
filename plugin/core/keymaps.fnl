@@ -12,7 +12,6 @@
   (nmap :gb "<Cmd>ls<CR>:b<Space>" {:silent true :desc "Go to Buffer"})
   (nmap :db "<Cmd>%bd<bar>e#<CR>" {:silent true :desc "Delete All Buffers"})
   (nmap :<F3> :<Cmd>Zoom<CR> {:silent true :desc "Toggle Zen Mode"})
-  (nmap :<F5> "<Cmd>GolangCI %<CR>" {:silent true :desc "Run GolangCI"})
   (nmap :<F6> :<Cmd>RunTests<CR> {:silent true :desc "Run Go Tests"})
   (nmap :<F7> :<Cmd>Inspect<CR> {:desc "Inspect TS node under cursor"})
   (nmap :<F8> :<Cmd>Gdiff<CR> {:desc "Git Diff"})

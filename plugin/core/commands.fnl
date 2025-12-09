@@ -63,6 +63,19 @@
       (table.insert lines (tpl:format loc lsps packs)))
     (print (table.concat lines "\n"))))
 
+(fn RunTests []
+  (vim.cmd.echo)
+  (var curr-fn ((. (require :nvim-treesitter) :statusline)))
+  (if (not (vim.startswith curr-fn "func ")) (set curr-fn "*")
+      (set curr-fn (curr-fn:sub 6 (- (curr-fn:find "%(") 1))))
+  (let [bufnr (vim.api.nvim_get_current_buf)
+        clients (vim.lsp.get_clients {: bufnr})]
+    (each [_ client (ipairs clients)]
+      (if (= client.name :gopls)
+          (client:exec_cmd {:arguments [{:URI (vim.uri_from_bufnr 0)
+                                         :Tests [curr-fn]}]
+                            :command :gopls.run_tests})))))
+
 (let [opts #(vim.tbl_extend :force {:desc $} (or $2 {}))
       cmd #(vim.api.nvim_create_user_command $ $2 (opts $3 $4))]
   (cmd :Gdiff "Gitsigns diffthis" "Git diff against another branch")
@@ -85,6 +98,7 @@
        "Auto-adjust window height" {:bar true})
   (cmd :LspCapabilities LspCapabilities "Show LSP server capabilities")
   (cmd :LspHintsToggle LspHintsToggle "Toggle LSP inlay hints")
+  (cmd :RunTests RunTests "Run Go tests for current function")
   (cmd :BuiltinPacks BuiltinPacks "Show builtin packages")
   (cmd :Version Version "Show Neovim and Neovide versions")
   (cmd :JQ "<line1>,<line2>!jq -S ." "Format JSON with jq"
