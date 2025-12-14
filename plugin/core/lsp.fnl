@@ -19,19 +19,36 @@
 
 (fn apply-code-actions [actions]
   (let [bufnr (vim.api.nvim_get_current_buf)
-        clients (vim.lsp.get_clients {: bufnr})]
-    (each [_ client (ipairs clients)]
-      (if (client:supports_method :textDocument/codeAction)
-          (each [_ action (ipairs actions)]
-            (vim.lsp.buf.code_action {:context {:only [action]} :apply true}))))))
+        clients (vim.lsp.get_clients {: bufnr})
+        clients (vim.iter clients)
+        has-code-actions? (clients:any #($:supports_method :textDocument/codeAction))]
+    (if has-code-actions?
+        (let [responses (vim.lsp.buf_request_sync bufnr
+                                                  :textDocument/codeAction
+                                                  {:textDocument {:uri (vim.uri_from_bufnr bufnr)}
+                                                   :range {:start {:line 0
+                                                                   :character 0}
+                                                           :end {:line (vim.api.nvim_buf_line_count bufnr)
+                                                                 :character 0}}
+                                                   :context {:only actions}}
+                                                  1000)
+              responses (vim.iter (vim.tbl_values responses))
+              has-actions? (and responses
+                                (responses:any #(and $.result
+                                                     (< 0 (length $.result)))))]
+          (if has-actions?
+              (each [_ action (ipairs actions)]
+                (vim.lsp.buf.code_action {:context {:only [action]}
+                                          :apply true})))))))
 
 (fn org-ts-imports []
   (let [bufnr (vim.api.nvim_get_current_buf)
-        clients (vim.lsp.get_clients {: bufnr})]
-    (each [_ client (ipairs clients)]
-      (if (= client.name :ts_ls)
-          (client:exec_cmd {:arguments [(vim.uri_from_bufnr bufnr)]
-                            :command :_typescript.organizeImports})))))
+        clients (vim.lsp.get_clients {: bufnr})
+        clients (vim.iter clients)
+        ts-client (clients:find #(= $.name :ts_ls))]
+    (if ts-client
+        (ts-client:exec_cmd {:arguments [(vim.uri_from_bufnr bufnr)]
+                             :command :_typescript.organizeImports}))))
 
 (fn au [group-name commands]
   (let [group (vim.api.nvim_create_augroup group-name {:clear true})
@@ -40,25 +57,33 @@
     group))
 
 (fn set-highlight []
-  (au :Highlight {[:CursorHold :CursorHoldI] vim.lsp.buf.document_highlight
-                  :CursorMoved vim.lsp.buf.clear_references}))
+  (au :Highlight
+      {[:CursorHold :CursorHoldI] vim.lsp.buf.document_highlight
+       [:CursorMoved :CursorMovedI] vim.lsp.buf.clear_references}))
 
 (fn inside-call-args? []
   (let [node (vim.treesitter.get_node)]
-    (var cur node)
-    (var found? false)
-    (while (and cur (not found?))
-      (let [t (cur:type)]
-        (if (or (= t :argument_list) (= t :call_expression))
-            (set found? true))
-        (set cur (cur:parent))))
-    found?))
+    (fn check-node [n]
+      (if (not n)
+          false
+          (let [t (n:type)]
+            (if (or (= t :argument_list) (= t :call_expression))
+                true
+                (check-node (n:parent))))))
+
+    (check-node node)))
 
 (fn lsp-hints-toggle [val]
   (if vim.b.hints_on (vim.lsp.inlay_hint.enable val {:bufnr 0})))
 
 (fn lsp-format [_args]
-  (vim.lsp.buf.format {:filter #(not= $.name :ts_ls)}))
+  (let [bufnr (vim.api.nvim_get_current_buf)
+        clients (vim.lsp.get_clients {: bufnr})
+        clients (vim.iter clients)
+        has-formatter? (clients:any #(and (not= $.name :ts_ls)
+                                          ($:supports_method :textDocument/formatting)))]
+    (if has-formatter?
+        (vim.lsp.buf.format {:filter #(not= $.name :ts_ls)}))))
 
 (fn on-attach [args]
   (let [client_id args.data.client_id
@@ -74,7 +99,8 @@
         (set-highlight))
     (if (client:supports_method :textDocument/completion)
         (vim.lsp.completion.enable true client.id args.buf {:autotrigger false}))
-    (when (client:supports_method :textDocument/codeLens)
+    (when (and (client:supports_method :textDocument/codeLens)
+               (not= client.name :terraformls))
       (au :CodeLens
           {[:BufEnter :CursorHold :InsertLeave] vim.lsp.codelens.refresh})
       (vim.defer_fn vim.lsp.codelens.refresh 100))

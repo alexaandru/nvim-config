@@ -1,7 +1,8 @@
 (local opts [[:autocomplete false]
              [:autowriteall true]
-             [:background :dark]
+             [:background :light]
              [:clipboard :unnamedplus]
+             [:cmdheight 0]
              [:completeopt [:fuzzy :menu :noselect :noinsert]]
              [:conceallevel 3]
              [:expandtab true]
@@ -14,22 +15,23 @@
              [:grepformat "%f:%l:%m"]
              [:ignorecase true]
              [:indentexpr "v:lua.require('nvim-treesitter').indentexpr()"]
-             [:laststatus 3]
+             [:laststatus 0]
              [:mouse :a]
              [:mousemodel :extend]
              [:path "**"]
              [:pumblend 10]
+             [:ruler false]
              [:signcolumn "yes:2"]
              [:smartcase true]
              [:smartindent true]
              [:splitbelow true]
              [:splitright true]
-             ;[:statusline (.. "hello " _G.bars.foo)]
+             ;[:statusline "%!v:lua.statusline()"]
              [:title true]
              [:titlestring
               (.. "%{v:lua.vim.g.get_zsandbox()}"
                   "🐙 %{v:lua.vim.g.get_git_branch()} %{get(b:,'gitsigns_status','')} "
-                  "📚 %<%f%M" "  %{v:lua.vim.g.get_diagnostics_summary()}")]
+                  "📚 %<%f%M")]
              [:updatetime 200]
              [:virtualedit [:block :onemore]]
              [:wildcharm (tonumber (vim.keycode :<C-Z>))]
@@ -37,14 +39,15 @@
              [:wildignorecase true]
              [:wildmode "noselect:longest,full"]
              [:wildoptions "pum,fuzzy"]
-             [:winbar "%= %t %{% luaeval('vim.diagnostic.status()') %}"]
+             ; Need to set it selectively. Left it here for reference.
+             ;[:winbar "%= %t %{% luaeval('vim.diagnostic.status()') %}"]
              [:winborder :rounded]
              [:wrap false]])
 
 ;; fnlfmt: skip
 (local inc-opts [[:complete :kspell]
                  [:diffopt ["algorithm:patience" :indent-heuristic :vertical "linematch:60"]]
-                 [:shortmess :c]])
+                 [:shortmess :cW]])
 
 (fn vim.g.get_zsandbox []
   (let [zsandbox vim.env.ZSANDBOX
@@ -82,7 +85,7 @@
 (fn vim.g.findfunc [cmdarg _cmdcomplete]
   (let [cmd "fd -t f --hidden --color=never --max-depth 10"
         fd-output (vim.fn.systemlist cmd)]
-    (if (= (length cmdarg) 0)
+    (if (= cmdarg "")
         fd-output
         (vim.fn.matchfuzzy fd-output cmdarg {:matchseq 1 :key "tail"}))))
 
@@ -91,4 +94,4 @@
   (each [_ [opt val] (ipairs opts)] (set-opt opt val))
   (each [_ [opt val] (ipairs inc-opts)] (inc-opt opt val)))
 
-(vim.cmd.colo :monk)
+(vim.cmd.colo :quiet)

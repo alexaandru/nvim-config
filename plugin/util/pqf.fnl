@@ -13,17 +13,23 @@
         type-map {:E :error :W :warning :I :info :N :hint}]
     (for [i info.start_idx info.end_idx]
       (let [item (. items i)]
-        (if (and (> item.bufnr 0) (> item.lnum 0))
+        (if (> item.bufnr 0)
             (let [filepath (vim.fn.bufname item.bufnr)
                   relative-path (if (vim.startswith filepath "/")
                                     (vim.fn.fnamemodify filepath ":.")
                                     filepath)
                   type-str (if (and item.type (not= item.type ""))
                                (.. (or (. type-map item.type) item.type) ": ")
-                               "")]
-              (table.insert lines
-                            (string.format "%s|%d col %d| %s%s" relative-path
-                                           item.lnum item.col type-str item.text))))))
+                               "")
+                  has-pos (> item.lnum 0)
+                  message (.. type-str (or item.text ""))
+                  parts (if has-pos
+                            [(string.format "%s|%d col %d" relative-path item.lnum item.col)
+                             (if (not= message "") message nil)]
+                            [relative-path
+                             (if (not= message "") message nil)])
+                  line-str (table.concat (vim.tbl_filter #(not= $ nil) parts) "| ")]
+              (table.insert lines line-str)))))
     lines))
 
 (fn vim.g.pqf_add_signs [winid]
@@ -32,13 +38,14 @@
                  (vim.fn.getqflist {:items 1 :qfbufnr 1}))
         items list.items
         buf list.qfbufnr]
-    (vim.fn.sign_unplace "pqf" {:buffer buf})
-    (each [idx item (ipairs items)] ; Skip context lines (no filename or line number)
-      (if (and (> item.bufnr 0) (> item.lnum 0))
-          (let [sign-name (. type-to-sign item.type)]
-            (if sign-name
-                (vim.fn.sign_place 0 "pqf" sign-name buf
-                                   {:lnum idx :priority 10})))))))
+    (when (and buf (> buf 0))
+      (vim.fn.sign_unplace "pqf" {:buffer buf})
+      (each [idx item (ipairs items)] ; Skip context lines (no filename or line number)
+        (if (and (> item.bufnr 0) (> item.lnum 0))
+            (let [sign-name (. type-to-sign item.type)]
+              (if sign-name
+                  (vim.fn.sign_place 0 "pqf" sign-name buf
+                                     {:lnum idx :priority 10}))))))))
 
 (fn delete-line []
   (let [loclist (vim.fn.getloclist 0)
@@ -53,7 +60,8 @@
           (let [new-count (length list)]
             (if (> new-count 0)
                 (let [new-line (math.min line new-count)]
-                  (vim.api.nvim_win_set_cursor 0 [new-line 0]))))))))
+                  (vim.api.nvim_win_set_cursor 0 [new-line 0]))
+                (vim.cmd (if is-loclist :lclose :cclose))))))))
 
 (fn setup []
   (vim.keymap.set :n :dd delete-line {:buffer true :silent true})
@@ -70,6 +78,6 @@
   (set-opt :qftf "v:lua.vim.g.pqf_filter_text")
   (au :FileType {:callback setup :pattern :qf : desc})
   (au :FileType {:command :AutoWinHeight :pattern :qf})
-  (au :FileType {:command "setl cul" :pattern :qf})
+  (au :FileType {:command "setl cul noruler" :pattern :qf})
   (au :QuickFixCmdPost {:command :cw :pattern "[^l]*"})
   (au :QuickFixCmdPost {:command :lw :pattern :l*}))

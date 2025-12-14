@@ -90,13 +90,13 @@
                             :type (if (= issue.Severity :error) :E :W)}))
                 current-qf (vim.fn.getqflist {:title 0})
                 current-title (or current-qf.title "")
-                new-title (.. "golangci-lint: " vim.w.proj_root)]
+                new-title (.. "golangci-lint: " vim.g.proj_root)]
             ;; Only overwrite if empty or it's THIS exact module's list
             (if (or (= current-title "") (= current-title new-title))
                 (vim.fn.setqflist [] " " {:items qflist :title new-title}))))))
 
   (let [bufdir (vim.fn.expand "%:p:h")
-        modfile (.. vim.w.proj_root "/tools/go.mod")
+        modfile (.. vim.g.proj_root "/tools/go.mod")
         cmd (.. "go tool -modfile=" modfile
                 " golangci-lint run --output.json.path=stdout --show-stats=false --issues-exit-code=1")
         job (.. "cd " (vim.fn.shellescape bufdir) " && " cmd)

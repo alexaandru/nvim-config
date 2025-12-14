@@ -9,18 +9,14 @@
                              :tools {:amp (require :amp-conf)}}}}}
         :lewis6991/gitsigns.nvim
         :nvim-mini/mini.icons
-        {:src :nvim-treesitter/nvim-treesitter
-         :version :main
-         :data {:after :TSUpdate}}
+        {:src :nvim-treesitter/nvim-treesitter :data {:after :TSUpdate}}
         {:src :nvim-treesitter/nvim-treesitter-context
          :name :treesitter-context
          :data {:conf {:max_lines 5 :trim_scope :inner}}}
         {:src :nvim-treesitter/nvim-treesitter-textobjects
          :version :main
          :data {:conf {:select {:lookahead true}}}}
-        {:src :ravsii/tree-sitter-d2
-         :version :main
-         :data {:build "make nvim-install"}}
+        {:src :ravsii/tree-sitter-d2 :data {:build "make nvim-install"}}
         {:src :windwp/nvim-ts-autotag
          :data {:conf {:opts {:enable_close_on_slash true}}}}])
 

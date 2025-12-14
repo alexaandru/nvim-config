@@ -68,6 +68,6 @@
                             :parameterNames true
                             :rangeVariableTypes true}
                     :experimentalPostfixCompletions true
-                    :semanticTokens true
+                    :semanticTokens false
                     :usePlaceholders false
                     :local vim.env.GOPRIVATE}}}

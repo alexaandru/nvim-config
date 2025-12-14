@@ -1,5 +1,12 @@
+(fn set-winbar [_args]
+  (if (= vim.bo.buftype "")
+      (let [path (.. (vim.fn.expand "%:p:h:t") "/" (vim.fn.expand "%:t"))
+            winbar (.. "%= " path " %{% luaeval('vim.diagnostic.status()') %}")]
+        (set vim.wo.winbar winbar))))
+
 (let [group (vim.api.nvim_create_augroup :Setup {:clear true})
-      ts-start #(let [_ (pcall vim.treesitter.start)] false)
+      ts-start #(let [_ (pcall vim.treesitter.start)]
+                  false)
       opts #(if (= (type $) :string)
                 {:command $ : group :pattern $2}
                 {:callback $ : group :pattern $2})
@@ -17,5 +24,6 @@
   (au :BufEnter :LastWindow)
   (au :BufEnter "setl ft=nginx" :nginx/*)
   (au :BufEnter "setl ft=risor" :*.risor)
+  (au :BufWinEnter set-winbar)
   (au :BufReadPost :JumpToLastLocation)
   (au :BufWritePre "TrimTrailingSpace | TrimTrailingBlankLines"))
