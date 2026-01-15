@@ -1,12 +1,12 @@
 (local hlx (let [black :#221212
                  pink :#ee16a5
-                 white :#fff9f9
+                 white :#cfc9bf
                  red :#cc0000
                  orange :#FF8800
                  green :#008800
                  blue :#2277ff
                  NONE :NONE]
-             {:Normal {:bg NONE}
+             {:Normal {:fg white :bg NONE}
               :NormalFloat {:bg NONE}
               :NormalNC {:bg NONE}
               :Visual {:fg black :bg orange}
@@ -15,14 +15,14 @@
               :EndOfBuffer {:bg NONE}
               :Folded {:link :Comment :bg NONE}
               :PmenuMatch {:fg :Red}
-              :Pmenu {:fg black :bg NONE}
+              :Pmenu {:fg white :bg NONE}
               :PmenuSel {:fg black :bg orange}
               :Keyword {:bold true}
               :Statement {:link :Keyword}
-              :String {:fg :#696959 :italic true}
+              :String {:fg orange :italic true}
               :Type {:fg red :italic true}
               "@type.builtin" {:link :Type}
-              :Comment {:fg :#898979 :italic true}
+              :Comment {:fg :#555555 :italic true}
               :Constant {:fg red}
               :PreProc {:link :Constant}
               :ErrorMsg {:fg red :bold true}

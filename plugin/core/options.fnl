@@ -1,6 +1,6 @@
 (local opts [[:autocomplete false]
              [:autowriteall true]
-             [:background :light]
+             [:background :dark]
              [:clipboard :unnamedplus]
              [:cmdheight 0]
              [:completeopt [:fuzzy :menu :noselect :noinsert]]
