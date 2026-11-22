@@ -6,7 +6,7 @@
                  green :#008800
                  blue :#2277ff
                  NONE :NONE]
-             {:Normal {:fg white :bg NONE}
+             {:Normal {:fg white :bg :NONE}
               :NormalFloat {:bg NONE}
               :NormalNC {:bg NONE}
               :Visual {:fg black :bg orange}
@@ -17,13 +17,15 @@
               :PmenuMatch {:fg :Red}
               :Pmenu {:fg white :bg NONE}
               :PmenuSel {:fg black :bg orange}
-              :Keyword {:bold true}
-              :Statement {:link :Keyword}
+              :Keyword {:bold true :fg red}
+              ; :Statement {:link :Keyword}
               :String {:fg orange :italic true}
-              :Type {:fg red :italic true}
+              :Type {:fg pink :italic true}
               "@type.builtin" {:link :Type}
+              "@variable.builtin.cel" {:fg red}
+              "@function.builtin.cel" {:fg pink}
               :Comment {:fg :#555555 :italic true}
-              :Constant {:fg red}
+              :Constant {:fg red :bold true}
               :PreProc {:link :Constant}
               :ErrorMsg {:fg red :bold true}
               :WarningMsg {:fg orange :bold true}

@@ -44,7 +44,7 @@
 ;; fnlfmt: skip
 (let [com vim.api.nvim_buf_create_user_command]
   {:cmd [:copilot-language-server :--stdio]
-   :filetypes [:terraform :hcl
+   :filetypes [:terraform :hcl :hyprlang
                :go :gomod :gosum :gotmpl
                :template :make :sh :json :fennel :lua :vim
                :javascript :typescript :vue :python :scala :rust]

@@ -1,7 +1,23 @@
+(fn open-at-position [args]
+  (let [name args.file
+        buf args.buf]
+    (fn open! [f row col]
+      (if (= 1 (vim.fn.filereadable f))
+          (vim.schedule #(do
+                           (vim.cmd (.. "edit " (vim.fn.fnameescape f)))
+                           (vim.api.nvim_win_set_cursor 0 [row col])
+                           (pcall vim.api.nvim_buf_delete buf {:force true})))))
+
+    (case (name:match "^(.+):(%d+):(%d+)$")
+      (f r c) (open! f (tonumber r) (- (tonumber c) 1))
+      _ (case (name:match "^(.+):(%d+)$")
+          (f r) (open! f (tonumber r) 0)))))
+
 (fn set-winbar [_args]
   (if (= vim.bo.buftype "")
       (let [path (.. (vim.fn.expand "%:p:h:t") "/" (vim.fn.expand "%:t"))
-            winbar (.. "%= " path " %{% luaeval('vim.diagnostic.status()') %}")]
+            winbar (.. "%= " path " %{% luaeval('vim.diagnostic.status()') %}"
+                       " %{% luaeval('vim.lsp.status()') %}")]
         (set vim.wo.winbar winbar))))
 
 (let [group (vim.api.nvim_create_augroup :Setup {:clear true})
@@ -11,9 +27,14 @@
                 {:command $ : group :pattern $2}
                 {:callback $ : group :pattern $2})
       au #(vim.api.nvim_create_autocmd $ (opts $2 $3))]
+  (au :BufNewFile open-at-position "*:*")
   (au :VimEnter :CdProjRoot)
   (au :VimResized "wincmd =")
-  (au :TextYankPost #(vim.hl.on_yank {:timeout 450}))
+  (au :TextYankPost #(vim.hl.hl_op {:higroup :Visual :timeout 450}))
+  (au :TextPutPost #(vim.hl.hl_op {:higroup :Visual :timeout 450}))
+  (au :User "sil keepp g/^\\./d _" :DirReadPost)
+  (au :User "setl stc=%{%v:lua.nvim_dir_statuscolumn()%} scl=no nonu nornu"
+      :DirReadPost)
   (au :TermOpen :startinsert)
   (au :TermClose #(if ($.file:find :/Downloads/) (vim.cmd.quit)))
   (au :FileType "wincmd L" :help)

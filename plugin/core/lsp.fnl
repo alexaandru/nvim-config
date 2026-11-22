@@ -102,12 +102,12 @@
     (when (and (client:supports_method :textDocument/codeLens)
                (not= client.name :terraformls))
       (au :CodeLens
-          {[:BufEnter :CursorHold :InsertLeave] vim.lsp.codelens.refresh})
-      (vim.defer_fn vim.lsp.codelens.refresh 100))
-    (if (client:supports_method :textDocument/signatureHelp)
-        (au :LSPSignatureHelp
-            {[:TextChangedI] #(if (inside-call-args?)
-                                  (vim.lsp.buf.signature_help))}))
+          {[:BufEnter :CursorHold :InsertLeave] #(vim.lsp.codelens.enable true)})
+      (vim.defer_fn #(vim.lsp.codelens.enable true) 100))
+    ; (if (client:supports_method :textDocument/signatureHelp)
+    ;     (au :LSPSignatureHelp
+    ;         {[:TextChangedI] #(if (inside-call-args?)
+    ;                               (vim.lsp.buf.signature_help))}))
     (if (client:supports_method :textDocument/onTypeFormatting)
         (vim.lsp.on_type_formatting.enable true {: client_id}))
     false))

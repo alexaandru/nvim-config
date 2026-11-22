@@ -1,6 +1,6 @@
 (local ns (vim.api.nvim_create_namespace :lint))
 (local num #(- (tonumber $) 1))
-(local [E W] (let [s vim.diagnostic.severity] [s.ERROR s.WARN]))
+(local [E W I H] (let [s vim.diagnostic.severity] [s.ERROR s.WARN s.INFO s.HINT]))
 (local golangci-jobs {})
 
 (fn parse-jq [lines _]
@@ -96,7 +96,9 @@
                 (vim.fn.setqflist [] " " {:items qflist :title new-title}))))))
 
   (let [bufdir (vim.fn.expand "%:p:h")
-        modfile (.. vim.g.proj_root "/tools/go.mod")
+        modfile (let [found (vim.fn.findfile "tools/go.mod" (.. vim.g.proj_root "/**"))]
+                  (if (not= found "") (vim.fn.fnamemodify found ":p")
+                      (.. vim.g.proj_root "/tools/go.mod")))
         cmd (.. "go tool -modfile=" modfile
                 " golangci-lint run --output.json.path=stdout --show-stats=false --issues-exit-code=1")
         job (.. "cd " (vim.fn.shellescape bufdir) " && " cmd)
@@ -105,10 +107,116 @@
     ;; Track the job
     (tset golangci-jobs bufnr job-id)))
 
+(fn parse-niri [lines _]
+  (var current-error nil)
+  (var current-lnum nil)
+  (var pipe-offset nil)
+  (let [dx []]
+    (each [_ line (ipairs lines)]
+      ;; Match error message: "Error:   × ..."
+      (let [error-msg (line:match "^Error:%s+×%s+(.+)$")]
+        (when error-msg
+          (set current-error error-msg)))
+      ;; Match location: "╭─[config.kdl:LINE:COL]"
+      (let [lnum (line:match "╭─%[config%.kdl:(%d+)")]
+        (when lnum
+          (set current-lnum (tonumber lnum))
+          (set pipe-offset nil)))
+      ;; Find the pipe character position in code lines: " 493 │ content"
+      (let [pipe-pos (line:find "│")]
+        (when (and pipe-pos current-lnum)
+          (set pipe-offset pipe-pos)))
+      ;; Match underline indicator: "     ·                     ─────┬─────"
+      (let [indicator-match (line:match "^(%s+·.*)$")]
+        (when (and indicator-match current-lnum current-error pipe-offset)
+          ;; Find first dash and count the dash sequence
+          (let [first-dash (indicator-match:find "─")
+                dash-seq (indicator-match:match "(─[─┬]+)")]
+            (when (and first-dash dash-seq)
+              ;; Use vim's UTF-8 aware width function
+              (let [width (vim.fn.strwidth dash-seq)
+                    lnum current-lnum
+                    col (- first-dash pipe-offset 3)
+                    end_col (+ col width)
+                    message current-error
+                    severity E
+                    source :niri]
+                (table.insert dx {: lnum
+                                  : col
+                                  : end_col
+                                  : message
+                                  : severity
+                                  : source})
+                (set current-error nil)
+                (set current-lnum nil)
+                (set pipe-offset nil)))))))
+    dx))
+
+(fn niri [bufnr]
+  (let [output (vim.fn.systemlist "niri validate")
+        dx (parse-niri output bufnr)]
+    (vim.diagnostic.set ns bufnr dx)))
+
+(fn parse-apkbuild-lint [lines _]
+  (let [dx []]
+    (each [_ line (ipairs lines)]
+      (let [(level code lnum message) (line:match "^(%u+):%[([^%]]+)%]:[^:]+:(%d+):(.+)$")]
+        (if (and lnum message)
+            (let [severity (case (level:sub 1 1)
+                             :S E
+                             :I W
+                             :M I
+                             :T H
+                             _ W)
+                  lnum (num lnum)
+                  col 0
+                  source :apkbuild-lint
+                  message (.. "[" code "] " message)]
+              (table.insert dx {: lnum : col : message : severity : source})))))
+    dx))
+
+(fn parse-umbriel [lines _]
+  (let [dx []
+        seen {}]
+    (each [_ line (ipairs lines)]
+      ;; Match both formats:
+      ;; 1. "09:39:03.557 [WRN] [config] /path:LINE:COL: message"
+      ;; 2. "warning: /path:LINE:COL: message"
+      (let [(lnum col message) (line:match "[^:]+:(%d+):(%d+): (.+)$")]
+        (if (and lnum col message)
+            (let [lnum (num lnum)
+                  col (num col)
+                  severity W
+                  source :umbriel
+                  key (.. lnum ":" col ":" message)]
+              ;; Deduplicate by (lnum:col:message)
+              (if (not (. seen key))
+                  (do
+                    (tset seen key true)
+                    (table.insert dx {: lnum : col : message : severity : source})))))))
+    dx))
+
+(fn umbriel [bufnr]
+  (let [output (vim.fn.systemlist "umbriel validate")
+        dx (parse-umbriel output bufnr)]
+    (vim.diagnostic.set ns bufnr dx)))
+
+(fn apkbuild-lint [bufnr]
+  (let [file (vim.api.nvim_buf_get_name bufnr)
+        output (vim.fn.systemlist (.. "apkbuild-lint " (vim.fn.shellescape file)))
+        dx (parse-apkbuild-lint output bufnr)]
+    (vim.diagnostic.set ns bufnr dx)))
+
 (vim.cmd.SetProjRoot)
 
 (let [au #(vim.api.nvim_create_autocmd $1 {:callback $2 :pattern $3})]
   (au [:BufEnter :BufWritePost :InsertLeave :TextChanged] #(jq $.buf) :*.json)
   (au [:BufEnter :BufWritePost :InsertLeave :TextChanged] #(eslint_d $.buf)
       [:*.js :*.ts :*.vue])
-  (au [:BufEnter :BufWritePost] #(golangci $.buf) :*.go))
+  (au [:BufEnter :BufWritePost :InsertLeave :TextChanged] #(niri $.buf)
+      :*/niri/config.kdl)
+  (au [:BufEnter :BufWritePost] #(golangci $.buf) :*.go)
+  (au [:BufEnter :BufWritePost :InsertLeave :TextChanged] #(apkbuild-lint $.buf)
+      :*/APKBUILD)
+  (au [:BufEnter :BufWritePost :InsertLeave :TextChanged] #(umbriel $.buf)
+      :*/umbriel/*.toml))

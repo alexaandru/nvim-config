@@ -1,0 +1,41 @@
+{
+  "plugins": {
+    "gitsigns": {
+      "rev": "c0862d382a35b7b45757d8d151a6a634c09bf3ce",
+      "src": "https://github.com/lewis6991/gitsigns.nvim"
+    },
+    "markview": {
+      "rev": "a6dbc5a4a4828b474c81fbcec11546cbd9000e3b",
+      "src": "https://github.com/OXY2DEV/markview.nvim"
+    },
+    "mini.icons": {
+      "rev": "5d58117d176c133f4cb5585ec8cb3450881c89a0",
+      "src": "https://github.com/nvim-mini/mini.icons"
+    },
+    "nvim-treesitter": {
+      "rev": "52773f0d13a0c11d0c3ef33c14ab6ecc1c17148b",
+      "src": "https://github.com/nvim-treesitter/nvim-treesitter"
+    },
+    "nvim-treesitter-textobjects": {
+      "rev": "5c7b0263797dfd1bd6202f2b219f3b53a80b2187",
+      "src": "https://github.com/nvim-treesitter/nvim-treesitter-textobjects",
+      "version": "'main'"
+    },
+    "nvim-ts-autotag": {
+      "rev": "d7220b55e16ed3c04e88086256def5d282429493",
+      "src": "https://github.com/windwp/nvim-ts-autotag"
+    },
+    "sidekick": {
+      "rev": "3d80a47e6375f6d647c9695d3afea6fa1b3275df",
+      "src": "https://github.com/folke/sidekick.nvim"
+    },
+    "tree-sitter-d2": {
+      "rev": "7bba28221d8c466d28b725124494bf89219326fd",
+      "src": "https://github.com/ravsii/tree-sitter-d2"
+    },
+    "treesitter-context": {
+      "rev": "8decd73460d26ef0a0befb745d022dd1fc2c38b8",
+      "src": "https://github.com/nvim-treesitter/nvim-treesitter-context"
+    }
+  }
+}

@@ -1,5 +1,5 @@
 ;; picker.fnl - extui-based fuzzy picker
-;; Uses vim._extui to render picker in cmdline area
+;; Uses vim._core.ui2 to render picker in cmdline area
 ;;
 ;; Inspired by https://github.com/comfysage/artio.nvim
 
@@ -42,7 +42,8 @@
                                       (self:mark item.id mark-value))))
                                 (set self.idx
                                      (if (> direction 0)
-                                         (math.min (length self.matches) (+ self.idx direction))
+                                         (math.min (length self.matches)
+                                                   (+ self.idx direction))
                                          (math.max 1 (+ self.idx direction))))
                                 (self.view:trigger-show))))]
     {:up (wrap (fn [self]
@@ -58,8 +59,7 @@
                    (let [m (. self.matches self.idx)]
                      (when m
                        (let [item (. self.items (. m 1))]
-                         (self:mark item.id
-                                    (not (. self.marked item.id))))))
+                         (self:mark item.id (not (. self.marked item.id))))))
                    (self.view:trigger-show)))
      :select (mark-and-move true 1)
      :deselect (mark-and-move false -1)
@@ -67,8 +67,7 @@
      :page-up (wrap (fn [self]
                       (let [list-height (or self.view.win.height 10)
                             page-size (math.max 1 (- list-height 1))]
-                        (set self.idx
-                             (math.max 1 (- self.idx page-size)))
+                        (set self.idx (math.max 1 (- self.idx page-size)))
                         (self.view:navigate))))
      :page-down (wrap (fn [self]
                         (let [list-height (or self.view.win.height 10)
@@ -113,20 +112,19 @@
   (local default-actions (make-actions t))
   (local custom-actions (or t.actions {}))
   ;; Wrap function for custom actions
-  (local wrap-action
-         (fn [action-spec]
-           (if (= (type action-spec) :table)
-               ;; If it's a table with action-fn/scheduled-fn (from utils.make-setqflist)
-               (let [action-fn action-spec.action-fn
-                     scheduled-fn action-spec.scheduled-fn]
-                 (fn []
-                   (when (and (not t.closed)
-                              (= (coroutine.status t.co) :suspended))
-                     (pcall action-fn t)
-                     (when scheduled-fn
-                       (vim.schedule #(pcall scheduled-fn t))))))
-               ;; Otherwise it's already a wrapped function, use as-is
-               action-spec)))
+  (local wrap-action (fn [action-spec]
+                       (if (= (type action-spec) :table)
+                           ;; If it's a table with action-fn/scheduled-fn (from utils.make-setqflist)
+                           (let [action-fn action-spec.action-fn
+                                 scheduled-fn action-spec.scheduled-fn]
+                             (fn []
+                               (when (and (not t.closed)
+                                          (= (coroutine.status t.co) :suspended))
+                                 (pcall action-fn t)
+                                 (when scheduled-fn
+                                   (vim.schedule #(pcall scheduled-fn t))))))
+                           ;; Otherwise it's already a wrapped function, use as-is
+                           action-spec)))
   ;; Wrap custom actions
   (each [k v (pairs custom-actions)]
     (tset custom-actions k (wrap-action v)))
@@ -202,7 +200,7 @@
 
 ;; Initialize keymaps
 (fn Picker.initkeymaps [self]
-  (let [ext (require :vim._extui.shared)
+  (let [ext (require :vim._core.ui2)
         opts {:buffer ext.bufs.cmd}]
     (if self.actions
         (: (vim.iter (pairs self.actions)) :each
@@ -217,7 +215,7 @@
 
 ;; Delete keymaps
 (fn Picker.delkeymaps [_self]
-  (let [ext (require :vim._extui.shared)
+  (let [ext (require :vim._core.ui2)
         keymaps (vim.api.nvim_buf_get_keymap ext.bufs.cmd :i)
         keymaps (vim.iter (ipairs keymaps))]
     (keymaps:each (fn [_ v]
@@ -296,9 +294,7 @@
 
 ;; Generic picker with items
 (fn picker.generic [items props]
-  (picker.pick (vim.tbl_deep_extend :force
-                                    {:fn picker.sorter
-                                     :items items}
+  (picker.pick (vim.tbl_deep_extend :force {:fn picker.sorter :items items}
                                     props)))
 
 ;; Main pick function

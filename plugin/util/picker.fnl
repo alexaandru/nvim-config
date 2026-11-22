@@ -463,6 +463,53 @@
                              nil))
              :preview-item (fn [item] (file-preview-item item.file))}))))
 
+;; Diff section picker - jump between file/hunk headers in a diff buffer
+(fn diff-picker []
+  (if (not= vim.bo.filetype :diff)
+      (vim.notify "Not a diff buffer" vim.log.levels.WARN)
+      (let [buf (vim.api.nvim_get_current_buf)
+            lines (vim.api.nvim_buf_get_lines buf 0 -1 false)
+            items []]
+        (var current-file nil)
+        (each [i line (ipairs lines)]
+          (if (string.match line "^diff %-%-git ")
+              (do
+                (set current-file (or (string.match line "^diff %-%-git a/.- b/(.*)$")
+                                      line))
+                (table.insert items
+                              {:line i :file current-file :kind :file
+                               :text current-file}))
+              (let [hunk (string.match line "^@@.-@@.*$")]
+                (when hunk
+                  (table.insert items
+                                {:line i :file current-file :kind :hunk
+                                 :text (string.format "  %s" hunk)})))))
+        (if (= (length items) 0)
+            (vim.notify "No diff sections found" vim.log.levels.INFO)
+            (pikr items
+                  {:prompt "diff"
+                   :format-item (fn [item] item.text)
+                   :on-close (fn [item _]
+                               (vim.schedule #(do
+                                                (vim.api.nvim_win_set_cursor 0
+                                                                             [item.line
+                                                                              0])
+                                                (vim.cmd "normal! zz"))))
+                   :get-sign (fn [item]
+                               (if (= item.v.kind :file)
+                                   (values "F" "PickerKeymapN")
+                                   (values "H" "PickerKeymapV")))
+                   :preview-item (fn [item]
+                                   (values buf
+                                           (fn [win]
+                                             (vim.api.nvim_set_option_value :cursorline
+                                                                            true
+                                                                            {:scope :local
+                                                                             :win win})
+                                             (vim.api.nvim_win_set_cursor win
+                                                                          [item.line
+                                                                           0]))))})))))
+
 (fn colorscheme-picker []
   (let [original-cs (or vim.g.colors_name "default")
         files (vim.api.nvim_get_runtime_file "colors/*.{vim,lua}" true)
@@ -496,7 +543,8 @@
   (com :PickColorscheme colorscheme-picker
        "Colorscheme picker with live preview")
   (com :PickCommand command-picker "Commands picker")
-  (com :PickGitStatus git-status-picker "Git status picker"))
+  (com :PickGitStatus git-status-picker "Git status picker")
+  (com :PickDiff diff-picker "Diff sections picker"))
 
 ;; LSP keymaps on attach
 (vim.api.nvim_create_autocmd :LspAttach

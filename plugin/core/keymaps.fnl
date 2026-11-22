@@ -12,10 +12,7 @@
 (local lsp-keys
        {:<F2> vim.lsp.buf.rename
         :<Leader>a vim.lsp.buf.code_action
-        :<Leader>d vim.diagnostic.setloclist
-        :<Leader>D vim.diagnostic.setqflist
         :<Leader>k vim.lsp.codelens.run
-        :<Leader>e vim.diagnostic.open_float
         :<Leader>h #(vim.cmd :LspHintsToggle)
         :grci vim.lsp.buf.incoming_calls
         :grco vim.lsp.buf.outgoing_calls
@@ -46,9 +43,13 @@
         {:silent true :desc "Save and Close Buffer"})
   (nmap :<Space> "@=((foldclosed(line('.')) < 0) ? 'zc' : 'zO')<CR>"
         {:silent true :desc "Toggle Fold"})
-  (nmap :Q :<Nop> {:silent true})
   (nmap :<Esc> :<Cmd>noh<CR>)
   (nmap "," ":find ")
+  ;; Diagnostics
+  (nmap :<Leader>d vim.diagnostic.setloclist
+        {:desc "Diagnostics to Location List"})
+  (nmap :<Leader>D vim.diagnostic.setqflist {:desc "Diagnostics to Quickfix"})
+  (nmap :<Leader>e vim.diagnostic.open_float {:desc "Show Diagnostic Float"})
   ;; Sidekick
   (zmap :<C-.> #(toggle {:name :claude :focus true}) {:desc "Sidekick Toggle"})
   (zmap :<C-/> #(select {:filter {:installed true}})

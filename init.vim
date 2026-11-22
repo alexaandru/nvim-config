@@ -1,7 +1,7 @@
-set rtp=~/.lua,~/.config/nvim,~/.local/share/nvim/site,$VIMRUNTIME
+set rtp=$XDG_CONFIG_HOME/nvim,$XDG_DATA_HOME/nvim/site,$VIMRUNTIME
+set plf=$XDG_CONFIG_HOME/nvim/pack.json " must be set before vim.pack is 1st used
 
 lua vim.loader.enable()
-lua require('vim._extui').enable({})
 
 packadd fennel-nvim
 packadd cfilter

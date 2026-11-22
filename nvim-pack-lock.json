@@ -1,45 +1,41 @@
 {
   "plugins": {
     "gitsigns": {
-      "rev": "42d6aed4e94e0f0bbced16bbdcc42f57673bd75e",
-      "src": "https://github.com/lewis6991/gitsigns.nvim"
+      "rev": "f2421c550618d257048afa650413d9e542ddbe67",
+      "src": "ssh://git@github.com/lewis6991/gitsigns.nvim"
     },
     "markview": {
-      "rev": "900272b66043d5e3d3f5a74b34eb4e93d3a0ce88",
-      "src": "https://github.com/OXY2DEV/markview.nvim"
+      "rev": "5d9fc2aa6dd1c2fbdc7a68bc79b300e9967b21ff",
+      "src": "ssh://git@github.com/OXY2DEV/markview.nvim"
     },
     "mini.icons": {
-      "rev": "efc85e42262cd0c9e1fdbf806c25cb0be6de115c",
-      "src": "https://github.com/nvim-mini/mini.icons"
+      "rev": "98faae31e9be1cc054ae63485e58ceb185efcad0",
+      "src": "ssh://git@github.com/nvim-mini/mini.icons"
     },
     "nvim-treesitter": {
-      "rev": "15b3416cc1f557c4932468e512a0bd45871167bc",
-      "src": "https://github.com/nvim-treesitter/nvim-treesitter"
+      "rev": "9a168f6357ed21c3a636e1727bc7d382abc451b8",
+      "src": "ssh://git@github.com/nvim-treesitter/nvim-treesitter"
     },
     "nvim-treesitter-textobjects": {
-      "rev": "baa6b4ec28c8be5e4a96f9b1b6ae9db85ec422f8",
-      "src": "https://github.com/nvim-treesitter/nvim-treesitter-textobjects",
+      "rev": "5c7b0263797dfd1bd6202f2b219f3b53a80b2187",
+      "src": "ssh://git@github.com/nvim-treesitter/nvim-treesitter-textobjects",
       "version": "'main'"
     },
     "nvim-ts-autotag": {
-      "rev": "c4ca798ab95b316a768d51eaaaee48f64a4a46bc",
-      "src": "https://github.com/windwp/nvim-ts-autotag"
+      "rev": "88c1453db4ba7dd24131086fe51fdf74e587d275",
+      "src": "ssh://git@github.com/windwp/nvim-ts-autotag"
     },
     "sidekick": {
-      "rev": "c2bdf8cfcd87a6be5f8b84322c1b5052e78e302e",
-      "src": "https://github.com/folke/sidekick.nvim"
-    },
-    "site.util": {
-      "rev": "92f41034387ebfade5863641ae232601e9fd81f8",
-      "src": "https://github.com/alexaandru/site-util"
+      "rev": "3d80a47e6375f6d647c9695d3afea6fa1b3275df",
+      "src": "ssh://git@github.com/folke/sidekick.nvim"
     },
     "tree-sitter-d2": {
-      "rev": "ffb66ce4c801a1e37ed145ebd5eca1ea8865e00f",
-      "src": "https://github.com/ravsii/tree-sitter-d2"
+      "rev": "200434618a6bede20ebd4982aa4d4f1edeb0b5c1",
+      "src": "ssh://git@github.com/ravsii/tree-sitter-d2"
     },
     "treesitter-context": {
-      "rev": "64dd4cf3f6fd0ab17622c5ce15c91fc539c3f24a",
-      "src": "https://github.com/nvim-treesitter/nvim-treesitter-context"
+      "rev": "f3061339b8eaf9fda873600bc425b8d2d8502533",
+      "src": "ssh://git@github.com/nvim-treesitter/nvim-treesitter-context"
     }
   }
 }

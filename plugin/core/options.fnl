@@ -2,7 +2,7 @@
              [:autowriteall true]
              [:background :dark]
              [:clipboard :unnamedplus]
-             [:cmdheight 0]
+             [:cmdheight 1]
              [:completeopt [:fuzzy :menu :noselect :noinsert]]
              [:conceallevel 3]
              [:expandtab true]
@@ -13,6 +13,7 @@
              [:foldmethod :expr]
              [:grepprg "git grep -EIn"]
              [:grepformat "%f:%l:%m"]
+             [:guifont "Maple Mono Light:h13"]
              [:ignorecase true]
              [:indentexpr "v:lua.require('nvim-treesitter').indentexpr()"]
              [:laststatus 0]
@@ -20,7 +21,7 @@
              [:mousemodel :extend]
              [:path "**"]
              [:pumblend 10]
-             [:ruler false]
+             [:ruler true]
              [:signcolumn "yes:2"]
              [:smartcase true]
              [:smartindent true]
@@ -94,4 +95,4 @@
   (each [_ [opt val] (ipairs opts)] (set-opt opt val))
   (each [_ [opt val] (ipairs inc-opts)] (inc-opt opt val)))
 
-(vim.cmd.colo :quiet)
+(vim.cmd.colo :catppuccin)

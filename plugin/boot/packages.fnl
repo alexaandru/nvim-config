@@ -2,7 +2,6 @@
        [{:src :OXY2DEV/markview.nvim
          :data {:conf {:preview {:icon_provider :mini
                                  :filetypes [:markdown :nvim-pack]}}}}
-        {:src :alexaandru/site-util :name :site.util}
         {:src :folke/sidekick.nvim
          :data {:conf {:cli {:win {:layout :bottom}
                              :mux {:enabled true :backend :zellij}
